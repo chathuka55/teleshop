@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vercel
+# python
+scripts/python/.venv/
+scripts/python/output/
+__pycache__/
+# raw 3D sources (commit only optimised .glb in public/models)
+assets-src/
+# generated
+*.tsbuildinfo
+next-env.d.ts
+# local dev database (pnpm db:memory)
+.mongo-dev/

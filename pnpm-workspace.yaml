@@ -1,0 +1,20 @@
+# Single-package repo; this file only exists for pnpm settings.
+packages:
+  - "."
+
+# pnpm 11: packages allowed to run install scripts.
+allowBuilds:
+  "@tailwindcss/oxide": true
+  esbuild: true
+  mongodb-memory-server: true
+  sharp: true
+  unrs-resolver: true
+
+# Security overrides (pnpm audit --prod). Review when Next / Auth.js upgrade.
+overrides:
+  nodemailer: 10.1.7 # Auth.js 5 beta still declares ^7 || ^8, which have known advisories
+  postcss: 8.5.23 # Next 15 bundles postcss 8.4.x
+
+peerDependencyRules:
+  allowedVersions:
+    nodemailer: "10" # we only use nodemailer directly; Auth.js's email provider is not enabled

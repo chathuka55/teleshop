@@ -1,0 +1,36 @@
+/*
+ * Midnight Tech tokens — names match the Figma "Teleshop Colors" variables (color/<name>).
+ * Source of truth: docs/05-design-system.md. No violet, cyan or pink.
+ */
+:root {
+  --color-bg: #0a0d14;
+  --color-surface: #141922;
+  --color-surface-2: #1c2230;
+  --color-surface-deep: #0b1120;
+  --color-text: #f9fafb;
+  --color-text-secondary: #9ca3af;
+  /* Figma color/text-muted is #6B7280, which fails WCAG AA (3.3–4.0:1) on our surfaces; raised to pass ≥ 4.5:1. */
+  --color-text-muted: #848c9a;
+  --color-primary: #1d4ed8; /* buttons, active states */
+  --color-primary-strong: #2563eb; /* end stop of the primary button gradient */
+  --color-primary-light: #3b82f6; /* links, charts, glows */
+  --color-primary-soft: #60a5fa; /* small blue text on tinted / glass backgrounds (AA contrast) */
+  --color-accent: #f59e0b; /* deals, tracking codes, highlights */
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-on-primary: #ffffff;
+
+  --glass-fill: rgb(255 255 255 / 0.06);
+  --glass-border: rgb(255 255 255 / 0.12);
+  --glass-blur: 24px;
+
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.12);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
