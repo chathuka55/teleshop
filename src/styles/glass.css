@@ -1,0 +1,17 @@
+/*
+ * Glassmorphism — ONLY for the floating navbar, hero cards, announcement pill, trust strip,
+ * modals/sheets and mobile bottom bars (docs/05-design-system.md §2).
+ */
+.glass {
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.35);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: rgb(20 25 34 / 0.92);
+  }
+}

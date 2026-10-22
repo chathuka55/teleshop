@@ -1,0 +1,9 @@
+.next
+node_modules
+coverage
+pnpm-lock.yaml
+public/models
+docs
+scripts/python
+playwright-report
+test-results
