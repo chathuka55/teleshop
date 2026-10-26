@@ -29,7 +29,7 @@
 - [x] **P2-T02** Register, sign in, sign out, email verification pages (Figma 07, 08). Rate limits. — _No account enumeration (same answer + "already registered" email), breached-password check (HIBP k-anonymity), 24 h single-use links at `/verify-email`._
 - [x] **P2-T03** Forgot / reset password (hashed single-use tokens, 30 min). Lockout after 5 failures. — _`/reset-password`; a reset signs out every device (tokenVersion) and replaces older links._
 - [x] **P2-T04** Route guards in middleware + `requireRole()` / ownership helpers in `lib/auth/guards.ts`. — _Rules in `lib/auth/route-access.ts`, pure checks in `lib/auth/authorize.ts` (unit tested)._
-- [ ] **P2-T05** Admin TOTP 2FA (enrol with QR, verify, recovery codes, encrypted secret). Admin login page (A1).
+- [x] **P2-T05** Admin TOTP 2FA (enrol with QR, verify, recovery codes, encrypted secret). Admin login page (A1). — _`/admin/login`: AES-256-GCM secret, 10 single-use recovery codes (SHA-256), replay guard (time step), 5 tries/min/user; the session is upgraded only by redeeming a one-time server proof in the jwt callback (browser session updates are ignored)._
 - [ ] **P2-T06** Navbar Guest/Logged-in states (name + profile photo), profile page with avatar upload (Blob, sharp). — _Done: navbar states, `/account` (profile, email verification banner, change password, sign out on all devices). Avatar upload (Upstash Blob + sharp) still to do._
 
 ## Phase 3 — Storefront · [details](phases/phase-3-storefront.md)

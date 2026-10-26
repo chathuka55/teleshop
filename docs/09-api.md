@@ -30,7 +30,7 @@
 | `signOutAction`, `signInWithGoogleAction` | auth | public | — |
 | `updateProfileAction`, `changePasswordAction`, `signOutEverywhereAction` | users | signed in | 10/min/IP |
 | `toggleWishlistAction`, `syncWishlistAction` | wishlist | public (guests: no-op) / signed in | — |
-| `verifyTotpAction` | auth | admin | 5/min/user |
+| `confirmEnrolmentAction`, `verifySecondFactorAction`, `finishEnrolmentAction` (TOTP) | auth | admin (password step done) | 5/min/user |
 | `addToCartAction`, `updateCartItemAction`, `removeCartItemAction` | cart | guest/customer | 30/min |
 | `toggleWishlistAction` | cart | customer | 30/min |
 | `saveAddressAction`, `deleteAddressAction` | users | customer | 10/min |

@@ -119,7 +119,7 @@ Indexes: `{ createdAt: -1 }`, `{ actorId: 1, createdAt: -1 }`, `{ entity: 1, ent
 | `role` | enum | `customer` \| `seller` \| `admin` |
 | `status` | enum | `active` \| `suspended` |
 | `tokenVersion` | number | bump to invalidate all sessions (JWT carries it) |
-| `twoFactor` | `{ enabled, secretEnc, recoveryHashes[] }` | admins must have `enabled: true`; secret AES-256-GCM encrypted. `select: false` |
+| `twoFactor` | `{ enabled, secretEnc, recoveryHashes[], lastStep, proofHash, proofExpires }` | admins must have `enabled: true`; secret AES-256-GCM encrypted; recovery codes SHA-256, single use; `lastStep` blocks code replay; `proofHash` = one-time 60 s proof that upgrades the session after a correct code (added v0.3). `select: false` |
 | `failedLogins`, `lockedUntil` | number, Date | lock 15 min after 5 failures |
 | `lastLoginAt` | Date | |
 Indexes: `{ email: 1 }` unique, `{ role: 1, status: 1 }`. Writes: `auth.service`, `users.service`.

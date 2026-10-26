@@ -1,6 +1,7 @@
 import type { Types } from "mongoose";
 import { connectDB } from "../mongoose";
 import { UserModel } from "../models/user.model";
+import { $gt, $lt, $ne } from "../operators";
 
 /** Safe user DTO — never contains passwordHash, twoFactor secrets or lockout counters. */
 export type UserDTO = {
@@ -211,4 +212,93 @@ export async function changePasswordAndRevokeSessions(id: string, passwordHash: 
 export async function bumpTokenVersion(id: string): Promise<void> {
   await connectDB();
   await UserModel.updateOne({ _id: id }, { $inc: { tokenVersion: 1 } });
+}
+
+// ---- Admin TOTP 2FA (P2-T05) — used by modules/auth/two-factor.ts ----
+
+export type TwoFactorState = {
+  enabled: boolean;
+  secretEnc: string | null;
+  recoveryCount: number;
+  lastStep: number;
+};
+
+export async function getTwoFactorState(id: string): Promise<TwoFactorState> {
+  await connectDB();
+  const u = await UserModel.findById(id).select("+twoFactor").lean<{
+    twoFactor?: {
+      enabled?: boolean;
+      secretEnc?: string | null;
+      recoveryHashes?: string[];
+      lastStep?: number;
+    };
+  }>();
+  const t = u?.twoFactor ?? {};
+  return {
+    enabled: !!t.enabled,
+    secretEnc: t.secretEnc ?? null,
+    recoveryCount: t.recoveryHashes?.length ?? 0,
+    lastStep: t.lastStep ?? 0,
+  };
+}
+
+/** Stores a not-yet-confirmed secret (enrolment step 1). Never touches an enabled 2FA. */
+export async function savePendingTwoFactorSecret(id: string, secretEnc: string): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne(
+    { _id: id, "twoFactor.enabled": $ne(true) },
+    { $set: { "twoFactor.secretEnc": secretEnc } },
+  );
+}
+
+export async function enableTwoFactor(id: string, recoveryHashes: string[], step: number): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne(
+    { _id: id },
+    {
+      $set: {
+        "twoFactor.enabled": true,
+        "twoFactor.recoveryHashes": recoveryHashes,
+        "twoFactor.lastStep": step,
+      },
+    },
+  );
+}
+
+/** Atomic replay guard: only succeeds when `step` is newer than the last accepted one. */
+export async function acceptTotpStep(id: string, step: number): Promise<boolean> {
+  await connectDB();
+  const r = await UserModel.updateOne(
+    { _id: id, "twoFactor.lastStep": $lt(step) },
+    { $set: { "twoFactor.lastStep": step } },
+  );
+  return r.modifiedCount === 1;
+}
+
+/** Atomically removes a recovery code; true only if it was there (single use). */
+export async function consumeRecoveryCode(id: string, hash: string): Promise<boolean> {
+  await connectDB();
+  const r = await UserModel.updateOne(
+    { _id: id, "twoFactor.recoveryHashes": hash },
+    { $pull: { "twoFactor.recoveryHashes": hash } },
+  );
+  return r.modifiedCount === 1;
+}
+
+export async function saveTwoFactorProof(id: string, proofHash: string, expires: Date): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne(
+    { _id: id },
+    { $set: { "twoFactor.proofHash": proofHash, "twoFactor.proofExpires": expires } },
+  );
+}
+
+/** Redeems the one-time proof (single use, before expiry). */
+export async function consumeTwoFactorProof(id: string, proofHash: string, now: Date): Promise<boolean> {
+  await connectDB();
+  const r = await UserModel.updateOne(
+    { _id: id, "twoFactor.proofHash": proofHash, "twoFactor.proofExpires": $gt(now) },
+    { $set: { "twoFactor.proofHash": null, "twoFactor.proofExpires": null } },
+  );
+  return r.modifiedCount === 1;
 }
