@@ -29,6 +29,37 @@ const sellerSchema = new Schema(
     phone: { type: String, required: true, match: /^\+94\d{9}$/ },
     description: { type: String, default: "", maxlength: 1000 },
     logoUrl: { type: String, default: null },
+    /** Wide shop photo for the top of the shop page (added v0.3). */
+    coverUrl: { type: String, default: null },
+    /** Up to 6 shop photos (storefront, interior) — shop page gallery (added v0.3). */
+    photos: {
+      type: [
+        new Schema(
+          {
+            url: { type: String, required: true },
+            alt: { type: String, default: "", maxlength: 160 },
+            width: intMin(1),
+            height: intMin(1),
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+      validate: (v: unknown[]) => v.length <= 6,
+    },
+    /** Map pin (WGS84). Shown on the shop page with a "Get directions" link (added v0.3). */
+    location: {
+      type: new Schema(
+        {
+          lat: { type: Number, required: true, min: -90, max: 90 },
+          lng: { type: Number, required: true, min: -180, max: 180 },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
+    /** Free text, e.g. "Mon–Sat 9.00–19.00 · Sun 10.00–14.00" (added v0.3). */
+    openingHours: { type: String, default: "", maxlength: 80 },
     /** Year the shop was founded (shown as "Since 2019"). */
     establishedYear: intMin(1950, { max: 2100 }),
     /** Up to 5 short display tags ("Phones", "Apple"…). */

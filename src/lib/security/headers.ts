@@ -2,7 +2,7 @@
  * Security headers from docs/10-security.md §2. Pure functions so they can be unit tested
  * and reused by `middleware.ts` (per-request CSP nonce) and `next.config.ts` (static headers).
  */
-import { BLOB_PUBLIC_HOST } from "../../config/storage";
+import { BLOB_PUBLIC_HOST, MAP_TILE_HOST } from "../../config/storage";
 
 export type CspOptions = { nonce: string; isDev: boolean };
 
@@ -21,7 +21,7 @@ export function buildCsp({ nonce, isDev }: CspOptions): string {
     "style-src": ["'self'", "'unsafe-inline'"],
     // Three.js decodes textures through blob: URLs.
     // Product photos/avatars come from our public Upstash Blob bucket only (ADR-005).
-    "img-src": ["'self'", "data:", "blob:", `https://${BLOB_PUBLIC_HOST}`],
+    "img-src": ["'self'", "data:", "blob:", `https://${BLOB_PUBLIC_HOST}`, `https://${MAP_TILE_HOST}`],
     // GLTFLoader fetches textures embedded in .glb files through blob: URLs.
     "connect-src": ["'self'", "blob:", "https://*.upstash.io", ...(isDev ? ["ws:", "wss:"] : [])],
     "worker-src": ["'self'", "blob:"],

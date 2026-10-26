@@ -5,3 +5,10 @@
  * Production gets its own bucket: change the host here when it is created (doc 12 §2).
  */
 export const BLOB_PUBLIC_HOST = "b65e2efccddc.blob.upstash.io";
+
+/**
+ * OpenStreetMap standard tiles for the shop-page map (ShopMap). Usage policy: show the
+ * "© OpenStreetMap contributors" credit, no bulk downloads. Move to a hosted tile provider with
+ * an API key before traffic grows (docs/10 §2).
+ */
+export const MAP_TILE_HOST = "tile.openstreetmap.org";

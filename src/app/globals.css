@@ -112,3 +112,15 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Shop page cover: slow settle-in (reduced motion: the global rule above shortens it to ~0). */
+@keyframes cover-in {
+  from {
+    transform: scale(1.08);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}

@@ -11,7 +11,11 @@ import {
   listRelatedProducts as repoRelated,
   searchPublishedProducts,
 } from "@/db/repositories/product.repository";
-import { findApprovedSellerBySlug, listApprovedSellers } from "@/db/repositories/seller.repository";
+import {
+  findApprovedSellerBySlug,
+  findApprovedSellerProfileBySlug,
+  listApprovedSellers,
+} from "@/db/repositories/seller.repository";
 import type {
   BrandDTO,
   CategoryDTO,
@@ -20,6 +24,7 @@ import type {
   ProductPage,
   ProductQuery,
   SellerCardDTO,
+  SellerProfileDTO,
 } from "./types";
 
 /**
@@ -56,6 +61,11 @@ export async function listSellers(): Promise<SellerCardDTO[]> {
 
 export async function getSeller(slug: string): Promise<SellerCardDTO | null> {
   return findApprovedSellerBySlug(slug);
+}
+
+/** Public shop page data (/s/[shop]). */
+export async function getSellerProfile(slug: string): Promise<SellerProfileDTO | null> {
+  return findApprovedSellerProfileBySlug(slug);
 }
 
 export async function listFeaturedProducts(limit = 12): Promise<ProductCardDTO[]> {
