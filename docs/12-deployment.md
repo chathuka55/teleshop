@@ -35,6 +35,8 @@
 | `EMAIL_SERVER`, `EMAIL_FROM` | sandbox SMTP | real SMTP |
 | `NEXT_PUBLIC_SITE_URL` | preview URL | `https://teleshop.lk` |
 
+> **Preview variables in one step:** `pnpm vercel:preview-env` (`scripts/dev/vercel-preview-env.mjs`) writes the *Preview* set from `.env.local` with its own database `teleshop_preview` and freshly generated `AUTH_SECRET` / `TOTP_ENCRYPTION_KEY`. Needs a Vercel token in `~/.vercel-token` or `VERCEL_TOKEN`. Then fill the preview database once: `MONGODB_DB=teleshop_preview pnpm db:seed` (PowerShell: `$env:MONGODB_DB='teleshop_preview'; pnpm db:seed`). Without these, every PR preview build fails with "Invalid environment variables".
+
 3. **Storage**: create Upstash Blob buckets `teleshop-images` (public) and `teleshop-docs` (private) — [ADR-005](adr/ADR-005-upstash-blob.md). `.glb` files stay in `public/models` (served by Vercel's CDN with long cache headers).
 4. **Domains**: add `teleshop.lk` + `www` → redirect `www` to apex. HTTPS is automatic.
 5. **Security**: enable Vercel Firewall, Deployment Protection for previews (Vercel Authentication), and Bot protection on `/api/v1/track` and auth routes.
@@ -48,7 +50,7 @@ PR opened ─► GitHub Actions: lint · typecheck · unit · integration · bui
 merge to main ─► Actions: db:migrate + db:indexes (teleshop_migrator, prod) ─► Vercel Production deploy
 ```
 
-`.github/workflows/ci.yml` holds the checks; `MIGRATOR_MONGODB_URI` is a **GitHub Actions secret**, never a Vercel variable.
+`.github/workflows/ci.yml` holds the checks; `MIGRATOR_MONGODB_URI` is a **GitHub Actions secret**, never a Vercel variable. Add it under *Settings → Environments → production → Environment secrets*. Until it exists the `migrate` job is **skipped with a warning** (the run stays green) — apply migrations from a laptop with `pnpm db:migrate` in the meantime.
 
 ## 4. Release checklist
 - [ ] All CI checks green on `main`.

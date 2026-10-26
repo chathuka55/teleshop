@@ -9,10 +9,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4 # version comes from "packageManager" in package.json
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24, cache: pnpm } # same major as Vercel (Node 24.x)
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
@@ -22,26 +22,38 @@ jobs:
       - run: pnpm build
         env:
           SKIP_ENV_VALIDATION: "true"
+
+  # Production database migrations (docs/12 §3) — main only, after the checks pass.
   migrate:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: check
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
+      # Without the secret the job is skipped with a visible warning instead of failing the run;
+      # migrations can then be applied from a laptop with `pnpm db:migrate`.
       - name: Check the migrator secret
+        id: secret
         env:
           MIGRATOR_MONGODB_URI: ${{ secrets.MIGRATOR_MONGODB_URI }}
         run: |
           if [ -z "$MIGRATOR_MONGODB_URI" ]; then
-            echo "::error::MIGRATOR_MONGODB_URI is not set. Add it under Settings → Environments → production → Environment secrets (docs/12 §3)."
-            exit 1
+            echo "::warning::Migrations skipped — MIGRATOR_MONGODB_URI is not set (Settings → Environments → production → Environment secrets). Run 'pnpm db:migrate' locally or add the secret (docs/12 §3)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
           fi
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:migrate && pnpm db:indexes
+      - if: steps.secret.outputs.run == 'true'
+        uses: actions/checkout@v5
+      - if: steps.secret.outputs.run == 'true'
+        uses: pnpm/action-setup@v4
+      - if: steps.secret.outputs.run == 'true'
+        uses: actions/setup-node@v5
+        with: { node-version: 24, cache: pnpm }
+      - if: steps.secret.outputs.run == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.secret.outputs.run == 'true'
+        run: pnpm db:migrate && pnpm db:indexes
         env:
           MONGODB_URI: ${{ secrets.MIGRATOR_MONGODB_URI }}
           MONGODB_DB: teleshop

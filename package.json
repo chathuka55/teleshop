@@ -24,7 +24,8 @@
     "models:optimize": "gltf-transform optimize",
     "prepare": "husky",
     "test:watch": "vitest --project unit",
-    "db:memory": "tsx scripts/dev/memory-db.ts"
+    "db:memory": "tsx scripts/dev/memory-db.ts",
+    "vercel:preview-env": "node scripts/dev/vercel-preview-env.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "6.0.0",

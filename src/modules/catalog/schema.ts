@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ProductQuery } from "./types";
+import type { ProductQuery, SpecFilterDTO } from "./types";
 
 const csv = z
   .string()
@@ -50,8 +50,35 @@ export type RawSearchParams = Record<string, string | string[] | undefined>;
 
 const MULTI_KEYS = new Set(["brand", "condition"]);
 
+/** URL prefix for spec filters: `?spec.storage=256GB,512GB` (repeated checkboxes also work). */
+export const SPEC_PARAM_PREFIX = "spec.";
+
+/**
+ * Spec filters from the URL, kept only when the key is a filterable spec of this category and every
+ * value is one of its listed options — an allow-list, so nothing user-typed reaches the query.
+ */
+export function parseSpecFilters(
+  params: RawSearchParams,
+  specFilters: readonly SpecFilterDTO[],
+): Record<string, string[]> | undefined {
+  const out: Record<string, string[]> = {};
+  for (const f of specFilters) {
+    const raw = params[`${SPEC_PARAM_PREFIX}${f.key}`];
+    const values = (Array.isArray(raw) ? raw : raw ? [raw] : [])
+      .flatMap((v) => v.split(","))
+      .map((v) => v.trim())
+      .filter((v) => f.options.includes(v));
+    if (values.length) out[f.key] = [...new Set(values)].slice(0, 10);
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Turns Next.js `searchParams` into a validated `ProductQuery`. */
-export function parseProductQuery(params: RawSearchParams, category?: string): ProductQuery {
+export function parseProductQuery(
+  params: RawSearchParams,
+  category?: string,
+  specFilters: readonly SpecFilterDTO[] = [],
+): ProductQuery {
   const flat: Record<string, string> = {};
   for (const [k, val] of Object.entries(params)) {
     // Filter forms post repeated checkboxes (?brand=a&brand=b); other keys use the first value.
@@ -69,6 +96,7 @@ export function parseProductQuery(params: RawSearchParams, category?: string): P
     inStock: p.inStock,
     sort: p.sort ?? "featured",
     seller: p.seller,
+    specs: parseSpecFilters(params, specFilters),
     cursor: p.cursor,
   };
 }

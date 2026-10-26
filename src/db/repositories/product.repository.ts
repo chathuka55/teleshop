@@ -74,6 +74,24 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
       ...(query.maxPriceCents !== undefined ? { $lte: query.maxPriceCents } : {}),
     };
   }
+  if (query.specs) {
+    // AND across specs, OR within one spec. A value matches the product spec when it starts with
+    // the option ("1TB" ↔ "1TB SSD") or any variant has it ("512GB" storage variant). Keys and
+    // values are allow-listed category options (parseSpecFilters), so the regex is built from
+    // trusted strings only.
+    const escape = (v: string): string => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    match.$and = Object.entries(query.specs).map(([key, values]) => ({
+      $or: [
+        {
+          [`specs.${key}`]: {
+            // eslint-disable-next-line security/detect-non-literal-regexp -- allow-listed option, escaped
+            $in: values.map((v) => new RegExp(`^${escape(v)}(?![0-9a-z])`, "i")),
+          },
+        },
+        { [`variants.attributes.${key}`]: { $in: values } },
+      ],
+    }));
+  }
   if (query.inStock) {
     const ids = await InventoryModel.distinct("productId", { available: $gt(0) });
     match._id = { $in: ids };
