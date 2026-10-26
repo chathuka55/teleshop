@@ -26,7 +26,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   return (
     <ProductListing
       title={category.name}
-      subtitle={`${category.productCount.toLocaleString("en-LK")} products from verified shops`}
+      subtitle={
+        page.total === category.productCount
+          ? `${category.productCount.toLocaleString("en-LK")} products from verified shops`
+          : `${page.total.toLocaleString("en-LK")} of ${category.productCount.toLocaleString("en-LK")} products match your filters`
+      }
       crumbs={[{ label: "Home", href: "/" }, { label: "Shop", href: "/shop" }, { label: category.name }]}
       basePath={`/c/${category.slug}`}
       query={query}

@@ -5,6 +5,7 @@ import type { BrandDTO, ProductPage, ProductQuery, SpecFilterDTO } from "@/modul
 import { Breadcrumbs, type Crumb } from "@/components/ui/Breadcrumbs";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
+import { FilterForm } from "./FilterForm";
 import { ProductCard } from "./ProductCard";
 import { SortSelect } from "./SortSelect";
 
@@ -150,7 +151,7 @@ export function ProductListing({
         })}
       </ul>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
+      <div className="group/listing mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
         <details className="group rounded-[18px] lg:open:contents" open>
           <summary className="flex cursor-pointer list-none items-center justify-between rounded-[18px] border border-line bg-surface px-4 py-3 lg:hidden">
             <span className="flex items-center gap-2 font-semibold">
@@ -160,7 +161,7 @@ export function ProductListing({
             <span className="hidden text-xs text-text-secondary group-open:inline">Hide</span>
           </summary>
 
-          <form method="get" action={basePath} className="mt-3 flex flex-col gap-4 lg:mt-0">
+          <FilterForm action={basePath} className="mt-3 flex flex-col gap-4 lg:mt-0">
             {query.q && <input type="hidden" name="q" value={query.q} />}
             {query.sort && query.sort !== "featured" && (
               <input type="hidden" name="sort" value={query.sort} />
@@ -184,7 +185,7 @@ export function ProductListing({
                     type="number"
                     inputMode="numeric"
                     min={0}
-                    step={1000}
+                    step={1}
                     defaultValue={query.minPriceCents !== undefined ? query.minPriceCents / 100 : undefined}
                     placeholder="0"
                     className="w-full bg-transparent text-sm font-semibold outline-none"
@@ -197,7 +198,7 @@ export function ProductListing({
                     type="number"
                     inputMode="numeric"
                     min={0}
-                    step={1000}
+                    step={1}
                     defaultValue={query.maxPriceCents !== undefined ? query.maxPriceCents / 100 : undefined}
                     placeholder="Any"
                     className="w-full bg-transparent text-sm font-semibold outline-none"
@@ -272,10 +273,11 @@ export function ProductListing({
             <Button type="submit" className="w-full">
               Apply filters
             </Button>
-          </form>
+          </FilterForm>
         </details>
 
-        <div>
+        {/* Dims while new filter results load (FilterForm sets data-pending). */}
+        <div className="transition-opacity duration-150 group-has-[form[data-pending]]/listing:pointer-events-none group-has-[form[data-pending]]/listing:opacity-50">
           {active.length > 0 && (
             <div className="mb-4 flex flex-wrap items-center gap-2 text-[13px]">
               <span className="text-text-secondary">Active:</span>
