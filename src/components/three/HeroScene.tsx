@@ -21,7 +21,16 @@ export type HeroSceneProps = {
 };
 
 /** Size (largest dimension, world units) each slide is normalised to. */
-const SLIDE_SIZE: Record<HeroSlide["id"], number> = { phone: 2.6, pc: 2.9, headset: 2.4 };
+const SLIDE_SIZE: Record<HeroSlide["id"], number> = { phone: 2.6, laptop: 3.2, pc: 2.9, headset: 2.4 };
+/** Resting pose per slide (radians), so each model faces the camera at a flattering angle. */
+const SLIDE_ROTATION: Record<HeroSlide["id"], [number, number, number]> = {
+  phone: [0.05, -0.4, 0],
+  laptop: [0.18, -0.5, 0],
+  pc: [0, -0.65, 0],
+  headset: [0, 0, 0],
+};
+/** Desktop canvases have room to spare around the model; fill a little more of it. */
+const DESKTOP_SCALE = 1.1;
 
 function SlideModel({ slide }: { slide: HeroSlide }) {
   if (slide.id === "pc") return <GamingPC glass />;
@@ -140,11 +149,16 @@ export default function HeroScene({ index, active, reducedMotion, isMobile, onRe
         >
           <Float enabled={!reducedMotion} speed={1.6} rotationIntensity={0.15} floatIntensity={0.5}>
             <SlideIn slideKey={index} spin={!reducedMotion}>
-              <FitToSize key={slide.id} size={SLIDE_SIZE[slide.id]}>
-                <group rotation={slide.id === "pc" ? [0, -0.65, 0] : [0, 0, 0]}>
-                  <SlideModel slide={slide} />
-                </group>
-              </FitToSize>
+              {/* Per-slide boundary: lights stay up while a model loads, and FitToSize measures
+                  only after the model exists. The poster hides on the first frame WITH a model. */}
+              <Suspense key={slide.id} fallback={null}>
+                <FitToSize size={SLIDE_SIZE[slide.id] * (isMobile ? 1 : DESKTOP_SCALE)}>
+                  <group rotation={SLIDE_ROTATION[slide.id]}>
+                    <SlideModel slide={slide} />
+                  </group>
+                </FitToSize>
+                <FirstFrame onReady={onReady} />
+              </Suspense>
             </SlideIn>
           </Float>
         </PresentationControls>
@@ -166,8 +180,6 @@ export default function HeroScene({ index, active, reducedMotion, isMobile, onRe
           <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.25} intensity={0.9} radius={0.65} />
         </EffectComposer>
       )}
-
-      <FirstFrame onReady={onReady} />
     </Canvas>
   );
 }

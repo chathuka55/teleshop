@@ -1,6 +1,6 @@
 /** Slides for the home hero (docs/06-3d-hero.md §1). Plain data — safe for server and client. */
 export type HeroSlide = {
-  id: "phone" | "pc" | "headset";
+  id: "phone" | "laptop" | "pc" | "headset";
   label: string;
   caption: string;
   cta: { label: string; href: string };
@@ -14,8 +14,14 @@ export const heroSlides: readonly HeroSlide[] = [
     label: "Smartphones",
     caption: "iPhone 17 Pro · from LKR 389,900",
     cta: { label: "Shop smartphones", href: "/c/mobile-phones" },
-    // Set to "/models/hero-phone.glb" once the optimised file exists (see public/models/README.md).
-    modelUrl: null,
+    modelUrl: "/models/hero-phone.glb",
+  },
+  {
+    id: "laptop",
+    label: "Laptops",
+    caption: "MacBook Pro · M-series power",
+    cta: { label: "Shop laptops", href: "/c/laptops" },
+    modelUrl: "/models/hero-laptop.glb",
   },
   {
     id: "pc",

@@ -58,7 +58,7 @@ export type LeanProduct = {
   highlights?: string[];
   condition: "new" | "used" | "refurbished";
   specs?: Record<string, string>;
-  images?: { url: string; alt?: string }[];
+  images?: { url: string; alt?: string; width?: number | null; height?: number | null }[];
   variants: LeanVariant[];
   basePriceCents: number;
   freeDelivery?: boolean;
@@ -208,6 +208,12 @@ export function toProductDetailDTO(p: LeanProduct, l: Lookups): ProductDetailDTO
     });
   return {
     ...card,
+    images: (p.images ?? []).map((img) => ({
+      url: img.url,
+      alt: img.alt || p.name,
+      width: img.width ?? null,
+      height: img.height ?? null,
+    })),
     shortDescription: p.shortDescription ?? "",
     description: p.description ?? "",
     specs: ordered,

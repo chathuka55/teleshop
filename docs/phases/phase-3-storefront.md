@@ -10,4 +10,4 @@
 - React Bits for the headline/count-up effects; optional ThreeUI background behind the hero (one effect only).
 
 ## Claude Code prompt
-> Read CLAUDE.md, docs/05-design-system.md and docs/06-3d-hero.md. Implement P3-T03: HeroModelSlider with the three GLB files in public/models (use placeholder cubes if a file is missing). Measure the JS added to `/` and report it. Plan first.
+> Read RULES.md, docs/05-design-system.md and docs/06-3d-hero.md. Implement P3-T03: HeroModelSlider with the three GLB files in public/models (use placeholder cubes if a file is missing). Measure the JS added to `/` and report it. Plan first.

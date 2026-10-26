@@ -50,6 +50,19 @@ export const sellerApplicationSchema = z.object({
 
 export const forgotPasswordSchema = z.object({ email });
 
+/** Reset form: the token comes from the email link (hidden field), checked again in the service. */
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1).max(100),
+    password: newPassword,
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
 export type SignInInput = z.infer<typeof signInSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

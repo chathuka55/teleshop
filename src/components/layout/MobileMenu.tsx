@@ -5,48 +5,62 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  ChevronDown,
   ChevronRight,
-  Cpu,
+  Flame,
   Heart,
   House,
   Info,
-  Laptop,
   LayoutGrid,
+  LogOut,
   Menu,
   MessageCircle,
   Package,
-  Smartphone,
   Store,
   Truck,
   User,
   X,
   type LucideIcon,
 } from "lucide-react";
+import { CategoryIcon } from "@/components/product/CategoryIcon";
 import { Badge } from "@/components/ui/Badge";
+import { DEALS_HREF, isNavActive, mainNav } from "@/config/site";
+import { signOutAction } from "@/modules/auth/actions";
+import type { CategoryDTO } from "@/modules/catalog/types";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { initials } from "@/lib/utils/strings";
 import { cn } from "@/lib/utils/cn";
 import { Logo } from "./Logo";
 import type { NavUser } from "./types";
 
-type DrawerLink = { label: string; href: string; icon: LucideIcon; hot?: boolean };
+type DrawerLink = { label: string; href: string; icon: LucideIcon; hot?: boolean; navLabel?: string };
 
-const drawerLinks: readonly DrawerLink[] = [
+const navMatch = (label: string) => mainNav.find((l) => l.label === label)?.match;
+
+const topLinks: readonly DrawerLink[] = [
   { label: "Home", href: "/", icon: House },
-  { label: "Shop all categories", href: "/shop", icon: LayoutGrid },
-  { label: "Mobile Phones", href: "/c/mobile-phones", icon: Smartphone },
-  { label: "Laptops", href: "/c/laptops", icon: Laptop },
-  { label: "PC Components", href: "/c/pc-components", icon: Cpu },
-  { label: "Deals", href: "/shop?sort=discount", icon: Truck, hot: true },
+  { label: "Shop all products", href: "/shop", icon: LayoutGrid, navLabel: "Shop" },
+];
+
+const bottomLinks: readonly DrawerLink[] = [
+  { label: "Deals", href: DEALS_HREF, icon: Flame, hot: true },
   { label: "Sellers", href: "/sellers", icon: Store },
+  { label: "Track an order", href: "/track", icon: Truck },
   { label: "About Teleshop", href: "/about", icon: Info },
   { label: "Help & Contact", href: "/help", icon: MessageCircle },
 ];
 
 /** Figma "M2 · Mobile — Menu Drawer" (24:2921). Shown below the xl breakpoint. */
-export function MobileMenu({ user }: { user: NavUser | null }) {
+export function MobileMenu({
+  user,
+  categories,
+}: {
+  user: NavUser | null;
+  categories: readonly CategoryDTO[];
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const [catsOpen, setCatsOpen] = useState(() => pathname.startsWith("/c/"));
   const closeRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -91,10 +105,10 @@ export function MobileMenu({ user }: { user: NavUser | null }) {
           role="dialog"
           aria-modal="true"
           aria-label="Menu"
-          className="fixed inset-0 z-[60] overflow-y-auto bg-bg/80 backdrop-blur-sm xl:hidden"
+          className="fixed inset-0 z-[60] overflow-y-auto bg-bg/95 xl:hidden"
         >
           <div className="mx-auto flex min-h-full max-w-md flex-col gap-4 px-3 pt-3 pb-6">
-            <div className="glass flex h-[62px] items-center justify-between rounded-[20px] py-2.5 pr-2.5 pl-4">
+            <div className="glass-bar flex h-[62px] items-center justify-between rounded-[20px] py-2.5 pr-2.5 pl-4">
               <Logo />
               <Button
                 ref={closeRef}
@@ -145,35 +159,64 @@ export function MobileMenu({ user }: { user: NavUser | null }) {
 
             <nav aria-label="Mobile" className="rounded-[20px] border border-line bg-surface p-2">
               <ul>
-                {drawerLinks.map(({ label, href, icon: Icon, hot }) => {
-                  const active =
-                    href === "/" ? pathname === "/" : pathname.startsWith(href.split("?")[0] ?? href);
-                  return (
-                    <li key={label}>
-                      <Link
-                        href={href}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          "flex min-h-11 items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-[15px]",
-                          active ? "bg-primary/15 font-semibold" : "text-text hover:bg-white/5",
-                        )}
-                      >
-                        <Icon
-                          aria-hidden
-                          className={cn("size-5", active ? "text-primary-light" : "text-text-secondary")}
-                        />
-                        <span className="flex-1">{label}</span>
-                        {hot ? (
-                          <Badge tone="accent" size="xs">
-                            HOT
-                          </Badge>
-                        ) : (
-                          <ChevronRight aria-hidden className="size-4 text-text-muted" />
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {topLinks.map((l) => (
+                  <DrawerItem key={l.label} link={l} pathname={pathname} />
+                ))}
+                <li>
+                  <button
+                    type="button"
+                    aria-expanded={catsOpen}
+                    aria-controls="drawer-categories"
+                    onClick={() => setCatsOpen((o) => !o)}
+                    className={cn(
+                      "flex min-h-11 w-full items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-left text-[15px]",
+                      pathname.startsWith("/c/")
+                        ? "bg-primary/15 font-semibold"
+                        : "text-text hover:bg-white/5",
+                    )}
+                  >
+                    <LayoutGrid aria-hidden className="size-5 text-text-secondary" />
+                    <span className="flex-1">Categories</span>
+                    <ChevronDown
+                      aria-hidden
+                      className={cn("size-4 text-text-muted transition-transform", catsOpen && "rotate-180")}
+                    />
+                  </button>
+                  <ul
+                    id="drawer-categories"
+                    hidden={!catsOpen}
+                    className="mt-1 mb-1.5 ml-5 border-l border-line pl-2"
+                  >
+                    {categories.map((c) => {
+                      const active = pathname === `/c/${c.slug}`;
+                      return (
+                        <li key={c.id}>
+                          <Link
+                            href={`/c/${c.slug}`}
+                            aria-current={active ? "page" : undefined}
+                            className={cn(
+                              "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-[14px]",
+                              active ? "bg-primary/15 font-semibold" : "text-text hover:bg-white/5",
+                            )}
+                          >
+                            <CategoryIcon
+                              icon={c.icon}
+                              className={cn(
+                                "size-[18px]",
+                                active ? "text-primary-light" : "text-text-secondary",
+                              )}
+                            />
+                            <span className="flex-1">{c.name}</span>
+                            <span className="text-xs text-text-muted">{c.productCount}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+                {bottomLinks.map((l) => (
+                  <DrawerItem key={l.label} link={l} pathname={pathname} />
+                ))}
               </ul>
             </nav>
 
@@ -189,6 +232,15 @@ export function MobileMenu({ user }: { user: NavUser | null }) {
               <ArrowRight aria-hidden className="size-5 text-primary-light" />
             </Link>
 
+            {user && (
+              <form action={signOutAction}>
+                <Button type="submit" variant="outline" className="w-full bg-white/4">
+                  <LogOut aria-hidden className="size-4!" />
+                  Sign out
+                </Button>
+              </form>
+            )}
+
             {!user && (
               <div className="grid grid-cols-2 gap-2.5">
                 <ButtonLink href="/sign-in" variant="outline" className="bg-white/4">
@@ -202,5 +254,33 @@ export function MobileMenu({ user }: { user: NavUser | null }) {
         </div>
       )}
     </>
+  );
+}
+
+function DrawerItem({ link, pathname }: { link: DrawerLink; pathname: string }) {
+  const { label, href, icon: Icon, hot } = link;
+  const navLabel = link.navLabel ?? label;
+  const active = isNavActive({ label: navLabel, href, match: navMatch(navLabel) }, pathname);
+  return (
+    <li>
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "flex min-h-11 items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-[15px]",
+          active ? "bg-primary/15 font-semibold" : "text-text hover:bg-white/5",
+        )}
+      >
+        <Icon aria-hidden className={cn("size-5", active ? "text-primary-light" : "text-text-secondary")} />
+        <span className="flex-1">{label}</span>
+        {hot ? (
+          <Badge tone="accent" size="xs">
+            HOT
+          </Badge>
+        ) : (
+          <ChevronRight aria-hidden className="size-4 text-text-muted" />
+        )}
+      </Link>
+    </li>
   );
 }

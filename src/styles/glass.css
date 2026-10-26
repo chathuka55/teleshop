@@ -1,17 +1,29 @@
 /*
  * Glassmorphism — ONLY for the floating navbar, hero cards, announcement pill, trust strip,
  * modals/sheets and mobile bottom bars (docs/05-design-system.md §2).
+ *
+ * Write ONLY the standard `backdrop-filter`: the CSS compiler (Lightning CSS) adds the -webkit-
+ * prefix for Safari itself. Writing both made it drop the standard property, so Chrome, Edge,
+ * Android and Firefox rendered no blur at all (only Safari/iOS did).
  */
 .glass {
   background: var(--glass-fill);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
   box-shadow: 0 16px 40px rgb(0 0 0 / 0.35);
 }
 
-@supports not (backdrop-filter: blur(1px)) {
-  .glass {
-    background: rgb(20 25 34 / 0.92);
+/* Navbar + bottom bars: denser tint so scrolled text never shows through. */
+.glass-bar {
+  background: var(--glass-bar-fill);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-bar-blur)) saturate(160%);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.35);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .glass-bar {
+    background: rgb(20 25 34 / 0.94);
   }
 }

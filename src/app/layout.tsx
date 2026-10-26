@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
+import { SplashScreen } from "@/components/layout/SplashScreen";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
@@ -44,6 +45,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en-LK" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-dvh">
+        <SplashScreen />
         <a
           href="#main"
           className="sr-only z-[100] rounded-lg bg-primary px-4 py-2 focus:not-sr-only focus:fixed focus:top-3 focus:left-3"

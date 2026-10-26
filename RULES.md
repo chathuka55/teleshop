@@ -1,6 +1,4 @@
-# CLAUDE.md — rules for working in the Teleshop repo
-
-Claude Code reads this file at the start of every session. Keep it short and true.
+# RULES.md — rules for working in the Teleshop repo
 
 ## What this project is
 

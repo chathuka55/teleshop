@@ -83,7 +83,7 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
   const pipeline: PipelineStage[] = [];
   if (query.q) pipeline.push({ $match: { $text: { $search: query.q } } });
   pipeline.push({ $match: match });
-  if (sortKey === "discount") {
+  if (sortKey === "discount" || query.deals) {
     pipeline.push({
       $addFields: {
         discountScore: {
@@ -106,6 +106,7 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
       },
     });
   }
+  if (query.deals) pipeline.push({ $match: { discountScore: { $gt: 0 } } });
   pipeline.push({
     $sort: query.q && sortKey === "featured" ? { score: { $meta: "textScore" }, _id: 1 } : SORTS[sortKey],
   });

@@ -11,4 +11,4 @@
 6. After commit: revalidate tags, send emails.
 
 ## Claude Code prompt
-> Read CLAUDE.md, docs/02-architecture.md §3 and docs/08-data-model.md §3.4. Implement P4-T04 with integration tests: happy path, out of stock, idempotent replay, and two concurrent buyers for the last unit. Plan first.
+> Read RULES.md, docs/02-architecture.md §3 and docs/08-data-model.md §3.4. Implement P4-T04 with integration tests: happy path, out of stock, idempotent replay, and two concurrent buyers for the last unit. Plan first.

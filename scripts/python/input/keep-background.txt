@@ -1,0 +1,10 @@
+# Photos whose rembg cut-out looked wrong (reviewed 2026-10-26) — published with their background.
+asus-dual-rtx-5060-ti-16gb-2   # close-up, model kept a sliver
+google-pixel-9-pro-refurbished-2   # only outlines survived (white-background shot)
+hp-victus-15-rtx-4050-2   # only the logo survived
+hp-victus-15-rtx-4050-3   # broken mask
+samsung-galaxy-s26-ultra-3   # camera close-up scattered
+samsung-galaxy-watch8-44mm-2   # hand fragments
+samsung-odyssey-g5-27-qhd-1   # monitor lost, screen logo kept
+amd-ryzen-5-9600x-2   # broken mask
+xiaomi-redmi-note-15-pro-2   # only outline survived

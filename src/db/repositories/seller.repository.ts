@@ -54,3 +54,12 @@ export async function findLeanSellers(filter: {
       .lean<LeanSeller[]>();
   return [];
 }
+
+/** The approved shop owned by `userId`, if any — goes into the session as `sellerId`. */
+export async function findApprovedSellerIdByUserId(userId: string): Promise<string | null> {
+  await connectDB();
+  const s = await SellerModel.findOne({ userId, approvalStatus: "approved" })
+    .select("_id")
+    .lean<{ _id: Types.ObjectId }>();
+  return s ? s._id.toString() : null;
+}

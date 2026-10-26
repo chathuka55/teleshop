@@ -26,6 +26,8 @@
 | Action | Module | Who | Rate limit |
 | --- | --- | --- | --- |
 | `registerAction`, `signInAction`, `requestPasswordResetAction`, `resetPasswordAction` | auth | public | 5/min/IP |
+| `resendVerificationAction` | auth | signed in | 5/min/IP |
+| `signOutAction`, `signInWithGoogleAction` | auth | public | — |
 | `verifyTotpAction` | auth | admin | 5/min/user |
 | `addToCartAction`, `updateCartItemAction`, `removeCartItemAction` | cart | guest/customer | 30/min |
 | `toggleWishlistAction` | cart | customer | 30/min |

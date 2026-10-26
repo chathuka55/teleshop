@@ -93,7 +93,10 @@ export function Footer() {
 
         <div className="flex flex-col gap-4 border-t border-line pt-6 md:flex-row md:items-center md:justify-between">
           <p className="text-[13px] text-text-muted">
-            © {new Date().getFullYear()} Teleshop (Pvt) Ltd. All rights reserved.
+            © {new Date().getFullYear()} Teleshop (Pvt) Ltd. All rights reserved. ·{" "}
+            <Link href="/credits" className="hover:text-text">
+              Image credits
+            </Link>
           </p>
           <div className="flex flex-wrap gap-2.5">
             <Badge tone="success" dot>

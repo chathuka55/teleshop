@@ -3,21 +3,23 @@
 **DOC-06** · Related: [ADR-004](adr/ADR-004-3d-hero.md) · Component: `src/components/three/HeroModelSlider.tsx`
 
 ## 1. What it does
-The home page hero has the headline and buttons on the left. On the right, the phone placeholder from the Figma design is replaced by a **3D slider** that shows three products one at a time:
+The home page hero has the headline and buttons on the left. On the right, the phone placeholder from the Figma design is replaced by a **3D slider** that shows four products one at a time:
 
 | Slide | File | Caption |
 | --- | --- | --- |
-| 1 | `public/models/hero-phone.glb` | Smartphones — "iPhone 17 Pro · from LKR 389,900" |
-| 2 | _procedural_ — `src/components/three/pc/*` (RGB gaming PC, no file) | PCs & laptops — "Gaming rigs · up to 20% off" |
-| 3 | `public/models/hero-headset.glb` | Audio — "Noise-cancelling headsets" |
+| 1 | `public/models/hero-phone.glb` (iPhone 17 Pro, CC BY 4.0) | Smartphones — "iPhone 17 Pro · from LKR 389,900" |
+| 2 | `public/models/hero-laptop.glb` (MacBook Pro M3, CC BY 4.0) | Laptops — "MacBook Pro · M-series power" |
+| 3 | _procedural_ — `src/components/three/pc/*` (RGB gaming PC, no file) | PCs & laptops — "Gaming rigs · up to 20% off" |
+| 4 | `public/models/hero-headset.glb` | Audio — "Noise-cancelling headsets" |
 
 The model slowly rotates, can be dragged (desktop) or swiped (phone), and the slide changes every 6 seconds with a slide-in from the right. The glass floating cards (Verified Sellers, COD, price card) stay on top in normal HTML.
 
-> **Status (2026-10-22).** Implemented in `HeroModelSlider.tsx` + `HeroScene.tsx`. The PC is built in code
-> (ported from the in-house "animated-3d-gaming-pc" sample, RGB recoloured to primary → amber). `hero-headset.glb` is
-> optimised (306 KB). `hero-phone.glb` is not in the repo yet — the slide shows `ProceduralPhone` until it is, then
-> set `modelUrl` in `hero-slides.ts`. Models are normalised with `FitToSize` (largest side = slide size).
-> The HTML phone mockup from Figma is the server-rendered poster (LCP); the canvas fades in over it.
+> **Status (2026-10-26).** Implemented in `HeroModelSlider.tsx` + `HeroScene.tsx`. Phone (1.6 MB) and laptop
+> (0.9 MB) are Sketchfab CC BY 4.0 models, credited in `public/models/CREDITS.md` and on `/credits`; raw sources stay
+> in `assets-src/models/` (git-ignored). `ProceduralPhone` is only the error fallback. The PC is built in code
+> (RGB recoloured to primary → amber); `hero-headset.glb` is 306 KB. Models are normalised with `FitToSize` (largest
+> side = slide size, `SLIDE_SIZE`) and posed with `SLIDE_ROTATION`. Each slide has its own Suspense boundary: the
+> HTML phone mockup (server-rendered poster, LCP) stays up until the first frame that actually shows a model.
 
 ## 2. Asset rules
 - Format: **.glb** (binary glTF 2.0). One model per file, origin at the centre, Y up, real-world scale ≈ 1 unit = 10 cm.

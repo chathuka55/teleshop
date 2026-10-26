@@ -1,0 +1,11 @@
+# Normalise line endings: LF in the repo and the working tree (Prettier writes LF), even on Windows.
+* text=auto eol=lf
+
+# Binary assets — never touched by line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.glb binary
+*.woff2 binary

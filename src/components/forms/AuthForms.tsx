@@ -8,7 +8,9 @@ import {
   applySellerAction,
   registerAction,
   requestPasswordResetAction,
+  resetPasswordAction,
   signInAction,
+  signInWithGoogleAction,
 } from "@/modules/auth/actions";
 import { shopTypes } from "@/modules/auth/schema";
 import { idleState, type FormState } from "@/lib/validation/form";
@@ -24,8 +26,15 @@ function GoogleButton() {
       <div className="flex items-center gap-3 text-xs text-text-muted">
         <span className="h-px flex-1 bg-line" /> or continue with <span className="h-px flex-1 bg-line" />
       </div>
-      {/* Wired to Auth.js signIn("google") in P2-T01. */}
-      <Button type="button" variant="glass" size="lg" className="w-full" disabled>
+      {/* Submits the surrounding form (with its `next` field) to Auth.js signIn("google"). */}
+      <Button
+        type="submit"
+        formAction={signInWithGoogleAction}
+        formNoValidate
+        variant="glass"
+        size="lg"
+        className="w-full"
+      >
         <svg aria-hidden viewBox="0 0 24 24" className="size-[18px]">
           <path
             fill="#EA4335"
@@ -38,12 +47,13 @@ function GoogleButton() {
   );
 }
 
-export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
+export function SignInForm({ googleEnabled, next }: { googleEnabled: boolean; next?: string }) {
   const [state, action, pending] = useActionState(signInAction, idleState);
   const f = fieldsOf(state);
   const v = valuesOf(state);
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
+      {next && <input type="hidden" name="next" value={next} />}
       <TextField
         label="Email address"
         name="email"
@@ -280,6 +290,55 @@ export function ForgotPasswordForm() {
         Remembered it?{" "}
         <Link href="/sign-in" className="font-semibold text-primary-light hover:text-text">
           Back to sign in
+        </Link>
+      </p>
+    </form>
+  );
+}
+
+export function ResetPasswordForm({ token }: { token: string }) {
+  const [state, action, pending] = useActionState(resetPasswordAction, idleState);
+  const f = fieldsOf(state);
+  if (state.status === "ok") {
+    return (
+      <div className="flex flex-col gap-4">
+        <FormMessage state={state} />
+        <Link
+          href="/sign-in"
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-on-primary"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <form action={action} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="token" value={token} />
+      <PasswordField
+        label="New password"
+        name="password"
+        autoComplete="new-password"
+        icon={<Lock />}
+        error={f.password}
+        required
+      />
+      <PasswordField
+        label="Confirm new password"
+        name="confirmPassword"
+        autoComplete="new-password"
+        icon={<Lock />}
+        error={f.confirmPassword}
+        required
+      />
+      <FormMessage state={state} />
+      <Button type="submit" size="lg" disabled={pending} className="w-full">
+        {pending ? "Saving…" : "Save new password"} <ArrowRight aria-hidden />
+      </Button>
+      <p className="text-center text-sm text-text-secondary">
+        Link expired?{" "}
+        <Link href="/forgot-password" className="font-semibold text-primary-light hover:text-text">
+          Request a new one
         </Link>
       </p>
     </form>

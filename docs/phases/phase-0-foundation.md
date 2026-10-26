@@ -3,7 +3,7 @@
 **Goal:** an empty but production-ready skeleton: strict TypeScript, tooling, env validation, security headers, design tokens, CI and Vercel previews.
 
 ## Steps
-1. The repo already has `docs/`, `CLAUDE.md` and folders, so create the app in a temporary folder and copy it in:
+1. The repo already has `docs/`, `RULES.md` and folders, so create the app in a temporary folder and copy it in:
    ```bash
    pnpm create next-app@latest ../teleshop-tmp --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-pnpm
    rsync -av --ignore-existing ../teleshop-tmp/ ./ --exclude .git --exclude README.md
@@ -19,4 +19,4 @@
 8. `.github/workflows/ci.yml` (already in the repo) — make it pass; connect Vercel.
 
 ## Claude Code prompt
-> Read CLAUDE.md, docs/03-tech-stack.md, docs/05-design-system.md and docs/10-security.md §2. Implement P0-T01 to P0-T03 only. Plan first and list the files you will create. After approval, implement, run `pnpm check`, and show me the diff summary.
+> Read RULES.md, docs/03-tech-stack.md, docs/05-design-system.md and docs/10-security.md §2. Implement P0-T01 to P0-T03 only. Plan first and list the files you will create. After approval, implement, run `pnpm check`, and show me the diff summary.

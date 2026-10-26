@@ -70,7 +70,7 @@ Seed accounts (development only):
 
 ```text
 teleshop/
-├── CLAUDE.md                 # rules Claude Code follows in this repo
+├── RULES.md                  # rules for working in this repo (code, data, security, UI)
 ├── docs/                     # all project documentation (start at docs/00-index.md)
 ├── public/
 │   ├── models/               # compressed .glb files for the 3D hero (phone, pc, headset)
@@ -134,7 +134,7 @@ Every task, with its acceptance check, is in [docs/13-phases.md](docs/13-phases.
 
 Read [docs/14-claude-code-workflow.md](docs/14-claude-code-workflow.md). Short version:
 
-1. Open the repo in Claude Code. It reads `CLAUDE.md` automatically.
+1. Open the repo in Claude Code and start with: “Read RULES.md”. It holds the rules for working in this repo.
 2. Pick the next unchecked task in `docs/13-phases.md` (for example `P1-T03`).
 3. Ask: _"Read docs/phases/phase-1-data-layer.md and implement P1-T03. Plan first, then code, then run tests."_
 4. Review the diff, run `pnpm check`, commit with the task ID: `feat(db): add product model [P1-T03]`.
