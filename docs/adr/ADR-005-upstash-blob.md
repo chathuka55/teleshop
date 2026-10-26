@@ -13,7 +13,7 @@ Use **Upstash Blob** (S3-compatible object storage, Cloudflare CDN) with two buc
 | `teleshop-images` | public | product images, profile photos, shop logos |
 | `teleshop-docs` | private (signed, time-limited URLs) | seller business-registration documents |
 
-Config: `UPSTASH_BLOB_TOKEN` (required in production by `src/config/env.ts`). SDK `@upstash/blob` is installed when uploads are built (P2-T06 / P6-T01). Uploads still follow doc 10: server-side upload handler checks role, type by magic bytes, ≤ 5 MB, ≤ 8 images per product, and re-encodes with sharp.
+Config: `UPSTASH_BLOB_TOKEN` (required in production by `src/config/env.ts`). SDK `@upstash/blob` 0.0.11, wrapped in `src/lib/storage/blob.ts` (first use: profile photos, P2-T06 — a Server Action posts the file, the server re-encodes it with sharp and `bucket.put`s it under a random name). Uploads still follow doc 10: server-side upload handler checks role, type by magic bytes, ≤ 5 MB, ≤ 8 images per product, and re-encodes with sharp.
 
 ## Options considered
 | | Upstash Blob | Vercel Blob | Cloudflare R2 | Cloudinary |

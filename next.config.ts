@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "@react-three/drei"],
+    // Profile photos are posted to a Server Action; 4 MB cap, under Vercel's 4.5 MB request limit.
+    serverActions: { bodySizeLimit: "4mb" },
   },
   async headers() {
     return [

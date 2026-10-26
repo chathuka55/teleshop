@@ -7,8 +7,8 @@ import {
   SignOutEverywhereButton,
   VerifyEmailBanner,
 } from "@/components/forms/AccountForms";
+import { AvatarForm } from "@/components/forms/AvatarForm";
 import { Badge } from "@/components/ui/Badge";
-import { initials } from "@/lib/utils/strings";
 import { getMyProfile } from "@/modules/users/service";
 
 export const metadata: Metadata = { title: "My account", robots: { index: false } };
@@ -18,11 +18,9 @@ export default async function AccountPage() {
   const me = await getMyProfile();
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-4">
-        <span className="grid size-16 place-items-center rounded-2xl bg-linear-to-br from-primary-light to-[#1e40af] font-display text-xl font-bold">
-          {initials(me.name)}
-        </span>
-        <div>
+      <header className="flex items-start gap-4">
+        <AvatarForm name={me.name} image={me.image} />
+        <div className="pt-2">
           <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] md:text-[34px]">
             Hi, {me.name.split(" ")[0]}
           </h1>

@@ -163,8 +163,13 @@ export async function signInWithGoogle(
  * due yet, or null — which signs the user out — when the account is gone, suspended, or its
  * tokenVersion was bumped (password change, "sign out everywhere", admin action).
  */
-export async function refreshClaims(claims: TokenClaims, now = new Date()): Promise<TokenClaims | null> {
-  if (now.getTime() - claims.checkedAt < RECHECK_MS) return claims;
+export async function refreshClaims(
+  claims: TokenClaims,
+  now = new Date(),
+  { force = false }: { force?: boolean } = {},
+): Promise<TokenClaims | null> {
+  // `force`: re-read now (e.g. right after a profile change) instead of waiting for the 5-min check.
+  if (!force && now.getTime() - claims.checkedAt < RECHECK_MS) return claims;
   const user = await findAuthState(claims.id);
   if (!user || !canSignIn(user) || user.tokenVersion !== claims.tokenVersion) return null;
   return claimsFor(user, now, { twoFactorVerified: claims.twoFactorVerified });

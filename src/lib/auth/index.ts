@@ -73,7 +73,8 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           return { ...token, claims: { ...claims, twoFactorVerified: true, checkedAt: Date.now() } };
         }
       }
-      const refreshed = await refreshClaims(claims);
+      // Any other update (e.g. after a new profile photo) only re-reads the user from the database.
+      const refreshed = await refreshClaims(claims, new Date(), { force: trigger === "update" });
       // null clears the session cookie: revoked, suspended or deleted users are signed out.
       return refreshed ? { ...token, claims: refreshed } : null;
     },
