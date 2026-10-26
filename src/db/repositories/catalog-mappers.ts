@@ -7,6 +7,7 @@ import type {
   SellerCardDTO,
   VariantDTO,
 } from "@/modules/catalog/types";
+import { productImagesBySlug, type DemoProductImage } from "@/config/product-images";
 import { initials } from "@/lib/utils/strings";
 
 /** Lean shapes (what `.lean()` / aggregation returns). Maps come back as plain objects. */
@@ -153,6 +154,24 @@ function cheapestVariant(p: LeanProduct): LeanVariant | undefined {
   return [...(active.length ? active : p.variants)].sort((a, b) => a.priceCents - b.priceCents)[0];
 }
 
+type StoredImage = { url: string; alt?: string; width?: number | null; height?: number | null };
+
+let demoSets: Map<string, DemoProductImage[]> | null = null;
+
+/**
+ * Images to show for a product. Seeded products may still hold the legacy single demo photo
+ * (`/images/products/<slug>.webp`, removed when the photo sets shipped) or nothing; for those the
+ * demo photo set is served directly, so photos work even before migration 0005 has run.
+ * Seller uploads (any other URL) are returned untouched.
+ */
+export function productImages(p: { slug: string; images?: StoredImage[] }): StoredImage[] {
+  const stored = p.images ?? [];
+  const legacyOnly = stored.length === 1 && stored[0]?.url === `/images/products/${p.slug}.webp`;
+  if (stored.length && !legacyOnly) return stored;
+  demoSets ??= productImagesBySlug();
+  return demoSets.get(p.slug) ?? stored;
+}
+
 export function toProductCardDTO(p: LeanProduct, l: Lookups, now = Date.now()): ProductCardDTO {
   const category = l.categories.get(p.categoryId.toString());
   const brand = l.brands.get(p.brandId.toString());
@@ -174,7 +193,7 @@ export function toProductCardDTO(p: LeanProduct, l: Lookups, now = Date.now()): 
     isNew: !!p.publishedAt && now - p.publishedAt.getTime() < NEW_FOR_MS,
     freeDelivery: !!p.freeDelivery,
     art: { kind: ART_BY_ICON[icon], tint: artTint(p, icon) },
-    imageUrl: p.images?.[0]?.url ?? null,
+    imageUrl: productImages(p)[0]?.url ?? null,
   };
 }
 
@@ -208,7 +227,7 @@ export function toProductDetailDTO(p: LeanProduct, l: Lookups): ProductDetailDTO
     });
   return {
     ...card,
-    images: (p.images ?? []).map((img) => ({
+    images: productImages(p).map((img) => ({
       url: img.url,
       alt: img.alt || p.name,
       width: img.width ?? null,
