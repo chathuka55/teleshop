@@ -19,7 +19,7 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Bottom"
-      className="glass fixed inset-x-0 bottom-0 z-40 rounded-none border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="glass-bar fixed inset-x-0 bottom-0 z-40 rounded-none border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="grid grid-cols-5">
         {tabs.map(({ label, href, icon: Icon }) => {
@@ -28,6 +28,7 @@ export function BottomTabBar() {
               ? pathname === "/"
               : pathname === href ||
                 (href !== "/account" && pathname.startsWith(href)) ||
+                (href === "/shop" && pathname.startsWith("/c/")) ||
                 (href === "/account" &&
                   pathname.startsWith("/account") &&
                   !pathname.startsWith("/account/wishlist"));

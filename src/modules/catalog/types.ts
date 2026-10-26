@@ -1,4 +1,4 @@
-/** Plain DTOs returned to pages — never Mongoose documents (CLAUDE.md). Money is integer cents. */
+/** Plain DTOs returned to pages — never Mongoose documents (RULES.md). Money is integer cents. */
 
 export type ProductArtKind =
   "phone" | "laptop" | "headphones" | "watch" | "cpu" | "gpu" | "monitor" | "router" | "gamepad";
@@ -62,7 +62,10 @@ export type ProductCardDTO = {
   imageUrl: string | null;
 };
 
+export type ProductImageDTO = { url: string; alt: string; width: number | null; height: number | null };
+
 export type ProductDetailDTO = ProductCardDTO & {
+  images: ProductImageDTO[];
   shortDescription: string;
   description: string;
   specs: { label: string; value: string }[];
@@ -83,6 +86,8 @@ export type ProductQuery = {
   q?: string;
   sort?: ProductSort;
   seller?: string;
+  /** Only products with at least one discounted variant (compare-at > price) — the Deals page. */
+  deals?: boolean;
   cursor?: string;
   limit?: number;
 };

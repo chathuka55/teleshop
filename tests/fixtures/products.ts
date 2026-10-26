@@ -33,6 +33,7 @@ export function fixtureProducts(): ProductDetailDTO[] {
       freeDelivery: !!p.freeDelivery,
       art: { kind: "phone", tint: "blue" },
       imageUrl: null,
+      images: [],
       shortDescription: p.shortDescription,
       description: p.description ?? "",
       specs: Object.entries(p.specs).map(([label, value]) => ({ label, value })),

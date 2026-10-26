@@ -62,7 +62,7 @@ function subscribe(l: () => void): () => void {
 }
 
 /**
- * Guest cart kept in the browser — SKU + quantity only, never prices (CLAUDE.md money rules).
+ * Guest cart kept in the browser — SKU + quantity only, never prices (RULES.md money rules).
  * The cart page re-prices it on the server. P4-T01 moves it to a signed cookie + `carts`.
  */
 export function useCart() {

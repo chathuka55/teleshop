@@ -4,7 +4,7 @@
 
 ## 1. One-time setup
 1. Install Claude Code and open the repo folder: `cd teleshop && claude`.
-2. Claude reads `CLAUDE.md` automatically. Keep it accurate — it is the most important file for good results.
+2. Start every session with “Read RULES.md” (it is not loaded automatically). Keep it accurate — it is the most important file for good results.
 3. Custom commands are in `.claude/commands/` (type `/` in Claude Code to see them):
    - `/task P1-T03` — plan and implement one task
    - `/db-change` — guided model/index/migration change that also updates doc 08
@@ -29,7 +29,7 @@ pick task ─► /task Px-Tyy ─► Claude plans ─► you approve/adjust ─�
 ## 3. Good prompts (copy and adapt)
 
 **Starting a phase**
-> Read CLAUDE.md and docs/phases/phase-4-checkout.md. Summarise the phase in 5 bullets and list the tasks in order with any blockers. Do not write code yet.
+> Read RULES.md and docs/phases/phase-4-checkout.md. Summarise the phase in 5 bullets and list the tasks in order with any blockers. Do not write code yet.
 
 **Implementing a task**
 > Implement P4-T04 from docs/13-phases.md. Follow docs/02-architecture.md §3 exactly. Plan first. Write integration tests first (happy path, out of stock, idempotent replay, race on last unit). Then implement. Run `pnpm check && pnpm test:int`.

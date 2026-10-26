@@ -39,12 +39,14 @@ Use glass **only** for the floating navbar, hero cards, announcement pill, trust
 .glass {
   background: var(--glass-fill);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%); /* only the standard property — see note */
   box-shadow: 0 16px 40px rgb(0 0 0 / 0.35);
 }
 @supports not (backdrop-filter: blur(1px)) { .glass { background: rgb(20 25 34 / 0.92); } }
 ```
+
+- **Never write `-webkit-backdrop-filter` by hand.** Lightning CSS (Tailwind v4 / Next) adds the Safari prefix itself; writing both made it drop the standard property, so only Safari got the blur.
+- **Bars use `.glass-bar`** (navbar, mobile bottom bar, drawer header): a denser tint (`--glass-bar-fill`, 78 %) so scrolled text never shows through, even where a browser skips the blur.
 
 ## 3. Typography
 - Headings: **Space Grotesk** (600/700). Body/UI: **Inter** (400/500/600). Load with `next/font` (self-hosted, no layout shift).

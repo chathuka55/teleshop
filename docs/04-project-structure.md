@@ -63,7 +63,7 @@ teleshop/
 │   ├── unit/                  # services, schemas, utils, data-model-doc.test.ts
 │   ├── integration/           # repositories + actions against mongodb-memory-server
 │   └── e2e/                   # Playwright: checkout, tracking, seller fulfilment, admin tracking code
-├── CLAUDE.md · README.md · .env.example
+├── RULES.md · README.md · .env.example
 └── next.config.ts · tsconfig.json · vitest.config.ts · playwright.config.ts
 ```
 

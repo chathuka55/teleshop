@@ -23,6 +23,10 @@
   --glass-fill: rgb(255 255 255 / 0.06);
   --glass-border: rgb(255 255 255 / 0.12);
   --glass-blur: 24px;
+  /* Bars (navbar, bottom tab bar) sit over moving content: a tinted fill keeps text behind them
+     unreadable even when the browser skips or weakens backdrop-filter (Chrome/Android). */
+  --glass-bar-fill: rgb(14 18 27 / 0.78);
+  --glass-bar-blur: 20px;
 
   --line: rgb(255 255 255 / 0.08);
   --line-strong: rgb(255 255 255 / 0.12);

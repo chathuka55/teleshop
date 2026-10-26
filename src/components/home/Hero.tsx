@@ -18,7 +18,7 @@ export function Hero() {
     <section className="relative isolate -mt-[74px] overflow-hidden pt-[74px] md:-mt-[82px] md:pt-[82px]">
       <HeroBackdrop />
 
-      <div className="container-page grid items-center gap-10 pt-8 pb-10 lg:grid-cols-[minmax(0,640px)_minmax(0,600px)] lg:justify-between lg:gap-10 lg:pt-12 lg:pb-14">
+      <div className="container-page grid items-center gap-10 pt-8 pb-10 lg:grid-cols-[minmax(0,640px)_minmax(0,600px)] lg:justify-between lg:gap-10 lg:pt-12 lg:pb-14 2xl:max-w-[1376px]! 2xl:grid-cols-[minmax(0,640px)_minmax(0,696px)]">
         <div className="flex flex-col items-start gap-6 md:gap-7">
           <Link
             href="/c/mobile-phones"
@@ -31,7 +31,7 @@ export function Hero() {
             <ArrowRight aria-hidden className="size-3.5 shrink-0" />
           </Link>
 
-          <h1 className="font-display text-[40px] leading-[1.04] font-bold tracking-[-0.03em] sm:text-[56px] lg:text-[70px]">
+          <h1 className="font-display text-[40px] leading-[1.04] font-bold tracking-[-0.03em] sm:text-[56px] lg:text-[60px] 2xl:text-[70px]">
             The future of tech,
             <br />
             <span className="text-gradient-brand">all in one place.</span>
@@ -101,7 +101,7 @@ function HeroBackdrop() {
 /** Right side of the hero: rings, 3D slider (with the Figma phone as poster) and float cards. */
 function HeroShowcase() {
   return (
-    <div className="relative mx-auto h-[380px] w-full max-w-[600px] md:h-[560px]">
+    <div className="relative mx-auto h-[380px] w-full max-w-[600px] md:h-[560px] xl:h-[620px] 2xl:h-[700px] 2xl:max-w-[696px]">
       <div aria-hidden className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 aspect-square w-[87%] -translate-1/2 rounded-full border border-white/6" />
         <div className="absolute top-1/2 left-1/2 aspect-square w-[63%] -translate-1/2 rounded-full border border-white/8" />
@@ -111,7 +111,7 @@ function HeroShowcase() {
       <HeroModelSlider poster={<PhoneMockup />} className="absolute inset-0 pb-[88px]" />
 
       {/* Glass float cards (HTML on top of the canvas) */}
-      <div className="glass absolute top-[70px] -left-2.5 hidden w-[230px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block">
+      <div className="glass absolute top-[12.5%] -left-2.5 hidden w-[230px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block">
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-[rgb(22_163_74/0.16)]">
             <ShieldCheck aria-hidden className="size-5 text-success" />
@@ -123,13 +123,13 @@ function HeroShowcase() {
         </div>
       </div>
 
-      <div className="glass absolute top-[96px] right-[-10px] hidden w-[190px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block">
+      <div className="glass absolute top-[17%] right-[-10px] hidden w-[190px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block">
         <Stars value={5} />
         <p className="mt-2.5 text-sm font-semibold">4.9 / 5 rating</p>
         <p className="mt-2.5 text-xs text-text-secondary">from 12,400+ reviews</p>
       </div>
 
-      <div className="glass absolute top-[300px] right-[-20px] hidden w-[210px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block">
+      <div className="glass absolute top-[53.5%] right-[-20px] hidden w-[210px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block">
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-primary/16">
             <Truck aria-hidden className="size-5 text-primary-light" />
@@ -141,7 +141,7 @@ function HeroShowcase() {
         </div>
       </div>
 
-      <div className="glass absolute top-[300px] left-0 hidden w-[250px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block">
+      <div className="glass absolute top-[53.5%] left-0 hidden w-[250px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block">
         <p className="text-[13px] text-text-secondary">iPhone 17 Pro · 256GB</p>
         <p className="mt-2.5 flex items-end gap-2">
           <span className="font-display text-[22px] font-bold text-primary-light">LKR 389,900</span>

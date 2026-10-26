@@ -52,7 +52,7 @@ export function ProductArt({
           fill
           priority={priority}
           sizes={size === "lg" ? "(min-width: 1024px) 600px, 100vw" : "(min-width: 1024px) 300px, 50vw"}
-          className="object-contain p-6"
+          className="object-contain p-6 drop-shadow-[0_16px_28px_rgb(0_0_0/0.45)]"
         />
       ) : (
         <>

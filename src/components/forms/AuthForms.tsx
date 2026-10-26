@@ -9,6 +9,7 @@ import {
   registerAction,
   requestPasswordResetAction,
   signInAction,
+  signInWithGoogleAction,
 } from "@/modules/auth/actions";
 import { shopTypes } from "@/modules/auth/schema";
 import { idleState, type FormState } from "@/lib/validation/form";
@@ -24,8 +25,15 @@ function GoogleButton() {
       <div className="flex items-center gap-3 text-xs text-text-muted">
         <span className="h-px flex-1 bg-line" /> or continue with <span className="h-px flex-1 bg-line" />
       </div>
-      {/* Wired to Auth.js signIn("google") in P2-T01. */}
-      <Button type="button" variant="glass" size="lg" className="w-full" disabled>
+      {/* Submits the surrounding form (with its `next` field) to Auth.js signIn("google"). */}
+      <Button
+        type="submit"
+        formAction={signInWithGoogleAction}
+        formNoValidate
+        variant="glass"
+        size="lg"
+        className="w-full"
+      >
         <svg aria-hidden viewBox="0 0 24 24" className="size-[18px]">
           <path
             fill="#EA4335"
@@ -38,12 +46,13 @@ function GoogleButton() {
   );
 }
 
-export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
+export function SignInForm({ googleEnabled, next }: { googleEnabled: boolean; next?: string }) {
   const [state, action, pending] = useActionState(signInAction, idleState);
   const f = fieldsOf(state);
   const v = valuesOf(state);
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
+      {next && <input type="hidden" name="next" value={next} />}
       <TextField
         label="Email address"
         name="email"

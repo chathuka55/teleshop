@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { beforeAll, describe, expect, it } from "vitest";
 import { InventoryModel } from "@/db/models";
-import { migrateDown, migrateUp, appliedMigrations } from "@/db/migrations";
+import { appliedMigrations, migrateDown, migrateUp, migrations } from "@/db/migrations";
 import { withTransaction } from "@/db/mongoose";
 import { CourierModel, SettingsModel } from "@/db/models";
 import { connectTestDatabase } from "../../support/db";
@@ -64,7 +64,8 @@ describe("sanitizeFilter (docs/10 NoSQL injection)", () => {
 describe("migrations", () => {
   it("are recorded and idempotent", async () => {
     const before = (await appliedMigrations(mongoose.connection)).map((m) => m._id);
-    expect(before).toEqual(["0001-init", "0002-validators", "0003-seed-couriers-settings"]);
+    // Every registered migration, in order — no hardcoded list to update for each new one.
+    expect(before).toEqual(migrations.map((m) => m.id));
     expect(await migrateUp(mongoose.connection)).toEqual([]);
   });
 

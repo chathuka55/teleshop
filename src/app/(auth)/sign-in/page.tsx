@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { User } from "lucide-react";
 import { env } from "@/config/env";
+import { safeNextPath } from "@/lib/auth/route-access";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { SignInForm } from "@/components/forms/AuthForms";
 import { customerFeatures } from "../auth-features";
@@ -8,7 +9,13 @@ import { customerFeatures } from "../auth-features";
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
 /** Figma "07 · Sign In" (11:887) / "M6" (24:3461). */
-export default function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const raw = (await searchParams).next;
+  const next = safeNextPath(Array.isArray(raw) ? raw[0] : raw, "");
   return (
     <AuthShell
       headline="Welcome back to the future of tech."
@@ -22,7 +29,7 @@ export default function SignInPage() {
       <p className="mt-1 mb-7 text-sm text-text-secondary">
         Good to see you again. Enter your details below.
       </p>
-      <SignInForm googleEnabled={!!env.AUTH_GOOGLE_ID} />
+      <SignInForm googleEnabled={!!env.AUTH_GOOGLE_ID && !!env.AUTH_GOOGLE_SECRET} next={next || undefined} />
     </AuthShell>
   );
 }

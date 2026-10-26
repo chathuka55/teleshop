@@ -3,28 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import type { NavLink } from "@/config/site";
+import { isNavActive, type NavLink } from "@/config/site";
+import type { CategoryDTO } from "@/modules/catalog/types";
 import { cn } from "@/lib/utils/cn";
+import { CategoriesMenu } from "./CategoriesMenu";
 
-/** Desktop nav links; client only to highlight the active route. */
+/** Desktop nav links; client only to highlight the active route and run the Categories dropdown. */
 export function NavLinks({
   links,
+  categories,
   className,
-  trailing = {},
   badges = {},
 }: {
   links: readonly NavLink[];
+  categories: readonly CategoryDTO[];
   className?: string;
-  trailing?: Record<string, ReactNode>;
   badges?: Record<string, ReactNode>;
 }) {
   const pathname = usePathname();
   return (
     <ul className={cn("items-center gap-1", className)}>
       {links.map((link) => {
-        const path = link.href.split(/[?#]/)[0] ?? "/";
-        const active =
-          path === "/" ? pathname === "/" : pathname.startsWith(path) && link.label !== "Categories";
+        const active = isNavActive(link, pathname);
+        if (link.label === "Categories") {
+          return <CategoriesMenu key={link.label} categories={categories} active={active} />;
+        }
         return (
           <li key={link.label}>
             <Link
@@ -38,7 +41,6 @@ export function NavLinks({
               )}
             >
               {link.label}
-              {trailing[link.label]}
               {link.badge && badges[link.badge]}
             </Link>
           </li>

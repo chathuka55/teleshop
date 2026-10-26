@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { listActiveBrands } from "@/db/repositories/brand.repository";
 import { findCategoryBySlug, listActiveCategories } from "@/db/repositories/category.repository";
 import {
@@ -29,6 +30,13 @@ import type {
 export async function listCategories(): Promise<CategoryDTO[]> {
   return listActiveCategories();
 }
+
+/** Categories for the navbar dropdown / drawer — cached 5 min so page views don't hit the DB. */
+export const listNavCategories: () => Promise<CategoryDTO[]> = unstable_cache(
+  () => listActiveCategories(),
+  ["nav-categories"],
+  { revalidate: 300, tags: ["categories"] },
+);
 
 export async function getCategory(slug: string): Promise<CategoryDTO | null> {
   return findCategoryBySlug(slug);

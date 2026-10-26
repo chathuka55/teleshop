@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import mongoose, { type Types } from "mongoose";
 import { buildTrackingUrl } from "@/config/couriers";
+import { productImagesBySlug } from "@/config/product-images";
 import { migrateUp } from "@/db/migrations";
 import {
   BrandModel,
@@ -139,6 +140,7 @@ export async function seedDatabase(opts: { fixedPassword?: string } = {}): Promi
     }
   >();
   const now = Date.now();
+  const photos = productImagesBySlug();
   for (const p of seedProducts) {
     const sellerId = sellerIds.get(p.seller);
     const categoryId = categoryIds.get(p.category);
@@ -162,6 +164,7 @@ export async function seedDatabase(opts: { fixedPassword?: string } = {}): Promi
       shortDescription: p.shortDescription,
       description: p.description ?? p.shortDescription,
       highlights: p.highlights,
+      images: photos.get(p.slug) ?? [],
       condition: p.condition ?? "new",
       specs: p.specs,
       variants,

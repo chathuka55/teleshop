@@ -12,4 +12,4 @@
 7. Doc-sync test: read `src/db/models/*.model.ts` names and `src/db/migrations/*.ts`, assert each appears in doc 08.
 
 ## Claude Code prompt
-> Read CLAUDE.md and docs/08-data-model.md fully. Implement P1-T01 (connection + withTransaction) with an integration test using MongoMemoryReplSet. Do not create models yet. Plan first.
+> Read RULES.md and docs/08-data-model.md fully. Implement P1-T01 (connection + withTransaction) with an integration test using MongoMemoryReplSet. Do not create models yet. Plan first.

@@ -2,10 +2,11 @@ import type { Connection } from "mongoose";
 import { migration as m0001 } from "./0001-init";
 import { migration as m0002 } from "./0002-validators";
 import { migration as m0003 } from "./0003-seed-couriers-settings";
+import { migration as m0004 } from "./0004-demo-product-images";
 import type { Migration } from "./types";
 
 /** Every migration, in order. Add new files here AND in docs/08 §7 (the doc-sync test checks). */
-export const migrations: readonly Migration[] = [m0001, m0002, m0003];
+export const migrations: readonly Migration[] = [m0001, m0002, m0003, m0004];
 
 const LOG = "_migrations";
 

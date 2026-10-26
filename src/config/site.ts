@@ -22,16 +22,40 @@ export const siteConfig = {
   },
 } as const;
 
-export type NavLink = { label: string; href: string; badge?: string };
+export type NavLink = {
+  label: string;
+  href: string;
+  badge?: string;
+  /** Path prefixes that also mark this link active (e.g. product pages under "Shop"). */
+  match?: readonly string[];
+};
+
+export const DEALS_HREF = "/deals";
 
 export const mainNav: readonly NavLink[] = [
   { label: "Home", href: "/" },
-  { label: "Shop", href: "/shop" },
-  { label: "Categories", href: "/shop#categories" },
-  { label: "Deals", href: "/shop?sort=discount", badge: "HOT" },
-  { label: "Sellers", href: "/sellers" },
+  { label: "Shop", href: "/shop", match: ["/p/", "/compare"] },
+  { label: "Categories", href: "/shop", match: ["/c/"] },
+  { label: "Deals", href: DEALS_HREF, badge: "HOT" },
+  { label: "Sellers", href: "/sellers", match: ["/s/"] },
   { label: "About", href: "/about" },
 ];
+
+/**
+ * One active rule for every nav (desktop links, drawer, bottom bar): a link is active on its own
+ * path or under one of its `match` prefixes. Query strings are ignored, so "/shop?sort=…" never
+ * lights up a second item. "Categories" has no page of its own — only category pages activate it.
+ */
+export function isNavActive(link: Pick<NavLink, "label" | "href" | "match">, pathname: string): boolean {
+  const own = link.label === "Categories" ? [] : [link.href.split(/[?#]/)[0] ?? "/"];
+  return [...own, ...(link.match ?? [])].some((prefix) =>
+    prefix === "/"
+      ? pathname === "/"
+      : prefix.endsWith("/")
+        ? pathname.startsWith(prefix)
+        : pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 export const footerNav: readonly { title: string; links: readonly NavLink[] }[] = [
   {
@@ -42,7 +66,7 @@ export const footerNav: readonly { title: string; links: readonly NavLink[] }[] 
       { label: "PC Components", href: "/c/pc-components" },
       { label: "Audio", href: "/c/audio" },
       { label: "Wearables", href: "/c/wearables" },
-      { label: "Deals", href: "/shop?sort=discount" },
+      { label: "Deals", href: DEALS_HREF },
     ],
   },
   {

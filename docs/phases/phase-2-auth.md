@@ -9,4 +9,4 @@
 - Email verification required before checkout (not before browsing).
 
 ## Claude Code prompt
-> Read CLAUDE.md, docs/10-security.md and docs/08-data-model.md §3.2. Implement P2-T01 and P2-T04 with unit tests for guards (customer cannot reach /seller, seller cannot reach /admin). Plan first.
+> Read RULES.md, docs/10-security.md and docs/08-data-model.md §3.2. Implement P2-T01 and P2-T04 with unit tests for guards (customer cannot reach /seller, seller cannot reach /admin). Plan first.

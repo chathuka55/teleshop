@@ -286,6 +286,7 @@ Other rules:
 | 0001 | `0001-init.ts` | Create collections, all indexes in §3, TTL indexes | 2026-10-22 |
 | 0002 | `0002-validators.ts` | `$jsonSchema` validators for `orders` and `inventory` (ints ≥ 0 via `multipleOf: 1`, `orderNo` pattern, ≥ 1 package) | 2026-10-22 |
 | 0003 | `0003-seed-couriers-settings.ts` | Insert couriers + `settings.global` (`$setOnInsert` — never overwrites admin edits) | 2026-10-22 |
+| 0004 | `0004-demo-product-images.ts` | Attach Wikimedia Commons demo photos (`public/images/products`, credits on `/credits`) to seeded products that have no images | 2026-10-23 |
 
 Applied migrations are recorded in the `_migrations` collection (`_id` = migration id, `appliedAt`). Runner: `scripts/seed/migrate.ts` (`--status`, `--down <id>`); list of migrations: `src/db/migrations/index.ts`.
 
