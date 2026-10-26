@@ -10,6 +10,7 @@ export const $nin = <T>(values: readonly T[]) => mongoose.trusted({ $nin: [...va
 export const $ne = <T>(value: T) => mongoose.trusted({ $ne: value });
 export const $gt = (value: number | Date) => mongoose.trusted({ $gt: value });
 export const $gte = (value: number | Date) => mongoose.trusted({ $gte: value });
+export const $lt = (value: number | Date) => mongoose.trusted({ $lt: value });
 export const $lte = (value: number | Date) => mongoose.trusted({ $lte: value });
 /** Field present / absent. Note: `{ field: "" }` or `{ field: [] }` never matches a MISSING field. */
 export const $exists = (present: boolean) => mongoose.trusted({ $exists: present });

@@ -6,6 +6,7 @@ import type { Provider } from "next-auth/providers";
 import { env } from "@/config/env";
 import { signInSchema } from "@/modules/auth/schema";
 import { refreshClaims, signInWithGoogle, signInWithPassword } from "@/modules/auth/service";
+import { redeemTwoFactorProof } from "@/modules/auth/two-factor";
 import { clientIp } from "@/lib/security/client-ip";
 import { authConfig } from "./auth.config";
 import { parseTokenClaims, type TokenClaims } from "./claims";
@@ -35,7 +36,7 @@ if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
  * Full Auth.js setup (Node runtime). `auth()` here re-checks the user against the database every
  * 5 minutes (tokenVersion, status, role, seller approval) — the edge middleware can't.
  */
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   ...authConfig,
   providers,
   callbacks: {
@@ -56,13 +57,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       (user as UserWithClaims).claims = claims;
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Sign-in: claims come from authorize() or the Google signIn callback above.
       const fresh = parseTokenClaims((user as UserWithClaims | undefined)?.claims);
       if (fresh) return { ...token, claims: fresh };
 
       const claims = parseTokenClaims(token.claims);
       if (!claims) return null;
+
+      // Session update: the ONLY thing honoured is a one-time 2FA proof issued by the server
+      // (modules/auth/two-factor.ts). Anything else a browser posts to /api/auth/session is ignored.
+      if (trigger === "update" && claims.role === "admin") {
+        const proof = (session as { totpProof?: unknown } | undefined)?.totpProof;
+        if (await redeemTwoFactorProof(claims.id, proof)) {
+          return { ...token, claims: { ...claims, twoFactorVerified: true, checkedAt: Date.now() } };
+        }
+      }
       const refreshed = await refreshClaims(claims);
       // null clears the session cookie: revoked, suspended or deleted users are signed out.
       return refreshed ? { ...token, claims: refreshed } : null;

@@ -7,6 +7,11 @@ const twoFactorSchema = new Schema(
     /** AES-256-GCM encrypted TOTP secret (TOTP_ENCRYPTION_KEY) */
     secretEnc: { type: String, default: null },
     recoveryHashes: { type: [String], default: [] },
+    /** Last accepted TOTP time step — the same code can't be used twice (replay guard). */
+    lastStep: intMin(0, { default: 0 }),
+    /** SHA-256 of a one-time proof that upgrades the session after a correct code (60 s). */
+    proofHash: { type: String, default: null },
+    proofExpires: { type: Date, default: null },
   },
   { _id: false },
 );
