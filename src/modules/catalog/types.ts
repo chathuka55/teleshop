@@ -32,6 +32,19 @@ export type SellerCardDTO = {
   since: number;
   tags: string[];
   gradient: [string, string];
+  /** wide shop photo (null → gradient banner) */
+  coverUrl: string | null;
+};
+
+/** Everything the public shop page shows (/s/[shop]). No payout or registration details. */
+export type SellerProfileDTO = SellerCardDTO & {
+  description: string;
+  address: { line1: string; city: string; district: string };
+  phone: string;
+  photos: { url: string; alt: string; width: number | null; height: number | null }[];
+  location: { lat: number; lng: number } | null;
+  openingHours: string;
+  acceptsCod: boolean;
 };
 
 export type VariantDTO = {

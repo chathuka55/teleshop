@@ -18,6 +18,9 @@ describe("buildCsp (P0-T04)", () => {
     expect(csp).toMatch(/img-src [^;]*blob:/);
     // Only our bucket — a wildcard would let any Upstash bucket serve images here.
     expect(csp).toMatch(/img-src [^;]*https:\/\/b65e2efccddc\.blob\.upstash\.io/);
+    // Shop-page map tiles (OpenStreetMap) — images only, nothing else from that host.
+    expect(csp).toMatch(/img-src [^;]*https:\/\/tile\.openstreetmap\.org/);
+    expect(csp).not.toMatch(/(script|connect|frame)-src [^;]*openstreetmap/);
     expect(csp).not.toMatch(/\*\.blob\.upstash\.io/);
     expect(csp).toMatch(/worker-src [^;]*blob:/);
     // GLTFLoader fetch()es embedded GLB textures via blob: URLs.

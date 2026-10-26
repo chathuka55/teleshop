@@ -60,3 +60,12 @@ describe("newsletterSchema", () => {
     expect(newsletterSchema.safeParse({ email: { $gt: "" } }).success).toBe(false);
   });
 });
+
+describe("formatPhoneLK", () => {
+  it("shows Sri Lankan numbers in local format", async () => {
+    const { formatPhoneLK } = await import("@/lib/utils/strings");
+    expect(formatPhoneLK("+94771234567")).toBe("077 123 4567");
+    expect(formatPhoneLK("+94112345678")).toBe("011 234 5678");
+    expect(formatPhoneLK("+1 555")).toBe("+1 555");
+  });
+});

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import mongoose, { type Types } from "mongoose";
 import { buildTrackingUrl } from "@/config/couriers";
+import { demoShopPhotos, demoShopProfiles } from "@/config/demo-shops";
 import { productImagesBySlug } from "@/config/product-images";
 import { migrateUp } from "@/db/migrations";
 import {
@@ -88,6 +89,7 @@ export async function seedDatabase(opts: { fixedPassword?: string } = {}): Promi
 
   // ---- sellers (+ owner users) ----
   const sellerIds = new Map<string, Types.ObjectId>();
+  const shopPhotos = demoShopPhotos();
   for (const s of seedSellers) {
     const owner = await UserModel.create({
       email: s.ownerEmail,
@@ -106,6 +108,11 @@ export async function seedDatabase(opts: { fixedPassword?: string } = {}): Promi
       phone: s.phone,
       establishedYear: s.establishedYear,
       tags: s.tags,
+      description: demoShopProfiles[s.slug]?.description ?? "",
+      openingHours: demoShopProfiles[s.slug]?.openingHours ?? "",
+      location: demoShopProfiles[s.slug]?.location ?? null,
+      coverUrl: shopPhotos.get(s.slug)?.[0]?.url ?? null,
+      photos: shopPhotos.get(s.slug) ?? [],
       approvalStatus: "approved",
       approvedBy: admin._id,
       approvedAt: new Date(),

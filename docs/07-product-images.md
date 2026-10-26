@@ -42,6 +42,9 @@ PYTHONIOENCODING=utf-8 python fetch_commons_images.py fetch --picks input/common
 PYTHONIOENCODING=utf-8 python fetch_commons_images.py build --raw output/commons/raw   --out ../../public/images/products --credits ../../src/config/product-image-credits.ts   --keep-background input/keep-background.txt
 ```
 
+### Shop photos
+Demo shops use the same script with `input/seller-queries.csv` / `input/seller-picks.csv`, built without background removal into `public/images/sellers/` (`--no-cutout --max 1600 --public-prefix /images/sellers --export-name sellerPhotoCredits --type-name SellerPhotoCredit`). Photos with identifiable people or a famous brand's storefront are skipped — a fictional shop must not look like a real person's or brand's. On Git Bash prefix the command with `MSYS_NO_PATHCONV=1` (it rewrites `/images/...` arguments into Windows paths; the script now refuses such a prefix). Real sellers upload their own photos in the seller portal (Phase 6).
+
 ### On the product page
 - The gallery shows every photo with thumbnails. **Zoom:** with a mouse the photo magnifies 2.2× under the cursor while hovering; on touch screens a tap zooms in at that spot and a second tap zooms out (`src/components/product/ProductGallery.tsx`).
 

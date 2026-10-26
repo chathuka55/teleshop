@@ -24,7 +24,7 @@
 
 ```text
 Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-<n>' 'strict-dynamic' 'wasm-unsafe-eval';
-  style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://b65e2efccddc.blob.upstash.io;
+  style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://b65e2efccddc.blob.upstash.io https://tile.openstreetmap.org;
   connect-src 'self' blob: https://*.upstash.io; worker-src 'self' blob:; font-src 'self'; frame-ancestors 'none'; base-uri 'self';
   form-action 'self'; object-src 'none'; upgrade-insecure-requests
 Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
@@ -33,7 +33,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
 Cross-Origin-Opener-Policy: same-origin
 ```
-Three.js needs `blob:` in `img-src`/`worker-src`/`connect-src` for embedded GLB textures, and `'wasm-unsafe-eval'` for the meshopt decoder (WebAssembly only — JS `eval` stays blocked). Every HTML page renders per request so it gets a nonce: do not prerender pages (`generateStaticParams`) while the nonce CSP is on. Source: `src/lib/security/headers.ts` (unit tested).
+The shop-page map loads OpenStreetMap tiles as plain images (`img-src` only — no script, no iframe); credit "© OpenStreetMap contributors" is shown and a hosted tile provider replaces it before traffic grows. Three.js needs `blob:` in `img-src`/`worker-src`/`connect-src` for embedded GLB textures, and `'wasm-unsafe-eval'` for the meshopt decoder (WebAssembly only — JS `eval` stays blocked). Every HTML page renders per request so it gets a nonce: do not prerender pages (`generateStaticParams`) while the nonce CSP is on. Source: `src/lib/security/headers.ts` (unit tested).
 
 ## 3. PR security checklist
 - [ ] All new inputs have a Zod schema; no raw objects reach Mongoose.

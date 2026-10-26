@@ -38,7 +38,7 @@
 - [x] **P3-T03** **3D hero slider** (phone, PC, headset GLB) per [doc 06](06-3d-hero.md). *Check:* acceptance list in doc 06. — _4 slides: iPhone 17 Pro + MacBook Pro GLBs (CC BY 4.0), procedural PC, headset._
 - [x] **P3-T04** Shop listing `/shop` + `/c/[slug]`: filters from category spec template, sort, cursor pagination, URL state. — _Spec filters `?spec.<key>=a,b` (allow-listed options; matches spec prefix or variant attribute). `/deals` page added._
 - [x] **P3-T05** Product page `/p/[slug]`: gallery, variant picker (price/stock per SKU), specs, seller card, reviews, related. ISR + tags. — _Up to 4 photos with hover/tap zoom. ISR deliberately not used — every page renders per request for the CSP nonce (doc 10 §2)._
-- [x] **P3-T06** Search (text index), compare page (up to 4), seller shop page `/s/[shop]`.
+- [x] **P3-T06** Search (text index), compare page (up to 4), seller shop page `/s/[shop]`. — _Shop page is an immersive profile: cover photo, glass identity card, call + directions, about/hours, photo gallery, OpenStreetMap map with pin (migration 0006 for demo shops)._
 - [ ] **P3-T07** Info pages: about, contact (form + rate limit), help/FAQ, terms & privacy. SEO metadata, sitemap, robots, JSON-LD Product. — _Done except persisting newsletter sign-ups; contact form sends when `EMAIL_SERVER` is set._
 
 ## Phase 4 — Cart & checkout · [details](phases/phase-4-checkout.md)

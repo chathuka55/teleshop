@@ -149,6 +149,10 @@ Email verification. `identifier` (email), `tokenHash` (SHA-256), `expires`. TTL 
 | `settings` | `{ acceptsCod, vacationMode, autoAccept, dispatchDays }` | |
 | `payoutAccount` | `{ bank, branch, last4 }` | full account number is **not** stored here — kept only by the payment provider/offline |
 | `establishedYear` | int | year the shop opened ("Since 2019") — added v0.2 |
+| `coverUrl` | string | wide shop photo at the top of the shop page — added v0.3 |
+| `photos` | `[{ url, alt, width, height }]` ≤ 6 | shop gallery (storefront, interior) — added v0.3 |
+| `location` | `{ lat, lng }` \| null | map pin + "Get directions" on the shop page — added v0.3 |
+| `openingHours` | string ≤ 80 | e.g. "Mon–Sat 9.00–19.00" — added v0.3 |
 | `tags` | string[] ≤ 5 | short display tags ("Phones", "Apple") — added v0.2 |
 | `rating` | `{ average, count }` | cached from reviews |
 Indexes: `{ slug: 1 }` unique, `{ approvalStatus: 1 }`. Writes: `sellers.service` (owner edits profile; admin approves).
@@ -288,6 +292,7 @@ Other rules:
 | 0003 | `0003-seed-couriers-settings.ts` | Insert couriers + `settings.global` (`$setOnInsert` — never overwrites admin edits) | 2026-10-22 |
 | 0004 | `0004-demo-product-images.ts` | Attach Wikimedia Commons demo photos (`public/images/products`, credits on `/credits`) to seeded products that have no images | 2026-10-23 |
 | 0005 | `0005-demo-product-photo-sets.ts` | Replace the legacy single demo photo (`<slug>.webp`, from the first 0004) with the photo set (`<slug>-1…4.webp`, backgrounds removed); seller uploads untouched | 2026-10-26 |
+| 0006 | `0006-demo-shop-profiles.ts` | Cover photo, photos (Commons, credited on `/credits`), map pin and opening hours for the demo shops; only empty fields are set | 2026-10-27 |
 
 Applied migrations are recorded in the `_migrations` collection (`_id` = migration id, `appliedAt`). Runner: `scripts/seed/migrate.ts` (`--status`, `--down <id>`); list of migrations: `src/db/migrations/index.ts`.
 

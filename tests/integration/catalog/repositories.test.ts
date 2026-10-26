@@ -250,3 +250,27 @@ describe("spec filters on MongoDB (P3-T04)", () => {
     expect(both.total).toBeLessThanOrEqual(either.total);
   });
 });
+
+describe("shop profile (immersive shop page)", () => {
+  it("has cover, photos, map pin, hours and description for demo shops", async () => {
+    const { getSellerProfile } = await import("@/modules/catalog/service");
+    const shop = await getSellerProfile("pc-forge");
+    expect(shop?.coverUrl).toMatch(/^\/images\/sellers\/pc-forge-1\.webp$/);
+    expect(shop?.photos.length).toBeGreaterThanOrEqual(2);
+    expect(shop?.location).toEqual({ lat: expect.any(Number), lng: expect.any(Number) });
+    expect(shop?.openingHours).not.toBe("");
+    expect(shop?.description.length).toBeGreaterThan(20);
+    expect(shop?.address.line1).toContain("Peradeniya");
+  });
+
+  it("never exposes registration or payout details", async () => {
+    const { getSellerProfile } = await import("@/modules/catalog/service");
+    const json = JSON.stringify(await getSellerProfile("istore-colombo"));
+    expect(json).not.toMatch(/businessRegNo|payoutAccount|approvedBy|rejectionReason|userId/);
+  });
+
+  it("shop cards carry the cover photo", async () => {
+    const cards = await listSellers();
+    expect(cards.every((c) => c.coverUrl?.startsWith("/images/sellers/"))).toBe(true);
+  });
+});

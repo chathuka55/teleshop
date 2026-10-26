@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import type { SellerCardDTO } from "@/modules/catalog/types";
 import { Badge } from "@/components/ui/Badge";
@@ -7,10 +8,29 @@ import { ButtonLink } from "@/components/ui/Button";
 export function SellerCard({ seller }: { seller: SellerCardDTO }) {
   const [from, to] = seller.gradient;
   return (
-    <article className="flex flex-col gap-5 rounded-[22px] border border-white/7 bg-surface p-6">
-      <div className="flex items-center gap-3.5">
+    <article className="flex flex-col gap-5 overflow-hidden rounded-[22px] border border-white/7 bg-surface p-6">
+      {/* Cover strip: the shop photo when there is one, otherwise the shop's gradient */}
+      <div className="relative -mx-6 -mt-6 h-28 overflow-hidden">
+        {seller.coverUrl ? (
+          <Image
+            src={seller.coverUrl}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 400px, 100vw"
+            className="object-cover"
+          />
+        ) : (
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{ backgroundImage: `linear-gradient(135deg, ${from} 0%, #0b1120 80%)` }}
+          />
+        )}
+        <div aria-hidden className="absolute inset-0 bg-linear-to-t from-surface to-transparent" />
+      </div>
+      <div className="relative -mt-12 flex items-end gap-3.5">
         <span
-          className="grid size-[60px] shrink-0 place-items-center rounded-[18px] font-display text-[22px] font-bold"
+          className="relative grid size-[60px] shrink-0 place-items-center rounded-[18px] font-display text-[22px] font-bold ring-4 ring-surface"
           style={{ backgroundImage: `linear-gradient(135deg, ${from} 0%, ${to} 71%)` }}
         >
           {seller.initials}

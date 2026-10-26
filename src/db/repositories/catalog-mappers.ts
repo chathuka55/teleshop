@@ -5,6 +5,7 @@ import type {
   ProductCardDTO,
   ProductDetailDTO,
   SellerCardDTO,
+  SellerProfileDTO,
   VariantDTO,
 } from "@/modules/catalog/types";
 import { productImagesBySlug, type DemoProductImage } from "@/config/product-images";
@@ -32,7 +33,18 @@ export type LeanSeller = {
   establishedYear?: number | null;
   tags?: string[];
   rating?: { average: number; count: number };
+  coverUrl?: string | null;
   createdAt: Date;
+};
+
+export type LeanSellerProfile = LeanSeller & {
+  description?: string;
+  address: { line1: string; city: string; district: string };
+  phone: string;
+  photos?: { url: string; alt?: string; width?: number | null; height?: number | null }[];
+  location?: { lat: number; lng: number } | null;
+  openingHours?: string;
+  settings?: { acceptsCod?: boolean };
 };
 
 export type LeanVariant = {
@@ -129,6 +141,25 @@ export function toSellerCardDTO(s: LeanSeller, productCount: number): SellerCard
     since: s.establishedYear ?? s.createdAt.getFullYear(),
     tags: s.tags ?? [],
     gradient,
+    coverUrl: s.coverUrl ?? null,
+  };
+}
+
+export function toSellerProfileDTO(s: LeanSellerProfile, productCount: number): SellerProfileDTO {
+  return {
+    ...toSellerCardDTO(s, productCount),
+    description: s.description ?? "",
+    address: { line1: s.address.line1, city: s.address.city, district: s.address.district },
+    phone: s.phone,
+    photos: (s.photos ?? []).map((p) => ({
+      url: p.url,
+      alt: p.alt || `${s.shopName} shop`,
+      width: p.width ?? null,
+      height: p.height ?? null,
+    })),
+    location: s.location ? { lat: s.location.lat, lng: s.location.lng } : null,
+    openingHours: s.openingHours ?? "",
+    acceptsCod: s.settings?.acceptsCod ?? true,
   };
 }
 

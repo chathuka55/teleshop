@@ -1,13 +1,21 @@
 import type { Types } from "mongoose";
-import type { SellerCardDTO } from "@/modules/catalog/types";
+import type { SellerCardDTO, SellerProfileDTO } from "@/modules/catalog/types";
 import { connectDB } from "../mongoose";
 import { ProductModel } from "../models/product.model";
 import { SellerModel } from "../models/seller.model";
-import { toSellerCardDTO, type LeanSeller } from "./catalog-mappers";
+import {
+  toSellerCardDTO,
+  toSellerProfileDTO,
+  type LeanSeller,
+  type LeanSellerProfile,
+} from "./catalog-mappers";
 import { $in } from "../operators";
 
 const PUBLIC_FIELDS =
-  "shopName slug shopType address.city address.district establishedYear tags rating createdAt";
+  "shopName slug shopType address.city address.district establishedYear tags rating coverUrl createdAt";
+
+/** Shop page: public fields only — never businessRegNo, payoutAccount or approval details. */
+const PROFILE_FIELDS = `${PUBLIC_FIELDS} address.line1 description phone photos location openingHours settings.acceptsCod`;
 
 async function productCounts(sellerIds: Types.ObjectId[]): Promise<Map<string, number>> {
   const rows = await ProductModel.aggregate<{ _id: Types.ObjectId; n: number }>([
@@ -37,6 +45,16 @@ export async function findApprovedSellerBySlug(slug: string): Promise<SellerCard
   if (!s) return null;
   const counts = await productCounts([s._id]);
   return toSellerCardDTO(s, counts.get(s._id.toString()) ?? 0);
+}
+
+export async function findApprovedSellerProfileBySlug(slug: string): Promise<SellerProfileDTO | null> {
+  await connectDB();
+  const s = await SellerModel.findOne({ slug, approvalStatus: "approved" })
+    .select(PROFILE_FIELDS)
+    .lean<LeanSellerProfile>();
+  if (!s) return null;
+  const counts = await productCounts([s._id]);
+  return toSellerProfileDTO(s, counts.get(s._id.toString()) ?? 0);
 }
 
 export async function findLeanSellers(filter: {
