@@ -293,6 +293,7 @@ Other rules:
 | 0004 | `0004-demo-product-images.ts` | Attach Wikimedia Commons demo photos (`public/images/products`, credits on `/credits`) to seeded products that have no images | 2026-10-23 |
 | 0005 | `0005-demo-product-photo-sets.ts` | Replace the legacy single demo photo (`<slug>.webp`, from the first 0004) with the photo set (`<slug>-1…4.webp`, backgrounds removed); seller uploads untouched | 2026-10-26 |
 | 0006 | `0006-demo-shop-profiles.ts` | Cover photo, photos (Commons, credited on `/credits`), map pin and opening hours for the demo shops; only empty fields are set | 2026-10-27 |
+| 0007 | `0007-fill-missing-shop-fields.ts` | Fill demo shop `photos` + `openingHours` where the field is **missing** (records older than v0.3 — 0006 only matched empty values) | 2026-10-27 |
 
 Applied migrations are recorded in the `_migrations` collection (`_id` = migration id, `appliedAt`). Runner: `scripts/seed/migrate.ts` (`--status`, `--down <id>`); list of migrations: `src/db/migrations/index.ts`.
 

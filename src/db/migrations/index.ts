@@ -5,10 +5,11 @@ import { migration as m0003 } from "./0003-seed-couriers-settings";
 import { migration as m0004 } from "./0004-demo-product-images";
 import { migration as m0005 } from "./0005-demo-product-photo-sets";
 import { migration as m0006 } from "./0006-demo-shop-profiles";
+import { migration as m0007 } from "./0007-fill-missing-shop-fields";
 import type { Migration } from "./types";
 
 /** Every migration, in order. Add new files here AND in docs/08 §7 (the doc-sync test checks). */
-export const migrations: readonly Migration[] = [m0001, m0002, m0003, m0004, m0005, m0006];
+export const migrations: readonly Migration[] = [m0001, m0002, m0003, m0004, m0005, m0006, m0007];
 
 const LOG = "_migrations";
 
