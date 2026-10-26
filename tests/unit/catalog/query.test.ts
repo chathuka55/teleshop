@@ -68,7 +68,7 @@ describe("spec filters (P3-T04)", () => {
   });
 
   it("round-trips through listingHref", async () => {
-    const { listingHref } = await import("@/components/product/ProductListing");
+    const { listingHref } = await import("@/components/product/listing-href");
     const q = parseProductQuery({ "spec.storage": "256GB,512GB", sort: "price_asc" }, "x", filters);
     const href = listingHref("/c/mobile-phones", q);
     expect(href).toBe("/c/mobile-phones?sort=price_asc&spec.storage=256GB%2C512GB");

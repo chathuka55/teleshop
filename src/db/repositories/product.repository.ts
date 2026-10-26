@@ -166,6 +166,20 @@ export async function findPublishedProductsBySlugs(slugs: readonly string[]): Pr
   return slugs.flatMap((s) => docs.filter((d) => d.slug === s)).map((p) => toProductDetailDTO(p, l));
 }
 
+/** Published product cards by id, in the caller's order (wishlist). Unknown ids are skipped. */
+export async function findPublishedProductCardsByIds(ids: readonly string[]): Promise<ProductCardDTO[]> {
+  const valid = ids.filter((id) => /^[a-f0-9]{24}$/.test(id));
+  if (!valid.length) return [];
+  await connectDB();
+  const docs = await ProductModel.find({ status: "published", _id: $in(valid) }).lean<LeanProduct[]>();
+  const l = await lookupsFor(docs, false);
+  const byId = new Map(docs.map((d) => [d._id.toString(), d]));
+  return valid.flatMap((id) => {
+    const d = byId.get(id);
+    return d ? [toProductCardDTO(d, l)] : [];
+  });
+}
+
 /** Products containing any of the SKUs — used to re-price carts on the server. */
 export async function findPublishedProductsBySkus(skus: readonly string[]): Promise<ProductDetailDTO[]> {
   if (!skus.length) return [];

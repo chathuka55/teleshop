@@ -181,3 +181,34 @@ export async function resetPasswordAndRevokeSessions(
     },
   ]);
 }
+
+// ---- Account (P2-T06) — used by modules/users/service.ts ----
+
+export async function updateUserProfile(
+  id: string,
+  input: { name: string; phone: string | null },
+): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne({ _id: id }, { $set: { name: input.name, phone: input.phone } });
+}
+
+export async function findPasswordHash(id: string): Promise<string | null> {
+  await connectDB();
+  const u = await UserModel.findById(id).select("+passwordHash").lean<{ passwordHash?: string | null }>();
+  return u?.passwordHash ?? null;
+}
+
+/** New password from the account page: clears the lockout and signs out every session. */
+export async function changePasswordAndRevokeSessions(id: string, passwordHash: string): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne(
+    { _id: id },
+    { $set: { passwordHash, failedLogins: 0, lockedUntil: null }, $inc: { tokenVersion: 1 } },
+  );
+}
+
+/** "Sign out everywhere": every JWT carrying the old tokenVersion is rejected at its next re-check. */
+export async function bumpTokenVersion(id: string): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne({ _id: id }, { $inc: { tokenVersion: 1 } });
+}
