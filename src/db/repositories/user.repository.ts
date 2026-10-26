@@ -145,3 +145,39 @@ export async function markEmailVerified(id: string, at: Date): Promise<void> {
   await connectDB();
   await UserModel.updateOne({ _id: id, emailVerified: null }, { $set: { emailVerified: at } });
 }
+
+export async function markEmailVerifiedByEmail(email: string, at: Date): Promise<string | null> {
+  await connectDB();
+  const u = await UserModel.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    [{ $set: { emailVerified: { $ifNull: ["$emailVerified", at] } } }],
+    { new: true },
+  )
+    .select("_id")
+    .lean<{ _id: { toString(): string } }>();
+  return u ? u._id.toString() : null;
+}
+
+/**
+ * New password after a reset: clears the lockout and bumps tokenVersion, which signs the user out
+ * on every device at the next session re-check. Proving inbox access also verifies the email.
+ */
+export async function resetPasswordAndRevokeSessions(
+  id: string,
+  passwordHash: string,
+  at: Date,
+): Promise<void> {
+  await connectDB();
+  await UserModel.updateOne({ _id: id }, [
+    {
+      $set: {
+        // $literal: in a pipeline a string starting with "$" (every Argon2 hash) is a field path.
+        passwordHash: { $literal: passwordHash },
+        failedLogins: 0,
+        lockedUntil: null,
+        tokenVersion: { $add: [{ $ifNull: ["$tokenVersion", 0] }, 1] },
+        emailVerified: { $ifNull: ["$emailVerified", at] },
+      },
+    },
+  ]);
+}

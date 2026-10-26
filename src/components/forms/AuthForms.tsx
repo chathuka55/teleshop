@@ -8,6 +8,7 @@ import {
   applySellerAction,
   registerAction,
   requestPasswordResetAction,
+  resetPasswordAction,
   signInAction,
   signInWithGoogleAction,
 } from "@/modules/auth/actions";
@@ -289,6 +290,55 @@ export function ForgotPasswordForm() {
         Remembered it?{" "}
         <Link href="/sign-in" className="font-semibold text-primary-light hover:text-text">
           Back to sign in
+        </Link>
+      </p>
+    </form>
+  );
+}
+
+export function ResetPasswordForm({ token }: { token: string }) {
+  const [state, action, pending] = useActionState(resetPasswordAction, idleState);
+  const f = fieldsOf(state);
+  if (state.status === "ok") {
+    return (
+      <div className="flex flex-col gap-4">
+        <FormMessage state={state} />
+        <Link
+          href="/sign-in"
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-primary font-semibold text-on-primary"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <form action={action} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="token" value={token} />
+      <PasswordField
+        label="New password"
+        name="password"
+        autoComplete="new-password"
+        icon={<Lock />}
+        error={f.password}
+        required
+      />
+      <PasswordField
+        label="Confirm new password"
+        name="confirmPassword"
+        autoComplete="new-password"
+        icon={<Lock />}
+        error={f.confirmPassword}
+        required
+      />
+      <FormMessage state={state} />
+      <Button type="submit" size="lg" disabled={pending} className="w-full">
+        {pending ? "Saving…" : "Save new password"} <ArrowRight aria-hidden />
+      </Button>
+      <p className="text-center text-sm text-text-secondary">
+        Link expired?{" "}
+        <Link href="/forgot-password" className="font-semibold text-primary-light hover:text-text">
+          Request a new one
         </Link>
       </p>
     </form>

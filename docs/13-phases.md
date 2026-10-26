@@ -26,8 +26,8 @@
 
 ## Phase 2 — Auth & accounts · [details](phases/phase-2-auth.md)
 - [x] **P2-T01** Auth.js v5 config: Credentials (Argon2id) + Google, JWT strategy with `role`, `sellerId`, `tokenVersion`. — _Lockout after 5 failures, 5-min re-check (revocation), audit log. Google switches on when `AUTH_GOOGLE_ID/SECRET` are set._
-- [ ] **P2-T02** Register, sign in, sign out, email verification pages (Figma 07, 08). Rate limits. — _Sign in + sign out work; register and email verification next._
-- [ ] **P2-T03** Forgot / reset password (hashed single-use tokens, 30 min). Lockout after 5 failures.
+- [x] **P2-T02** Register, sign in, sign out, email verification pages (Figma 07, 08). Rate limits. — _No account enumeration (same answer + "already registered" email), breached-password check (HIBP k-anonymity), 24 h single-use links at `/verify-email`._
+- [x] **P2-T03** Forgot / reset password (hashed single-use tokens, 30 min). Lockout after 5 failures. — _`/reset-password`; a reset signs out every device (tokenVersion) and replaces older links._
 - [x] **P2-T04** Route guards in middleware + `requireRole()` / ownership helpers in `lib/auth/guards.ts`. — _Rules in `lib/auth/route-access.ts`, pure checks in `lib/auth/authorize.ts` (unit tested)._
 - [ ] **P2-T05** Admin TOTP 2FA (enrol with QR, verify, recovery codes, encrypted secret). Admin login page (A1).
 - [ ] **P2-T06** Navbar Guest/Logged-in states (name + profile photo), profile page with avatar upload (Blob, sharp).

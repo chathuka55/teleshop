@@ -17,3 +17,9 @@ export type GoogleProfile = {
   name: string;
   image: string | null;
 };
+
+/** Sign-up result: `ok` also when the email already exists (the owner is emailed instead). */
+export type RegisterResult = { ok: true } | { ok: false; field: "password"; message: string };
+
+export type ResetPasswordResult =
+  { ok: true } | { ok: false; reason: "invalid" } | { ok: false; reason: "breached"; message: string };

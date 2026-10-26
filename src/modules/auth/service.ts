@@ -1,5 +1,11 @@
 import "server-only";
 import { findUserIdByAccount, linkAccount } from "@/db/repositories/account.repository";
+import {
+  consumePasswordReset,
+  consumeVerificationToken,
+  savePasswordReset,
+  saveVerificationToken,
+} from "@/db/repositories/auth-token.repository";
 import { findApprovedSellerIdByUserId } from "@/db/repositories/seller.repository";
 import {
   createUser,
@@ -8,14 +14,25 @@ import {
   incrementFailedLogins,
   lockUserUntil,
   markEmailVerified,
+  markEmailVerifiedByEmail,
   recordSuccessfulLogin,
+  resetPasswordAndRevokeSessions,
   type AuthState,
 } from "@/db/repositories/user.repository";
+import { isBreachedPassword } from "@/lib/auth/breached";
 import { RECHECK_MS, type TokenClaims } from "@/lib/auth/claims";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { hashToken, looksLikeToken, newToken } from "@/lib/auth/tokens";
 import { audit } from "@/modules/audit/service";
 import { canSignIn, isLocked, lockAfterFailure } from "./access";
-import type { AuthContext, GoogleProfile, PasswordSignInResult } from "./types";
+import { sendAlreadyRegisteredEmail, sendPasswordResetEmail, sendVerificationEmail } from "./emails";
+import type {
+  AuthContext,
+  GoogleProfile,
+  PasswordSignInResult,
+  RegisterResult,
+  ResetPasswordResult,
+} from "./types";
 
 /**
  * Hash verified when the email is unknown or the account can't sign in, so every failure path
@@ -151,4 +168,139 @@ export async function refreshClaims(claims: TokenClaims, now = new Date()): Prom
   const user = await findAuthState(claims.id);
   if (!user || !canSignIn(user) || user.tokenVersion !== claims.tokenVersion) return null;
   return claimsFor(user, now, { twoFactorVerified: claims.twoFactorVerified });
+}
+
+// ---- Register + email verification (P2-T02) ----
+
+/** Verification links last 24 h; reset links 30 min (docs/10 §1). */
+export const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
+export const RESET_TTL_MS = 30 * 60 * 1000;
+
+const BREACHED =
+  "This password has appeared in a data breach. Please choose a different one — a short sentence works well.";
+
+const isDuplicateKey = (e: unknown): boolean =>
+  typeof e === "object" && e !== null && (e as { code?: number }).code === 11000;
+
+async function issueVerification(email: string, name: string, now: Date): Promise<void> {
+  const { token, hash } = newToken();
+  await saveVerificationToken(email, hash, new Date(now.getTime() + VERIFY_TTL_MS));
+  await sendVerificationEmail(email, name, token);
+}
+
+/**
+ * Customer sign-up. The screen answer is the same whether or not the email already has an
+ * account (no enumeration); the existing owner gets a "you already have an account" email
+ * instead. The password is hashed on both paths so response time gives nothing away either.
+ */
+export async function registerCustomer(
+  input: { name: string; email: string; phone: string; password: string },
+  ctx: AuthContext,
+): Promise<RegisterResult> {
+  const now = ctx.now ?? new Date();
+  if (await isBreachedPassword(input.password)) return { ok: false, field: "password", message: BREACHED };
+
+  const passwordHash = await hashPassword(input.password);
+  const existing = await findLoginRecordByEmail(input.email);
+  if (existing) {
+    await sendAlreadyRegisteredEmail(existing.email, existing.name);
+    return { ok: true };
+  }
+
+  let user: AuthState;
+  try {
+    user = await createUser({
+      email: input.email,
+      name: input.name,
+      phone: input.phone,
+      passwordHash,
+      emailVerified: null,
+    });
+  } catch (e) {
+    if (isDuplicateKey(e)) return { ok: true }; // registered a moment ago by a parallel request
+    throw e;
+  }
+  await issueVerification(user.email, user.name, now);
+  await audit.log({
+    actorId: user.id,
+    actorRole: "customer",
+    action: "auth.register",
+    entity: "user",
+    entityId: user.id,
+    ip: ctx.ip,
+  });
+  return { ok: true };
+}
+
+/** Consumes a verification link. True when the email is now verified. */
+export async function verifyEmail(token: unknown, ctx: AuthContext): Promise<boolean> {
+  if (!looksLikeToken(token)) return false;
+  const now = ctx.now ?? new Date();
+  const email = await consumeVerificationToken(hashToken(token), now);
+  if (!email) return false;
+  const userId = await markEmailVerifiedByEmail(email, now);
+  if (!userId) return false;
+  await audit.log({
+    actorId: userId,
+    actorRole: "customer",
+    action: "auth.email_verified",
+    entity: "user",
+    entityId: userId,
+    ip: ctx.ip,
+  });
+  return true;
+}
+
+/** A fresh verification link for a signed-in user who hasn't verified yet. */
+export async function resendVerification(userId: string, ctx: AuthContext): Promise<void> {
+  const user = await findAuthState(userId);
+  if (!user || user.emailVerified || !canSignIn(user)) return;
+  await issueVerification(user.email, user.name, ctx.now ?? new Date());
+}
+
+// ---- Forgot / reset password (P2-T03) ----
+
+/** Always "succeeds" from the caller's view: whether the email exists is never revealed. */
+export async function requestPasswordReset(email: string, ctx: AuthContext): Promise<void> {
+  const now = ctx.now ?? new Date();
+  const user = await findLoginRecordByEmail(email);
+  if (!user || !canSignIn(user)) return;
+  const { token, hash } = newToken();
+  await savePasswordReset(user.id, hash, new Date(now.getTime() + RESET_TTL_MS));
+  await sendPasswordResetEmail(user.email, user.name, token);
+  await audit.log({
+    actorId: user.id,
+    actorRole: user.role,
+    action: "auth.reset_requested",
+    entity: "user",
+    entityId: user.id,
+    ip: ctx.ip,
+  });
+}
+
+/**
+ * Sets a new password from a reset link: the link works once, and every existing session is
+ * signed out (tokenVersion bump). The breach check runs first so a rejected password doesn't
+ * burn the link.
+ */
+export async function resetPassword(
+  input: { token: string; password: string },
+  ctx: AuthContext,
+): Promise<ResetPasswordResult> {
+  if (!looksLikeToken(input.token)) return { ok: false, reason: "invalid" };
+  if (await isBreachedPassword(input.password)) return { ok: false, reason: "breached", message: BREACHED };
+  const now = ctx.now ?? new Date();
+  const userId = await consumePasswordReset(hashToken(input.token), now);
+  if (!userId) return { ok: false, reason: "invalid" };
+  await resetPasswordAndRevokeSessions(userId, await hashPassword(input.password), now);
+  const user = await findAuthState(userId);
+  await audit.log({
+    actorId: userId,
+    actorRole: user?.role ?? "customer",
+    action: "auth.password_reset",
+    entity: "user",
+    entityId: userId,
+    ip: ctx.ip,
+  });
+  return { ok: true };
 }
