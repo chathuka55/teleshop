@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
-import type { BrandDTO, ProductPage, ProductQuery } from "@/modules/catalog/types";
+import { SPEC_PARAM_PREFIX } from "@/modules/catalog/schema";
+import type { BrandDTO, ProductPage, ProductQuery, SpecFilterDTO } from "@/modules/catalog/types";
 import { Breadcrumbs, type Crumb } from "@/components/ui/Breadcrumbs";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
@@ -27,6 +28,9 @@ export function listingHref(
   if (query.maxPriceCents !== undefined) p.set("max", String(query.maxPriceCents / 100));
   if (query.inStock) p.set("inStock", "1");
   if (query.sort && query.sort !== "featured") p.set("sort", query.sort);
+  for (const [key, values] of Object.entries(query.specs ?? {})) {
+    if (values.length) p.set(`${SPEC_PARAM_PREFIX}${key}`, values.join(","));
+  }
   for (const [k, v] of Object.entries(patch)) {
     if (v === undefined) p.delete(k);
     else p.set(k, v);
@@ -44,6 +48,7 @@ export function ProductListing({
   query,
   page,
   brands,
+  specFilters = [],
 }: {
   title: string;
   subtitle: string;
@@ -52,6 +57,8 @@ export function ProductListing({
   query: ProductQuery;
   page: ProductPage;
   brands: BrandDTO[];
+  /** Filterable specs of the category (category pages only), e.g. Storage, RAM. */
+  specFilters?: readonly SpecFilterDTO[];
 }) {
   const start = query.cursor ? Number(query.cursor) : 0;
   const prevCursor = start > 0 ? Math.max(0, start - 12) : null;
@@ -68,6 +75,16 @@ export function ProductListing({
       label: conditions.find((x) => x.value === c)?.label ?? c,
       href: listingHref(basePath, { ...query, condition: query.condition?.filter((x) => x !== c) }),
     })),
+    ...Object.entries(query.specs ?? {}).flatMap(([key, values]) =>
+      values.map((value) => ({
+        label: `${specFilters.find((f) => f.key === key)?.label ?? key}: ${value}`,
+        href: listingHref(
+          basePath,
+          { ...query, specs: withoutSpec(query.specs, key, value) },
+          { cursor: undefined },
+        ),
+      })),
+    ),
     ...(query.inStock
       ? [{ label: "In stock", href: listingHref(basePath, { ...query, inStock: undefined }) }]
       : []),
@@ -193,6 +210,29 @@ export function ProductListing({
               <legend className="float-left mb-3 w-full text-sm font-semibold">Brand</legend>
               <BrandCheckboxes brands={brands} selected={query.brand ?? []} />
             </fieldset>
+
+            {specFilters.map((f) => (
+              <fieldset key={f.key} className="rounded-[18px] border border-line bg-surface p-4">
+                <legend className="float-left mb-3 w-full text-sm font-semibold">{f.label}</legend>
+                <div className="clear-both flex flex-wrap gap-2">
+                  {f.options.map((option) => (
+                    <label
+                      key={option}
+                      className="cursor-pointer rounded-full border border-line px-3 py-1.5 text-[13px] text-text-secondary transition-colors hover:text-text has-checked:border-primary-light/50 has-checked:bg-primary/15 has-checked:text-primary-light"
+                    >
+                      <input
+                        type="checkbox"
+                        name={`${SPEC_PARAM_PREFIX}${f.key}`}
+                        value={option}
+                        defaultChecked={query.specs?.[f.key]?.includes(option)}
+                        className="sr-only"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
 
             <fieldset className="rounded-[18px] border border-line bg-surface p-4">
               <legend className="float-left mb-3 w-full text-sm font-semibold">Condition</legend>
@@ -324,4 +364,13 @@ function BrandCheckboxes({ brands, selected }: { brands: BrandDTO[]; selected: r
       ))}
     </div>
   );
+}
+
+/** The spec filters with one value removed (and the key dropped when it was the last one). */
+function withoutSpec(specs: ProductQuery["specs"], key: string, value: string): ProductQuery["specs"] {
+  const next = { ...specs };
+  const left = (next[key] ?? []).filter((v) => v !== value);
+  if (left.length) next[key] = left;
+  else delete next[key];
+  return Object.keys(next).length ? next : undefined;
 }

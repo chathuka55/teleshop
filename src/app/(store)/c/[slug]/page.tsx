@@ -20,7 +20,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const category = await getCategory(slug);
   if (!category) notFound();
 
-  const query = parseProductQuery(await searchParams, category.slug);
+  const query = parseProductQuery(await searchParams, category.slug, category.specFilters);
   const [page, brands] = await Promise.all([searchProducts(query), listBrands()]);
 
   return (
@@ -32,6 +32,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       query={query}
       page={page}
       brands={brands}
+      specFilters={category.specFilters}
     />
   );
 }

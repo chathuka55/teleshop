@@ -86,6 +86,8 @@ export type ProductQuery = {
   q?: string;
   sort?: ProductSort;
   seller?: string;
+  /** Category spec filters, e.g. { storage: ["256GB", "512GB"] } — allow-listed by parseSpecFilters. */
+  specs?: Record<string, string[]>;
   /** Only products with at least one discounted variant (compare-at > price) — the Deals page. */
   deals?: boolean;
   cursor?: string;

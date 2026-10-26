@@ -212,3 +212,41 @@ describe("order tracking", () => {
     expect(await trackOrder({ ...input, orderNo: "TS-2026-999999" })).toBeNull();
   });
 });
+
+describe("spec filters on MongoDB (P3-T04)", () => {
+  it("matches the start of a spec value: 1TB finds '1TB SSD' laptops only", async () => {
+    const page = await searchProducts({ category: "laptops", specs: { storage: ["1TB"] }, limit: 50 });
+    expect(page.items.length).toBeGreaterThan(0);
+    for (const p of page.items) {
+      const full = await getProductBySlug(p.slug);
+      const storage = full?.specs.find((s) => s.label.toLowerCase() === "storage")?.value ?? "";
+      const variantHas = full?.variants.some((v) => v.attributes.storage === "1TB");
+      expect(storage.startsWith("1TB") || variantHas).toBe(true);
+    }
+  });
+
+  it("matches variant attributes: 512GB finds phones sold in a 512GB variant", async () => {
+    const page = await searchProducts({
+      category: "mobile-phones",
+      specs: { storage: ["512GB"] },
+      limit: 50,
+    });
+    expect(page.items.map((p) => p.slug)).toContain("apple-iphone-17-pro");
+  });
+
+  it("ANDs different specs and ORs values of one spec", async () => {
+    const one = await searchProducts({ category: "mobile-phones", specs: { storage: ["128GB"] }, limit: 50 });
+    const either = await searchProducts({
+      category: "mobile-phones",
+      specs: { storage: ["128GB", "512GB"] },
+      limit: 50,
+    });
+    const both = await searchProducts({
+      category: "mobile-phones",
+      specs: { storage: ["512GB"], ram: ["8GB"] },
+      limit: 50,
+    });
+    expect(either.total).toBeGreaterThanOrEqual(one.total);
+    expect(both.total).toBeLessThanOrEqual(either.total);
+  });
+});

@@ -12,7 +12,7 @@
 - [x] **P0-T03** `src/config/env.ts` with Zod; app fails to start when a variable is missing. *Check:* unit test.
 - [x] **P0-T04** Security headers + CSP nonce in `middleware.ts`; `next.config.ts` hardening (`poweredByHeader: false`). *Check:* securityheaders.com grade A on preview.
 - [x] **P0-T05** Design tokens (`tokens.css`, `glass.css`), fonts (Space Grotesk + Inter via `next/font`), base UI: Button, Badge, Input, GlassPanel. *Check:* `/dev/ui` preview page matches Figma.
-- [ ] **P0-T06** GitHub Actions CI (lint, typecheck, unit, build, audit) + Vercel project linked with Preview deploys. *Check:* PR shows green checks + preview URL. — _CI workflow updated for pnpm 11; Vercel project not linked yet._
+- [ ] **P0-T06** GitHub Actions CI (lint, typecheck, unit, build, audit) + Vercel project linked with Preview deploys. *Check:* PR shows green checks + preview URL. — _CI on Node 24 (`actions/*@v5`); Vercel linked, production deploys from `main` (bom1). Preview deploys need the Preview env vars: run `pnpm vercel:preview-env` once (docs/12 §2). CI `migrate` skips with a warning until `MIGRATOR_MONGODB_URI` is set._
 
 ## Phase 1 — Data layer · [details](phases/phase-1-data-layer.md)
 - [x] **P1-T01** `db/mongoose.ts`: cached connection, `sanitizeFilter`, `withTransaction()` helper. *Check:* integration test runs a transaction on `MongoMemoryReplSet`.
@@ -30,15 +30,15 @@
 - [x] **P2-T03** Forgot / reset password (hashed single-use tokens, 30 min). Lockout after 5 failures. — _`/reset-password`; a reset signs out every device (tokenVersion) and replaces older links._
 - [x] **P2-T04** Route guards in middleware + `requireRole()` / ownership helpers in `lib/auth/guards.ts`. — _Rules in `lib/auth/route-access.ts`, pure checks in `lib/auth/authorize.ts` (unit tested)._
 - [ ] **P2-T05** Admin TOTP 2FA (enrol with QR, verify, recovery codes, encrypted secret). Admin login page (A1).
-- [ ] **P2-T06** Navbar Guest/Logged-in states (name + profile photo), profile page with avatar upload (Blob, sharp).
+- [ ] **P2-T06** Navbar Guest/Logged-in states (name + profile photo), profile page with avatar upload (Blob, sharp). — _Navbar states + sign-out done; profile page + avatar upload next._
 
 ## Phase 3 — Storefront · [details](phases/phase-3-storefront.md)
 - [x] **P3-T01** Layout: glass Navbar, Footer, mobile bottom tab bar, menu drawer.
 - [x] **P3-T02** Home page sections (hero copy, trust strip, categories, featured products, promos, brands, shops, how it works, newsletter).
-- [x] **P3-T03** **3D hero slider** (phone, PC, headset GLB) per [doc 06](06-3d-hero.md). *Check:* acceptance list in doc 06.
-- [ ] **P3-T04** Shop listing `/shop` + `/c/[slug]`: filters from category spec template, sort, cursor pagination, URL state. — _Done on MongoDB (repositories); spec-value filters (`spec.<key>`) still to add._
-- [ ] **P3-T05** Product page `/p/[slug]`: gallery, variant picker (price/stock per SKU), specs, seller card, reviews, related. ISR + tags. — _Done on MongoDB with live stock; ISR not used — every page renders per request for the CSP nonce (doc 10 §2)._
-- [ ] **P3-T06** Search (text index), compare page (up to 4), seller shop page `/s/[shop]`. — _Done: text-index search, compare, shop page._
+- [x] **P3-T03** **3D hero slider** (phone, PC, headset GLB) per [doc 06](06-3d-hero.md). *Check:* acceptance list in doc 06. — _4 slides: iPhone 17 Pro + MacBook Pro GLBs (CC BY 4.0), procedural PC, headset._
+- [x] **P3-T04** Shop listing `/shop` + `/c/[slug]`: filters from category spec template, sort, cursor pagination, URL state. — _Spec filters `?spec.<key>=a,b` (allow-listed options; matches spec prefix or variant attribute). `/deals` page added._
+- [x] **P3-T05** Product page `/p/[slug]`: gallery, variant picker (price/stock per SKU), specs, seller card, reviews, related. ISR + tags. — _Up to 4 photos with hover/tap zoom. ISR deliberately not used — every page renders per request for the CSP nonce (doc 10 §2)._
+- [x] **P3-T06** Search (text index), compare page (up to 4), seller shop page `/s/[shop]`.
 - [ ] **P3-T07** Info pages: about, contact (form + rate limit), help/FAQ, terms & privacy. SEO metadata, sitemap, robots, JSON-LD Product. — _Done except persisting newsletter sign-ups; contact form sends when `EMAIL_SERVER` is set._
 
 ## Phase 4 — Cart & checkout · [details](phases/phase-4-checkout.md)
