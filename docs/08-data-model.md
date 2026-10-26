@@ -287,6 +287,7 @@ Other rules:
 | 0002 | `0002-validators.ts` | `$jsonSchema` validators for `orders` and `inventory` (ints ≥ 0 via `multipleOf: 1`, `orderNo` pattern, ≥ 1 package) | 2026-10-22 |
 | 0003 | `0003-seed-couriers-settings.ts` | Insert couriers + `settings.global` (`$setOnInsert` — never overwrites admin edits) | 2026-10-22 |
 | 0004 | `0004-demo-product-images.ts` | Attach Wikimedia Commons demo photos (`public/images/products`, credits on `/credits`) to seeded products that have no images | 2026-10-23 |
+| 0005 | `0005-demo-product-photo-sets.ts` | Replace the legacy single demo photo (`<slug>.webp`, from the first 0004) with the photo set (`<slug>-1…4.webp`, backgrounds removed); seller uploads untouched | 2026-10-26 |
 
 Applied migrations are recorded in the `_migrations` collection (`_id` = migration id, `appliedAt`). Runner: `scripts/seed/migrate.ts` (`--status`, `--down <id>`); list of migrations: `src/db/migrations/index.ts`.
 
