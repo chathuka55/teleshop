@@ -30,7 +30,7 @@
 - [x] **P2-T03** Forgot / reset password (hashed single-use tokens, 30 min). Lockout after 5 failures. — _`/reset-password`; a reset signs out every device (tokenVersion) and replaces older links._
 - [x] **P2-T04** Route guards in middleware + `requireRole()` / ownership helpers in `lib/auth/guards.ts`. — _Rules in `lib/auth/route-access.ts`, pure checks in `lib/auth/authorize.ts` (unit tested)._
 - [ ] **P2-T05** Admin TOTP 2FA (enrol with QR, verify, recovery codes, encrypted secret). Admin login page (A1).
-- [ ] **P2-T06** Navbar Guest/Logged-in states (name + profile photo), profile page with avatar upload (Blob, sharp). — _Navbar states + sign-out done; profile page + avatar upload next._
+- [ ] **P2-T06** Navbar Guest/Logged-in states (name + profile photo), profile page with avatar upload (Blob, sharp). — _Done: navbar states, `/account` (profile, email verification banner, change password, sign out on all devices). Avatar upload (Upstash Blob + sharp) still to do._
 
 ## Phase 3 — Storefront · [details](phases/phase-3-storefront.md)
 - [x] **P3-T01** Layout: glass Navbar, Footer, mobile bottom tab bar, menu drawer.
@@ -43,7 +43,7 @@
 
 ## Phase 4 — Cart & checkout · [details](phases/phase-4-checkout.md)
 - [ ] **P4-T01** Cart service: guest cart (signed cookie), saved cart, merge on login, prices always from DB.
-- [ ] **P4-T02** Cart page (grouped by seller) + mini cart; wishlist.
+- [ ] **P4-T02** Cart page (grouped by seller) + mini cart; wishlist. — _Wishlist done: hearts save to `wishlists` for signed-in users, guest hearts merge on `/account/wishlist`._
 - [ ] **P4-T03** Addresses CRUD (account + checkout).
 - [ ] **P4-T04** `placeOrder` transaction: reprice, reserve stock, split packages, payment `pending`, order number, idempotency. *Check:* race test — 2 buyers, 1 unit.
 - [ ] **P4-T05** Checkout page (stepper, delivery method, COD) + confirmation page + emails.

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
-import { SPEC_PARAM_PREFIX } from "@/modules/catalog/schema";
 import type { BrandDTO, ProductPage, ProductQuery, SpecFilterDTO } from "@/modules/catalog/types";
 import { Breadcrumbs, type Crumb } from "@/components/ui/Breadcrumbs";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
 import { FilterForm } from "./FilterForm";
+import { listingHref } from "./listing-href";
+import { SPEC_PARAM_PREFIX } from "@/modules/catalog/schema";
 import { ProductCard } from "./ProductCard";
 import { SortSelect } from "./SortSelect";
 
@@ -14,31 +15,6 @@ const conditions = [
   { value: "used", label: "Used" },
   { value: "refurbished", label: "Certified refurbished" },
 ] as const;
-
-/** Builds a listing URL from the current query plus overrides; `undefined` removes a key. */
-export function listingHref(
-  basePath: string,
-  query: ProductQuery,
-  patch: Record<string, string | undefined> = {},
-): string {
-  const p = new URLSearchParams();
-  if (query.q) p.set("q", query.q);
-  if (query.brand?.length) p.set("brand", query.brand.join(","));
-  if (query.condition?.length) p.set("condition", query.condition.join(","));
-  if (query.minPriceCents !== undefined) p.set("min", String(query.minPriceCents / 100));
-  if (query.maxPriceCents !== undefined) p.set("max", String(query.maxPriceCents / 100));
-  if (query.inStock) p.set("inStock", "1");
-  if (query.sort && query.sort !== "featured") p.set("sort", query.sort);
-  for (const [key, values] of Object.entries(query.specs ?? {})) {
-    if (values.length) p.set(`${SPEC_PARAM_PREFIX}${key}`, values.join(","));
-  }
-  for (const [k, v] of Object.entries(patch)) {
-    if (v === undefined) p.delete(k);
-    else p.set(k, v);
-  }
-  const s = p.toString();
-  return s ? `${basePath}?${s}` : basePath;
-}
 
 /** Figma "02 · Shop — Category Listing" (9:161). Filters are a GET form → URL state, no JS needed. */
 export function ProductListing({
