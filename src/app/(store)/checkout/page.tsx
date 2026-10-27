@@ -1,32 +1,46 @@
 import type { Metadata } from "next";
-import { Lock, ShoppingCart } from "lucide-react";
-import { ButtonLink } from "@/components/ui/Button";
+import { redirect } from "next/navigation";
+import { CheckoutForm } from "@/components/checkout/CheckoutForm";
+import { VerifyEmailBanner } from "@/components/forms/AccountForms";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { getCurrentUser } from "@/lib/auth/guards";
+import { listMyAddresses } from "@/modules/addresses/service";
+import { getCheckoutOptions } from "@/modules/cart/service";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
 
 /**
- * Checkout (Figma 05 / M7) needs a signed-in, email-verified customer and the placeOrder
- * transaction (P4-T04/T05). Until auth + database are connected it points back to the cart.
+ * Checkout (Figma 05 / M7, P4-T05): delivery address → delivery method → Cash on Delivery →
+ * place order. Signed-in customers only; prices and totals always come from the server.
  */
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/sign-in?next=%2Fcheckout");
+  const [addresses, options] = await Promise.all([listMyAddresses(), getCheckoutOptions()]);
+
   return (
-    <div className="container-page grid min-h-[60vh] place-items-center py-16">
-      <div className="flex max-w-md flex-col items-center rounded-[22px] border border-line bg-surface p-8 text-center">
-        <span className="grid size-14 place-items-center rounded-2xl bg-primary/12 text-primary-light">
-          <Lock aria-hidden className="size-6" />
-        </span>
-        <h1 className="mt-5 font-display text-2xl font-bold">Sign in to check out</h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Cash on Delivery orders need an account with a verified email and phone, so the shop and courier can
-          reach you.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <ButtonLink href="/sign-in?next=/checkout">Sign in</ButtonLink>
-          <ButtonLink href="/cart" variant="glass">
-            <ShoppingCart aria-hidden /> Back to cart
-          </ButtonLink>
+    <div className="container-page pt-6 pb-16 md:pt-8">
+      <Breadcrumbs items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} />
+      <h1 className="mt-4 mb-6 font-display text-[30px] font-bold tracking-[-0.02em] md:text-[38px]">
+        Checkout
+      </h1>
+      {!user.emailVerified && (
+        <div className="mb-6">
+          <VerifyEmailBanner email={user.email} />
         </div>
-      </div>
+      )}
+      <CheckoutForm
+        addresses={addresses}
+        fees={options.fees}
+        canOrder={user.emailVerified && options.codEnabled}
+        blockedReason={
+          !user.emailVerified
+            ? "Verify your email to place a Cash on Delivery order."
+            : !options.codEnabled
+              ? "Cash on Delivery is paused right now."
+              : null
+        }
+      />
     </div>
   );
 }

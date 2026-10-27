@@ -1,5 +1,7 @@
 import type { ProductCardDTO } from "@/modules/catalog/types";
 
+export type DeliveryMethod = "standard" | "express";
+
 /** What the browser is allowed to keep: SKUs and quantities only, never prices. */
 export type CartItemInput = { sku: string; qty: number };
 

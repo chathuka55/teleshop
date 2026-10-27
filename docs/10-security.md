@@ -6,7 +6,7 @@
 
 | Risk | Controls |
 | --- | --- |
-| Broken access control | Middleware route guards (`/account`, `/seller`, `/admin`) **and** service-level `requireRole()` + ownership checks. Tests for "seller A cannot edit seller B's product". |
+| Broken access control | Middleware route guards (`/account`, `/checkout`, `/seller`, `/admin`) **and** service-level `requireRole()` + ownership checks. Tests for "seller A cannot edit seller B's product". |
 | Weak authentication | Argon2id (`memoryCost 19456, timeCost 2`), min 10-char passwords + breached-password check (k-anonymity HIBP API), lockout after 5 failures, admin TOTP 2FA, email verification before checkout. |
 | Session theft | Auth.js JWT in `__Secure-` httpOnly, Secure, SameSite=Lax cookie; 7-day max age; `tokenVersion` in JWT to revoke all sessions on password change/suspend. |
 | Injection (NoSQL) | Zod on every input; `mongoose.set('sanitizeFilter', true)`; `strict: 'throw'`; never pass raw `req.body` into a query; no `$where`/`mapReduce`. |

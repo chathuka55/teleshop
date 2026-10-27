@@ -30,7 +30,8 @@ export function ProductArt({
 }: {
   product: Pick<ProductCardDTO, "art" | "imageUrl" | "name">;
   className?: string;
-  size?: "md" | "lg";
+  /** `sm`: thumbnails (cart lines, order items) — tight padding, small image. */
+  size?: "sm" | "md" | "lg";
   priority?: boolean;
   /** Scale of the drawn device (1 = card size). Defaults to 1.9 for `lg`. */
   artScale?: number;
@@ -51,8 +52,17 @@ export function ProductArt({
           alt={product.name}
           fill
           priority={priority}
-          sizes={size === "lg" ? "(min-width: 1024px) 600px, 100vw" : "(min-width: 1024px) 300px, 50vw"}
-          className="object-contain p-6 drop-shadow-[0_16px_28px_rgb(0_0_0/0.45)]"
+          sizes={
+            size === "lg"
+              ? "(min-width: 1024px) 600px, 100vw"
+              : size === "sm"
+                ? "96px"
+                : "(min-width: 1024px) 300px, 50vw"
+          }
+          className={cn(
+            "object-contain",
+            size === "sm" ? "p-1" : "p-6 drop-shadow-[0_16px_28px_rgb(0_0_0/0.45)]",
+          )}
         />
       ) : (
         <>

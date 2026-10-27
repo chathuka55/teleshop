@@ -58,6 +58,11 @@ describe("routeAccess — guards (P2-T04)", () => {
     expect(go("/admin", null)).toEqual({ allow: false, redirectTo: "/admin/login?next=%2Fadmin" });
   });
 
+  it("checkout needs a signed-in user", () => {
+    expect(go("/checkout", null)).toEqual({ allow: false, redirectTo: "/sign-in?next=%2Fcheckout" });
+    expect(go("/checkout", customer)).toEqual({ allow: true });
+  });
+
   it("any signed-in user reaches /account", () => {
     for (const u of [customer, seller, pendingSeller, admin2fa])
       expect(go("/account", u)).toEqual({ allow: true });

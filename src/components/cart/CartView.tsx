@@ -125,7 +125,7 @@ export function CartView() {
                   className="grid grid-cols-[72px_1fr] gap-4 px-5 py-4 sm:grid-cols-[72px_1fr_auto_auto] sm:items-center"
                 >
                   <Link href={`/p/${line.productSlug}`} aria-hidden tabIndex={-1}>
-                    <ProductArt product={line} artScale={0.42} className="size-[72px]" />
+                    <ProductArt product={line} size="sm" artScale={0.42} className="size-[72px]" />
                   </Link>
                   <div className="min-w-0">
                     <Link

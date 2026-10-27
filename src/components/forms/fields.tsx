@@ -112,10 +112,12 @@ export function CheckboxField({
   name,
   error,
   children,
+  defaultChecked,
 }: {
   name: string;
   error?: string;
   children: ReactNode;
+  defaultChecked?: boolean;
 }) {
   return (
     <div>
@@ -123,6 +125,7 @@ export function CheckboxField({
         <input
           type="checkbox"
           name={name}
+          defaultChecked={defaultChecked}
           aria-invalid={!!error || undefined}
           className="mt-0.5 size-4 shrink-0 accent-primary"
         />

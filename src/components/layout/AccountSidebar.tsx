@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, LayoutDashboard, Package, Store, type LucideIcon } from "lucide-react";
+import { Heart, LayoutDashboard, MapPin, Package, Store, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 type Item = { label: string; href: string; icon: LucideIcon };
@@ -11,6 +11,7 @@ const items: readonly Item[] = [
   { label: "Overview", href: "/account", icon: LayoutDashboard },
   { label: "My orders", href: "/account/orders", icon: Package },
   { label: "Wishlist", href: "/account/wishlist", icon: Heart },
+  { label: "Addresses", href: "/account/addresses", icon: MapPin },
 ];
 
 /** Account navigation (Figma 11 · My Account). A row of pills on mobile, a column on desktop. */

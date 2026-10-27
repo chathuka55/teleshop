@@ -1,5 +1,10 @@
 import type { Types } from "mongoose";
-import type { PackageStatus, TrackResultDTO } from "@/modules/orders/types";
+import type {
+  CustomerOrderDTO,
+  CustomerOrderSummaryDTO,
+  PackageStatus,
+  TrackResultDTO,
+} from "@/modules/orders/types";
 import { connectDB } from "../mongoose";
 import { OrderEventModel } from "../models/order-event.model";
 import { OrderModel } from "../models/order.model";
@@ -67,4 +72,100 @@ export async function findOrderForTracking(
       })),
     },
   };
+}
+
+// ---- Customer reads (confirmation page, /account/orders) — always scoped to the customer ----
+
+type LeanCustomerOrder = {
+  orderNo: string;
+  placedAt: Date;
+  status: CustomerOrderDTO["status"];
+  deliveryMethod: CustomerOrderDTO["deliveryMethod"];
+  subtotalCents: number;
+  deliveryCents: number;
+  totalCents: number;
+  deliveryAddress: CustomerOrderDTO["deliveryAddress"];
+  packages: {
+    _id: Types.ObjectId;
+    sellerId: Types.ObjectId;
+    status: PackageStatus;
+    subtotalCents: number;
+    deliveryCents: number;
+    items: CustomerOrderDTO["packages"][number]["items"];
+  }[];
+};
+
+export async function findCustomerOrder(
+  customerId: string,
+  orderNo: string,
+): Promise<CustomerOrderDTO | null> {
+  await connectDB();
+  const o = await OrderModel.findOne({ orderNo, customerId }).lean<LeanCustomerOrder>();
+  if (!o) return null;
+  const sellers = await findLeanSellers({ ids: o.packages.map((p) => p.sellerId) });
+  const byId = new Map(sellers.map((s) => [s._id.toString(), s]));
+  return {
+    orderNo: o.orderNo,
+    placedAt: o.placedAt.toISOString(),
+    status: o.status,
+    deliveryMethod: o.deliveryMethod,
+    paymentMethod: "cod",
+    subtotalCents: o.subtotalCents,
+    deliveryCents: o.deliveryCents,
+    totalCents: o.totalCents,
+    deliveryAddress: {
+      recipientName: o.deliveryAddress.recipientName,
+      phone: o.deliveryAddress.phone,
+      line1: o.deliveryAddress.line1,
+      line2: o.deliveryAddress.line2 ?? "",
+      city: o.deliveryAddress.city,
+      district: o.deliveryAddress.district,
+      postalCode: o.deliveryAddress.postalCode ?? null,
+    },
+    packages: o.packages.map((p) => {
+      const seller = byId.get(p.sellerId.toString());
+      return {
+        id: p._id.toString(),
+        sellerName: seller?.shopName ?? "Teleshop seller",
+        sellerSlug: seller?.slug ?? "",
+        status: p.status,
+        subtotalCents: p.subtotalCents,
+        deliveryCents: p.deliveryCents,
+        items: p.items.map((i) => ({
+          sku: i.sku,
+          name: i.name,
+          variantLabel: i.variantLabel,
+          imageUrl: i.imageUrl ?? null,
+          qty: i.qty,
+          unitPriceCents: i.unitPriceCents,
+          lineTotalCents: i.lineTotalCents,
+        })),
+      };
+    }),
+  };
+}
+
+export async function listCustomerOrders(customerId: string, limit = 50): Promise<CustomerOrderSummaryDTO[]> {
+  await connectDB();
+  const rows = await OrderModel.find({ customerId })
+    .sort({ placedAt: -1 })
+    .limit(limit)
+    .select("orderNo placedAt status totalCents packages.items.qty")
+    .lean<
+      {
+        orderNo: string;
+        placedAt: Date;
+        status: CustomerOrderSummaryDTO["status"];
+        totalCents: number;
+        packages: { items: { qty: number }[] }[];
+      }[]
+    >();
+  return rows.map((o) => ({
+    orderNo: o.orderNo,
+    placedAt: o.placedAt.toISOString(),
+    status: o.status,
+    totalCents: o.totalCents,
+    itemCount: o.packages.reduce((n, p) => n + p.items.reduce((m, i) => m + i.qty, 0), 0),
+    packageCount: o.packages.length,
+  }));
 }
