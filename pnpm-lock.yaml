@@ -27,6 +27,9 @@ importers:
       '@react-three/postprocessing':
         specifier: 3.2.1
         version: 3.2.1(@react-three/fiber@9.8.2(@types/react@19.3.0)(immer@11.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(three@0.186.1))(@types/three@0.186.0)(postprocessing@6.39.5(three@0.186.1))(react@19.1.0)(three@0.186.1)
+      '@upstash/blob':
+        specifier: 0.0.11
+        version: 0.0.11(react@19.1.0)
       '@upstash/ratelimit':
         specifier: 2.2.0
         version: 2.2.0(@upstash/redis@1.39.0)
@@ -1720,6 +1723,15 @@ packages:
     resolution: {integrity: sha512-nAB74NfSNKknqQ1RrYj6uz8FcXEomu/MATJZxh/x+BArzN2U3JbOYC0APYzUIGhVY3m5hRxA8VPNdPBoG8txlA==}
     cpu: [x64]
     os: [win32]
+
+  '@upstash/blob@0.0.11':
+    resolution: {integrity: sha512-UHudxISoPLqMchQ9HyOK7yJcFqsIgOShkdDvZ/1yL5UlDz88LPORSFYJ4BA7HPvfI3PcSjRrXdyVs6LDKiZgjg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      react: '>=18'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@upstash/core-analytics@0.0.10':
     resolution: {integrity: sha512-7qJHGxpQgQr9/vmeS1PktEwvNAF7TI4iJDi8Pu2CFZ9YUGHZH4fOP5TfYlZ4aVxfopnELiE4BS4FBjyK7V1/xQ==}
@@ -5835,6 +5847,10 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
+
+  '@upstash/blob@0.0.11(react@19.1.0)':
+    optionalDependencies:
+      react: 19.1.0
 
   '@upstash/core-analytics@0.0.10':
     dependencies:

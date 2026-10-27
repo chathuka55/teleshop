@@ -1,12 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { signOut } from "@/lib/auth";
+import { signOut, unstable_update } from "@/lib/auth";
+import { InvalidImageError } from "@/lib/images/avatar";
+import { StorageNotConfiguredError } from "@/lib/storage/blob";
 import { clientIp } from "@/lib/security/client-ip";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { echoValues, invalid, type FormState } from "@/lib/validation/form";
 import { changePasswordSchema, profileSchema } from "./schema";
-import { changeMyPassword, signOutEverywhere, updateMyProfile } from "./service";
+import {
+  changeMyPassword,
+  removeMyAvatar,
+  signOutEverywhere,
+  updateMyAvatar,
+  updateMyProfile,
+} from "./service";
 
 /* Account Server Actions — parse (Zod) → rate limit → service (which checks the session). */
 
@@ -47,4 +55,41 @@ export async function changePasswordAction(_prev: FormState, formData: FormData)
 export async function signOutEverywhereAction(): Promise<void> {
   await signOutEverywhere(await clientIp());
   await signOut({ redirectTo: "/sign-in" });
+}
+
+/** Re-reads the user into the session so the navbar shows the change right away. */
+async function refreshSession(): Promise<void> {
+  await unstable_update({});
+}
+
+/** Profile photo form: `intent=remove` removes it, otherwise the `avatar` file replaces it. */
+export async function avatarAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const blocked = await limited("account:avatar");
+  if (blocked) return blocked;
+
+  if (formData.get("intent") === "remove") {
+    await removeMyAvatar(await clientIp());
+    await refreshSession();
+    revalidatePath("/", "layout");
+    return { status: "ok", message: "Profile photo removed." };
+  }
+
+  const file = formData.get("avatar");
+  if (!(file instanceof File) || file.size === 0)
+    return { status: "error", message: "Choose a photo to upload." };
+  try {
+    await updateMyAvatar(new Uint8Array(await file.arrayBuffer()), await clientIp());
+  } catch (e) {
+    if (e instanceof InvalidImageError) return { status: "error", message: e.message };
+    if (e instanceof StorageNotConfiguredError) {
+      return {
+        status: "error",
+        message: "Photo uploads aren't available right now. Please try again later.",
+      };
+    }
+    throw e;
+  }
+  await refreshSession();
+  revalidatePath("/", "layout");
+  return { status: "ok", message: "Profile photo updated." };
 }

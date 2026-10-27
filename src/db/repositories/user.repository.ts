@@ -302,3 +302,12 @@ export async function consumeTwoFactorProof(id: string, proofHash: string, now: 
   );
   return r.modifiedCount === 1;
 }
+
+/** Sets (or clears) the profile photo; returns the previous URL so its file can be deleted. */
+export async function updateUserImage(id: string, url: string | null): Promise<string | null> {
+  await connectDB();
+  const before = await UserModel.findByIdAndUpdate(id, { $set: { image: url } })
+    .select("image")
+    .lean<{ image?: string | null }>();
+  return before?.image ?? null;
+}

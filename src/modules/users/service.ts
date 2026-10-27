@@ -6,8 +6,11 @@ import {
   findUserById,
   updateUserProfile,
   type UserDTO,
+  updateUserImage,
 } from "@/db/repositories/user.repository";
 import { isBreachedPassword } from "@/lib/auth/breached";
+import { processAvatar } from "@/lib/images/avatar";
+import { deleteObject, ownObjectPath, putPublicImage, randomObjectPath } from "@/lib/storage/blob";
 import { requireUser } from "@/lib/auth/guards";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { audit } from "@/modules/audit/service";
@@ -89,6 +92,47 @@ export async function signOutEverywhere(ip: string | null): Promise<void> {
     action: "auth.sign_out_everywhere",
     entity: "user",
     entityId: user.id,
+    ip,
+  });
+}
+
+const AVATAR_FOLDER = "avatars";
+
+/**
+ * New profile photo: validated + re-encoded (processAvatar), stored under a random name, then the
+ * previous photo (if it was ours) is deleted. Throws InvalidImageError / StorageNotConfiguredError.
+ */
+export async function updateMyAvatar(file: Uint8Array, ip: string | null): Promise<string> {
+  const user = await requireUser();
+  const id = accountIdFor(user);
+  const { bytes, contentType } = await processAvatar(file);
+  const url = await putPublicImage(randomObjectPath(AVATAR_FOLDER, id, "webp"), bytes, contentType);
+  const previous = await updateUserImage(id, url);
+  const oldPath = ownObjectPath(previous, AVATAR_FOLDER);
+  if (oldPath) await deleteObject(oldPath);
+  await audit.log({
+    actorId: id,
+    actorRole: user.role,
+    action: "account.avatar_updated",
+    entity: "user",
+    entityId: id,
+    ip,
+  });
+  return url;
+}
+
+export async function removeMyAvatar(ip: string | null): Promise<void> {
+  const user = await requireUser();
+  const id = accountIdFor(user);
+  const previous = await updateUserImage(id, null);
+  const oldPath = ownObjectPath(previous, AVATAR_FOLDER);
+  if (oldPath) await deleteObject(oldPath);
+  await audit.log({
+    actorId: id,
+    actorRole: user.role,
+    action: "account.avatar_removed",
+    entity: "user",
+    entityId: id,
     ip,
   });
 }
