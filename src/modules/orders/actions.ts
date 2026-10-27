@@ -1,10 +1,13 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { clientIp } from "@/lib/security/client-ip";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { trackOrderSchema } from "./schema";
+import { placeOrderSchema, trackOrderSchema } from "./schema";
+import { placeOrder } from "./customer";
 import { trackOrder } from "./service";
-import type { TrackResultDTO } from "./types";
+import type { PlaceOrderResult, TrackResultDTO } from "./types";
 
 type TrackValues = { orderNo: string; phone: string };
 
@@ -51,4 +54,27 @@ export async function trackOrderAction(_prev: TrackState, formData: FormData): P
     };
   }
   return { status: "found", result, values };
+}
+
+/** Checkout "Place order". parse (Zod) → rate limit → service (prices + stock from the DB only). */
+export async function placeOrderAction(input: unknown): Promise<PlaceOrderResult> {
+  const parsed = placeOrderSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      code: "ADDRESS_NOT_FOUND",
+      message: "Choose a delivery address and delivery method.",
+    };
+  }
+  const ip = await clientIp();
+  const r = await rateLimit(`checkout:${ip ?? "unknown"}`, { limit: 10, windowMs: 60_000 });
+  if (!r.ok)
+    return {
+      ok: false,
+      code: "CART_CHANGED",
+      message: `Too many attempts. Try again in ${r.retryAfterSeconds} seconds.`,
+    };
+  const result = await placeOrder(parsed.data, ip);
+  if (result.ok) revalidatePath("/account/orders");
+  return result;
 }

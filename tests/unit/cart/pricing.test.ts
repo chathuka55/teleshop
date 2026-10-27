@@ -30,6 +30,14 @@ describe("priceCart", () => {
     expect(cart.totalCents).toBe(cart.subtotalCents + cart.deliveryCents);
   });
 
+  it("express delivery charges its fee even for free-delivery items", () => {
+    const express = priceCart([{ sku: macbook, qty: 1 }], demoProducts, {
+      deliveryFeeCents: 95_000,
+      honourFreeDelivery: false,
+    });
+    expect(express.deliveryCents).toBe(95_000);
+  });
+
   it("ships a package free only when every item in it ships free", () => {
     const onlyFree = priceCart([{ sku: macbook, qty: 1 }], demoProducts);
     expect(onlyFree.deliveryCents).toBe(0);

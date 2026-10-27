@@ -30,6 +30,10 @@
 | `signOutAction`, `signInWithGoogleAction` | auth | public | — |
 | `updateProfileAction`, `changePasswordAction`, `signOutEverywhereAction`, `avatarAction` | users | signed in | 10/min/IP |
 | `toggleWishlistAction`, `syncWishlistAction` | wishlist | public (guests: no-op) / signed in | — |
+| `syncCartAction`, `saveCartAction` | cart | public (guests: no-op) / signed in | — |
+| `priceCheckoutAction` | cart | signed in | — |
+| `saveAddressAction`, `deleteAddressAction` | addresses | signed in (owner) | — |
+| `placeOrderAction` | orders | signed in, verified email | 10/min/IP |
 | `confirmEnrolmentAction`, `verifySecondFactorAction`, `finishEnrolmentAction` (TOTP) | auth | admin (password step done) | 5/min/user |
 | `addToCartAction`, `updateCartItemAction`, `removeCartItemAction` | cart | guest/customer | 30/min |
 | `toggleWishlistAction` | cart | customer | 30/min |

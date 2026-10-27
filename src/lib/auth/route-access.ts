@@ -1,7 +1,7 @@
 import type { SessionUser } from "./claims";
 
 /**
- * Route guard rules for /account, /seller and /admin (docs/10 §1). Pure and edge-safe:
+ * Route guard rules for /account, /checkout, /seller and /admin (docs/10 §1). Pure and edge-safe:
  * middleware.ts applies them on every request, unit tests pin them down. Services repeat the
  * role check with requireRole() — middleware alone is never the only gate.
  */
@@ -37,7 +37,9 @@ export function routeAccess(pathname: string, user: SessionUser | null, search =
     // Customers (and sellers still waiting for approval) go to the seller application.
     return { allow: false, redirectTo: user.role === "admin" ? "/admin" : "/register/seller" };
   }
-  if (isUnder(pathname, "/account")) {
+  // Checkout is guarded here (an HTTP redirect) rather than by the page alone: a page-level
+  // redirect followed by the sign-in redirect back confuses the client router.
+  if (isUnder(pathname, "/account") || isUnder(pathname, "/checkout")) {
     return user ? ALLOW : signInRedirect(pathname, search);
   }
   return ALLOW;

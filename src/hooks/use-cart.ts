@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { saveCartAction, syncCartAction } from "@/modules/cart/actions";
 import type { CartItemInput } from "@/modules/cart/types";
 
 const KEY = "teleshop:cart";
@@ -36,8 +37,36 @@ function read(): CartItemInput[] {
   return cache;
 }
 
-function write(next: CartItemInput[]): void {
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let synced = false;
+
+/** Signed-in users: keep the account cart in step (debounced). Guests: the action is a no-op. */
+function scheduleSave(items: CartItemInput[]): void {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => void saveCartAction(items).catch(() => undefined), 600);
+}
+
+/** Once per page load: merge this browser's cart with the account cart (sign-in, other device). */
+function syncOnce(): void {
+  if (synced) return;
+  synced = true;
+  void syncCartAction(read())
+    .then((merged) => {
+      if (merged) write(merged, { save: false });
+    })
+    .catch(() => undefined);
+}
+
+/** Lets the checkout page force a fresh merge before reading the account cart. */
+export async function syncCartNow(): Promise<void> {
+  clearTimeout(saveTimer);
+  const merged = await syncCartAction(read());
+  if (merged) write(merged, { save: false });
+}
+
+function write(next: CartItemInput[], { save = true }: { save?: boolean } = {}): void {
   cache = sanitize(next);
+  if (save) scheduleSave(cache);
   try {
     localStorage.setItem(KEY, JSON.stringify(cache));
   } catch {
@@ -63,10 +92,12 @@ function subscribe(l: () => void): () => void {
 
 /**
  * Guest cart kept in the browser — SKU + quantity only, never prices (RULES.md money rules).
- * The cart page re-prices it on the server. P4-T01 moves it to a signed cookie + `carts`.
+ * The cart page re-prices it on the server. Signed-in users' carts are also saved in `carts`
+ * (merged once per page load, saved after each change) so they follow the account (P4-T01).
  */
 export function useCart() {
   const items = useSyncExternalStore(subscribe, read, () => EMPTY);
+  useEffect(syncOnce, []);
   const add = useCallback((sku: string, qty = 1) => {
     const cur = read();
     const found = cur.find((i) => i.sku === sku);
@@ -76,7 +107,8 @@ export function useCart() {
     write(read().map((i) => (i.sku === sku ? { sku, qty } : i)));
   }, []);
   const remove = useCallback((sku: string) => write(read().filter((i) => i.sku !== sku)), []);
-  const clear = useCallback(() => write([]), []);
+  // After an order the server has already emptied the account cart.
+  const clear = useCallback(() => write([], { save: false }), []);
   const count = items.reduce((n, i) => n + i.qty, 0);
   return { items, count, add, setQty, remove, clear };
 }

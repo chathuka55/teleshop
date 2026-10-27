@@ -42,11 +42,11 @@
 - [ ] **P3-T07** Info pages: about, contact (form + rate limit), help/FAQ, terms & privacy. SEO metadata, sitemap, robots, JSON-LD Product. — _Done except persisting newsletter sign-ups; contact form sends when `EMAIL_SERVER` is set._
 
 ## Phase 4 — Cart & checkout · [details](phases/phase-4-checkout.md)
-- [ ] **P4-T01** Cart service: guest cart (signed cookie), saved cart, merge on login, prices always from DB.
-- [ ] **P4-T02** Cart page (grouped by seller) + mini cart; wishlist. — _Wishlist done: hearts save to `wishlists` for signed-in users, guest hearts merge on `/account/wishlist`._
-- [ ] **P4-T03** Addresses CRUD (account + checkout).
-- [ ] **P4-T04** `placeOrder` transaction: reprice, reserve stock, split packages, payment `pending`, order number, idempotency. *Check:* race test — 2 buyers, 1 unit.
-- [ ] **P4-T05** Checkout page (stepper, delivery method, COD) + confirmation page + emails.
+- [x] **P4-T01** Cart service: guest cart (signed cookie), saved cart, merge on login, prices always from DB. — _Guest cart stays in the browser (SKU + qty only, no prices — a signed cookie adds nothing it needs); signed-in carts are saved in `carts`, merged with the browser cart once per page load (max qty per SKU), saved after every change. Prices always from the DB._
+- [x] **P4-T02** Cart page (grouped by seller) + mini cart; wishlist. — _Cart page grouped by seller, navbar count; wishlist saved for signed-in users._
+- [x] **P4-T03** Addresses CRUD (account + checkout). — _`/account/addresses` (max 10, one default) and inline at checkout; every query scoped to the owner._
+- [x] **P4-T04** `placeOrder` transaction: reprice, reserve stock, split packages, payment `pending`, order number, idempotency. *Check:* race test — 2 buyers, 1 unit. — _`modules/orders/checkout.ts`; integration tests: happy path, idempotent replay (incl. 2 parallel submits), last-unit race, out-of-stock rollback, express fees, unverified email, other user's address, max 3 open COD orders._
+- [x] **P4-T05** Checkout page (stepper, delivery method, COD) + confirmation page + emails. — _`/checkout` (address → standard/express → COD → server-priced summary), confirmation = `/account/orders/[no]?placed=1`, plain-text confirmation email; `/account/orders` lists orders._
 
 ## Phase 5 — Orders & tracking · [details](phases/phase-5-tracking.md)
 - [ ] **P5-T01** My Orders list (tabs, search) and order detail with per-package timeline from `order_events`.

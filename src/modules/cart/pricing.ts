@@ -11,7 +11,14 @@ export const DEFAULT_DELIVERY_FEE_CENTS = 45_000; // settings.deliveryFeeCents d
 export function priceCart(
   items: readonly CartItemInput[],
   products: readonly ProductDetailDTO[],
-  { deliveryFeeCents = DEFAULT_DELIVERY_FEE_CENTS }: { deliveryFeeCents?: number } = {},
+  {
+    deliveryFeeCents = DEFAULT_DELIVERY_FEE_CENTS,
+    honourFreeDelivery = true,
+  }: {
+    deliveryFeeCents?: number;
+    /** false for express delivery: "free delivery" products only ship free by standard delivery */
+    honourFreeDelivery?: boolean;
+  } = {},
 ): PricedCartDTO {
   const bySku = new Map(
     products.flatMap((p) => p.variants.map((v) => [v.sku, { product: p, variant: v }] as const)),
@@ -56,12 +63,12 @@ export function priceCart(
       seller: product.seller,
       lines: [],
       subtotalCents: 0,
-      deliveryCents: product.freeDelivery ? 0 : deliveryFeeCents,
+      deliveryCents: product.freeDelivery && honourFreeDelivery ? 0 : deliveryFeeCents,
     };
     pkg.lines.push(line);
     pkg.subtotalCents = sumCents(pkg.lines.map((l) => l.lineTotalCents));
     // A package ships free only if every product in it ships free.
-    if (!product.freeDelivery) pkg.deliveryCents = deliveryFeeCents;
+    if (!product.freeDelivery || !honourFreeDelivery) pkg.deliveryCents = deliveryFeeCents;
     packages.set(key, pkg);
   }
 
