@@ -220,7 +220,7 @@ export async function seedDatabase(opts: { fixedPassword?: string } = {}): Promi
           qty: pk.qty,
           lineTotalCents: item.priceCents * pk.qty,
           warrantyMonths: item.warrantyMonths,
-          serialNumber: pk.status === "shipped" ? "356938035643809" : null,
+          serialNumbers: pk.status === "shipped" ? ["356938035643809"] : [],
         },
       ],
       subtotalCents: item.priceCents * pk.qty,

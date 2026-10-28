@@ -43,7 +43,7 @@
 | `createReviewAction` | reviews | customer — delivered item from own order, once per item | 5/min/IP |
 | `applySellerAction`, `updateShopAction` | sellers | customer/seller | 5/min |
 | `upsertProductAction`, `setProductStatusAction`, `adjustStockAction` | catalog / inventory | seller | 30/min |
-| `acceptPackageAction`, `recordSerialAction`, `markReadyToShipAction` | fulfilment | seller | 30/min |
+| `packageStepAction` (accept · pack · ready · cancel + reason), `recordSerialAction` | fulfilment | seller — own package only | 30/min/IP |
 | `addTrackingCodeAction` | shipments | admin | 60/min |
 | `markPaymentPaidAction` | payments | admin | 60/min |
 | `approveSellerAction`, `rejectSellerAction`, `suspendUserAction`, `moderateReviewAction` | admin | admin | 60/min |

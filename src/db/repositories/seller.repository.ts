@@ -74,6 +74,13 @@ export async function findLeanSellers(filter: {
   return [];
 }
 
+export async function findShopName(sellerId: string): Promise<string | null> {
+  if (!/^[a-f0-9]{24}$/.test(sellerId)) return null;
+  await connectDB();
+  const s = await SellerModel.findById(sellerId).select("shopName").lean<{ shopName: string }>();
+  return s?.shopName ?? null;
+}
+
 export type SellerContact = { sellerId: string; shopName: string; ownerName: string; ownerEmail: string };
 
 /** Shop owners to notify about their packages (cancellations; new orders later). */

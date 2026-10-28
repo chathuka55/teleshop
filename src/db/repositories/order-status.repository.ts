@@ -26,7 +26,14 @@ export type OrderForUpdate = {
     id: string;
     sellerId: string;
     status: PackageStatus;
-    items: { sku: string; name: string; qty: number }[];
+    items: {
+      id: string;
+      productId: string;
+      sku: string;
+      name: string;
+      qty: number;
+      serialNumbers: string[];
+    }[];
   }[];
 };
 
@@ -39,7 +46,14 @@ type LeanForUpdate = {
     _id: Types.ObjectId;
     sellerId: Types.ObjectId;
     status: PackageStatus;
-    items: { sku: string; name: string; qty: number }[];
+    items: {
+      _id: Types.ObjectId;
+      productId: Types.ObjectId;
+      sku: string;
+      name: string;
+      qty: number;
+      serialNumbers?: string[];
+    }[];
   }[];
 };
 
@@ -50,7 +64,7 @@ export async function findOrderForUpdate(
   await connectDB();
   const o = await OrderModel.findOne({ orderNo })
     .select(
-      "orderNo customerId updatedAt packages._id packages.sellerId packages.status packages.items.sku packages.items.name packages.items.qty",
+      "orderNo customerId updatedAt packages._id packages.sellerId packages.status packages.items._id packages.items.productId packages.items.sku packages.items.name packages.items.qty packages.items.serialNumbers",
     )
     .session(session ?? null)
     .lean<LeanForUpdate>();
@@ -64,7 +78,14 @@ export async function findOrderForUpdate(
       id: p._id.toString(),
       sellerId: p.sellerId.toString(),
       status: p.status,
-      items: p.items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty })),
+      items: p.items.map((i) => ({
+        id: i._id.toString(),
+        productId: i.productId.toString(),
+        sku: i.sku,
+        name: i.name,
+        qty: i.qty,
+        serialNumbers: i.serialNumbers ?? [],
+      })),
     })),
   };
 }
@@ -90,6 +111,25 @@ export async function updatePackageStatuses(
     { _id: new Types.ObjectId(order.id), updatedAt: order.updatedAt },
     { $set: set },
     { session },
+  );
+  if (r.modifiedCount !== 1) throw new OrderChangedError(order.orderNo);
+}
+
+/** Stores the IMEIs/serials of one item, only if the order is unchanged since it was read. */
+export async function setItemSerials(
+  order: OrderForUpdate,
+  packageId: string,
+  itemId: string,
+  serialNumbers: readonly string[],
+  session?: ClientSession,
+): Promise<void> {
+  const pi = order.packages.findIndex((p) => p.id === packageId);
+  const ii = pi < 0 ? -1 : (order.packages[pi]?.items.findIndex((i) => i.id === itemId) ?? -1);
+  if (ii < 0) throw new OrderChangedError(order.orderNo);
+  const r = await OrderModel.updateOne(
+    { _id: new Types.ObjectId(order.id), updatedAt: order.updatedAt },
+    { $set: { [`packages.${pi}.items.${ii}.serialNumbers`]: [...serialNumbers] } },
+    { session, runValidators: true },
   );
   if (r.modifiedCount !== 1) throw new OrderChangedError(order.orderNo);
 }

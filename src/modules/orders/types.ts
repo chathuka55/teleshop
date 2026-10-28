@@ -91,6 +91,8 @@ export type CustomerOrderDTO = {
       myRating: number | null;
       /** Delivered, not reviewed yet, not the customer's own product. */
       canReview: boolean;
+      /** IMEI / serial numbers the shop recorded (warranty proof). */
+      serialNumbers: string[];
       sku: string;
       name: string;
       variantLabel: string;

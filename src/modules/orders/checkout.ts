@@ -10,7 +10,7 @@ import {
   reserveStock,
   type NewOrderPackage,
 } from "@/db/repositories/checkout.repository";
-import { findLeanSellers } from "@/db/repositories/seller.repository";
+import { findLeanSellers, findSellerContacts } from "@/db/repositories/seller.repository";
 import { getSettings } from "@/db/repositories/settings.repository";
 import { withTransaction } from "@/db/mongoose";
 import type { SessionUser } from "@/lib/auth/claims";
@@ -18,7 +18,7 @@ import { audit } from "@/modules/audit/service";
 import { priceCart } from "@/modules/cart/pricing";
 import type { PricedCartDTO } from "@/modules/cart/types";
 import { getProductsBySkus } from "@/modules/catalog/service";
-import { sendOrderConfirmationEmail } from "./emails";
+import { sendOrderConfirmationEmail, sendSellerNewOrderEmail } from "./emails";
 import type { PlaceOrderInput } from "./schema";
 import type { PlaceOrderResult } from "./types";
 
@@ -167,6 +167,19 @@ export async function placeOrderFor(
     ip: ctx.ip,
   });
   // After commit, best effort: a mail outage never undoes an order.
-  await sendOrderConfirmationEmail(user.email, user.name, orderNo, priced, address).catch(() => undefined);
+  const contacts = await findSellerContacts(packages.map((p) => p.sellerId)).catch(() => []);
+  await Promise.allSettled([
+    sendOrderConfirmationEmail(user.email, user.name, orderNo, priced, address),
+    ...contacts.map((c) => {
+      const p = packages.find((pk) => pk.sellerId === c.sellerId);
+      return sendSellerNewOrderEmail(
+        c.ownerEmail,
+        c.shopName,
+        orderNo,
+        p?.items ?? [],
+        (p?.subtotalCents ?? 0) + (p?.deliveryCents ?? 0),
+      );
+    }),
+  ]);
   return { ok: true, orderNo, replay: false };
 }

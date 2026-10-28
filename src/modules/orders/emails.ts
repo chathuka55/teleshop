@@ -77,3 +77,27 @@ export function sendSellerPackageCancelledEmail(
   ].join("\n");
   return sendEmail({ to, subject: `Order ${orderNo} cancelled by the customer`, text });
 }
+
+/** Tells a shop it has a new package to accept. Amounts are the shop's own package only. */
+export function sendSellerNewOrderEmail(
+  to: string,
+  shopName: string,
+  orderNo: string,
+  items: readonly { name: string; variantLabel: string; qty: number }[],
+  amountCents: number,
+): Promise<SendResult> {
+  const text = [
+    `Hi ${shopName},`,
+    "",
+    `You have a new Cash on Delivery order: ${orderNo}.`,
+    "",
+    ...items.map((i) => `  ${i.qty} × ${i.name} (${i.variantLabel})`),
+    "",
+    `Courier collects: ${formatLKR(amountCents)}`,
+    "",
+    `Accept it in your seller dashboard: ${siteConfig.url}/seller/orders/${orderNo}`,
+    "",
+    "— Teleshop",
+  ].join("\n");
+  return sendEmail({ to, subject: `New order ${orderNo} — please accept`, text });
+}
