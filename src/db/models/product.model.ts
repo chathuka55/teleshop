@@ -33,7 +33,7 @@ const productSchema = new Schema(
     shortName: { type: String, required: true, trim: true, maxlength: 60 },
     slug: { type: String, required: true, unique: true, match: /^[a-z0-9-]{2,120}$/ },
     shortDescription: { type: String, default: "", maxlength: 300 },
-    /** sanitised HTML (allow-list) */
+    /** plain text (rendered escaped; sellers can't post HTML) */
     description: { type: String, default: "", maxlength: 10_000 },
     highlights: {
       type: [{ type: String, maxlength: 60 }],

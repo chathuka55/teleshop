@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, LayoutDashboard, UserRound, type LucideIcon } from "lucide-react";
+import {
+  Boxes,
+  ClipboardList,
+  LayoutDashboard,
+  PackageSearch,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 type Item = { label: string; href: string; icon: LucideIcon; badge?: number };
@@ -13,6 +20,8 @@ export function SellerSidebar({ shopName, newOrders }: { shopName: string; newOr
   const items: Item[] = [
     { label: "Dashboard", href: "/seller", icon: LayoutDashboard },
     { label: "Orders", href: "/seller/orders", icon: ClipboardList, badge: newOrders },
+    { label: "Products", href: "/seller/products", icon: PackageSearch },
+    { label: "Stock", href: "/seller/inventory", icon: Boxes },
     { label: "My account", href: "/account", icon: UserRound },
   ];
   return (

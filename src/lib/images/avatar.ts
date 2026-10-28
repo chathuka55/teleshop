@@ -11,7 +11,7 @@ export const AVATAR_MAX_BYTES = 4 * 1024 * 1024;
 export const AVATAR_SIZE = 320;
 const ALLOWED = new Set(["jpeg", "png", "webp"]);
 /** Refuse decompression bombs: a tiny file that decodes into a huge image. */
-const MAX_INPUT_PIXELS = 40_000_000;
+export const MAX_INPUT_PIXELS = 40_000_000;
 
 export class InvalidImageError extends Error {
   constructor(message: string) {
@@ -20,9 +20,8 @@ export class InvalidImageError extends Error {
   }
 }
 
-export async function processAvatar(
-  input: Uint8Array,
-): Promise<{ bytes: Buffer; contentType: "image/webp" }> {
+/** Shared upload checks: not empty, under 4 MB, and really a JPG/PNG/WebP by its own bytes. */
+export async function assertPhoto(input: Uint8Array): Promise<void> {
   if (input.byteLength === 0) throw new InvalidImageError("Choose a photo to upload.");
   if (input.byteLength > AVATAR_MAX_BYTES) throw new InvalidImageError("The photo is larger than 4 MB.");
 
@@ -33,7 +32,12 @@ export async function processAvatar(
     throw new InvalidImageError("That file isn't a photo we can read.");
   }
   if (!format || !ALLOWED.has(format)) throw new InvalidImageError("Use a JPG, PNG or WebP photo.");
+}
 
+export async function processAvatar(
+  input: Uint8Array,
+): Promise<{ bytes: Buffer; contentType: "image/webp" }> {
+  await assertPhoto(input);
   const bytes = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
     .rotate() // apply the camera's orientation before EXIF is dropped
     .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover", position: "attention" })
