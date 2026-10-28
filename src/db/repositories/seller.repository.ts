@@ -73,6 +73,19 @@ export async function findLeanSellers(filter: {
   return [];
 }
 
+export type OwnedShop = { shopName: string; approvalStatus: string };
+
+/** Shop name and approval status per owner user id (any status) — for the db:set-password CLI. */
+export async function findShopsByOwnerIds(userIds: string[]): Promise<Map<string, OwnedShop>> {
+  await connectDB();
+  const shops = await SellerModel.find({ userId: $in(userIds) })
+    .select("userId shopName approvalStatus")
+    .lean<{ userId: Types.ObjectId; shopName: string; approvalStatus: string }[]>();
+  return new Map(
+    shops.map((s) => [s.userId.toString(), { shopName: s.shopName, approvalStatus: s.approvalStatus }]),
+  );
+}
+
 /** The approved shop owned by `userId`, if any — goes into the session as `sellerId`. */
 export async function findApprovedSellerIdByUserId(userId: string): Promise<string | null> {
   await connectDB();

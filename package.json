@@ -21,6 +21,7 @@
     "db:indexes": "tsx scripts/seed/indexes.ts",
     "db:migrate": "tsx scripts/seed/migrate.ts",
     "db:seed": "tsx scripts/seed/seed.ts",
+    "db:set-password": "tsx scripts/seed/set-password.ts",
     "models:optimize": "gltf-transform optimize",
     "prepare": "husky",
     "test:watch": "vitest --project unit",
