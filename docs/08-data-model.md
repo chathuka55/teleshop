@@ -170,7 +170,7 @@ Indexes: `{ slug: 1 }` unique, `{ approvalStatus: 1 }`. Writes: `sellers.service
 | `categoryId`, `brandId` | ObjectId | |
 | `name`, `slug` | string, `slug` unique | |
 | `shortName` | string ≤ 60 | compact name for phone cards / cart lines — added v0.2 |
-| `shortDescription`, `description` | string | description sanitised HTML (allow-list) |
+| `shortDescription`, `description` | string | description is plain text (rendered escaped — sellers cannot post HTML) |
 | `highlights` | string[] ≤ 6 | key selling points on the product page — added v0.2 |
 | `condition` | enum | `new`, `used`, `refurbished` |
 | `specs` | Map<string,string> | keys from the category `specTemplate`, validated in the service |
