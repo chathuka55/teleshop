@@ -36,3 +36,44 @@ export function sendOrderConfirmationEmail(
   ].join("\n");
   return sendEmail({ to, subject: `Order ${orderNo} confirmed — Cash on Delivery`, text });
 }
+
+/** Confirms the customer's own cancellation (P5-T04). */
+export function sendOrderCancelledEmail(
+  to: string,
+  name: string,
+  orderNo: string,
+  reason: string,
+): Promise<SendResult> {
+  const text = [
+    `Hi ${name},`,
+    "",
+    `Your order ${orderNo} has been cancelled. Nothing is due — Cash on Delivery orders are only paid on delivery.`,
+    "",
+    `Reason: ${reason}`,
+    "",
+    `Order details: ${siteConfig.url}/account/orders/${orderNo}`,
+    "",
+    "— Teleshop",
+  ].join("\n");
+  return sendEmail({ to, subject: `Order ${orderNo} cancelled`, text });
+}
+
+/** Tells a shop to stop preparing its package. The customer's address is not included. */
+export function sendSellerPackageCancelledEmail(
+  to: string,
+  shopName: string,
+  orderNo: string,
+  items: readonly { name: string; qty: number }[],
+): Promise<SendResult> {
+  const text = [
+    `Hi ${shopName},`,
+    "",
+    `The customer cancelled order ${orderNo}. Please stop preparing this package — the stock`,
+    "has been released back to your listings automatically.",
+    "",
+    ...items.map((i) => `  ${i.qty} × ${i.name}`),
+    "",
+    "— Teleshop",
+  ].join("\n");
+  return sendEmail({ to, subject: `Order ${orderNo} cancelled by the customer`, text });
+}

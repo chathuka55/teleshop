@@ -12,7 +12,9 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { PurchasePanel } from "@/components/product/PurchasePanel";
 import { Stars } from "@/components/product/Rating";
 import { WishlistToggle } from "@/components/product/WishlistToggle";
+import { ReviewList } from "@/components/reviews/ReviewList";
 import { getProductBySlug, getSeller, listRelatedProducts } from "@/modules/catalog/service";
+import { listProductReviews } from "@/modules/reviews/service";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -37,7 +39,11 @@ const warrantyLabel = {
 export default async function ProductPage({ params }: Props) {
   const product = await getProductBySlug((await params).slug);
   if (!product) notFound();
-  const [seller, related] = await Promise.all([getSeller(product.seller.slug), listRelatedProducts(product)]);
+  const [seller, related, reviews] = await Promise.all([
+    getSeller(product.seller.slug),
+    listRelatedProducts(product),
+    listProductReviews(product.id),
+  ]);
   const totalStock = product.variants.reduce((n, v) => n + v.available, 0);
 
   const jsonLd = {
@@ -242,9 +248,7 @@ export default async function ProductPage({ params }: Props) {
               Only customers who received this item can review it. Every review is a verified purchase.
             </p>
           </div>
-          <p className="mt-5 rounded-xl border border-dashed border-line p-4 text-center text-[13px] text-text-secondary">
-            Written reviews appear here once the reviews service is live.
-          </p>
+          <ReviewList reviews={reviews} />
         </section>
       </div>
 

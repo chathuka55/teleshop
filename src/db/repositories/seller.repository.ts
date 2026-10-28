@@ -3,6 +3,7 @@ import type { SellerCardDTO, SellerProfileDTO } from "@/modules/catalog/types";
 import { connectDB } from "../mongoose";
 import { ProductModel } from "../models/product.model";
 import { SellerModel } from "../models/seller.model";
+import { UserModel } from "../models/user.model";
 import {
   toSellerCardDTO,
   toSellerProfileDTO,
@@ -71,6 +72,26 @@ export async function findLeanSellers(filter: {
       .select(PUBLIC_FIELDS)
       .lean<LeanSeller[]>();
   return [];
+}
+
+export type SellerContact = { sellerId: string; shopName: string; ownerName: string; ownerEmail: string };
+
+/** Shop owners to notify about their packages (cancellations; new orders later). */
+export async function findSellerContacts(sellerIds: string[]): Promise<SellerContact[]> {
+  await connectDB();
+  const shops = await SellerModel.find({ _id: $in(sellerIds) })
+    .select("userId shopName")
+    .lean<{ _id: Types.ObjectId; userId: Types.ObjectId; shopName: string }[]>();
+  const owners = await UserModel.find({ _id: $in(shops.map((s) => s.userId)) })
+    .select("name email")
+    .lean<{ _id: Types.ObjectId; name: string; email: string }[]>();
+  const byId = new Map(owners.map((u) => [u._id.toString(), u]));
+  return shops.flatMap((s) => {
+    const owner = byId.get(s.userId.toString());
+    return owner
+      ? [{ sellerId: s._id.toString(), shopName: s.shopName, ownerName: owner.name, ownerEmail: owner.email }]
+      : [];
+  });
 }
 
 export type OwnedShop = { shopName: string; approvalStatus: string };

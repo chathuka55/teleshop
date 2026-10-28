@@ -96,6 +96,19 @@ export async function reserveStock(sku: string, qty: number, session: ClientSess
   if (r.modifiedCount !== 1) throw new OutOfStockError(sku);
 }
 
+/**
+ * Undoes reserveStock when a package is cancelled. Guarded by `reserved >= qty` so a counter
+ * that has drifted is never pushed below zero (the unit then simply stays unavailable).
+ */
+export async function releaseStock(sku: string, qty: number, session: ClientSession): Promise<boolean> {
+  const r = await InventoryModel.updateOne(
+    { sku, reserved: $gte(qty) },
+    { $inc: { available: qty, reserved: -qty, version: 1 } },
+    { session },
+  );
+  return r.modifiedCount === 1;
+}
+
 /** Inserts order + COD payment + first timeline event. Returns the order id. */
 export async function insertOrder(
   order: NewOrder,

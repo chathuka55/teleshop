@@ -49,11 +49,18 @@ export type PlaceOrderResult =
       message: string;
     };
 
+/** One step of a package's history (order_events), oldest first. */
+export type TimelineEntryDTO = { at: string; status: PackageStatus | OrderStatus; note: string };
+
 /** One order as its customer sees it (confirmation page, account). */
 export type CustomerOrderDTO = {
   orderNo: string;
   placedAt: string;
   status: OrderStatus;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  /** Every live package is still before "shipped" (P5-T04). */
+  canCancel: boolean;
   deliveryMethod: "standard" | "express";
   paymentMethod: "cod";
   subtotalCents: number;
@@ -75,7 +82,15 @@ export type CustomerOrderDTO = {
     status: PackageStatus;
     subtotalCents: number;
     deliveryCents: number;
+    shipment: ShipmentDTO | null;
+    timeline: TimelineEntryDTO[];
     items: {
+      id: string;
+      productSlug: string;
+      /** Set once the customer reviewed this item; null otherwise. */
+      myRating: number | null;
+      /** Delivered, not reviewed yet, not the customer's own product. */
+      canReview: boolean;
       sku: string;
       name: string;
       variantLabel: string;
@@ -94,4 +109,10 @@ export type CustomerOrderSummaryDTO = {
   totalCents: number;
   itemCount: number;
   packageCount: number;
+  /** For search and the "iPhone 17 Pro + 2 more" line. */
+  itemNames: string[];
+  imageUrl: string | null;
 };
+
+export type CancelOrderResult =
+  { ok: true } | { ok: false; code: "NOT_FOUND" | "NOT_CANCELLABLE" | "CHANGED"; message: string };

@@ -47,7 +47,7 @@ export function TrackingCodeBox({ shipment }: { shipment: ShipmentDTO }) {
         rel="noopener noreferrer"
         className="bg-gradient-primary inline-flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-semibold text-on-primary hover:brightness-110"
       >
-        Open courier site <ExternalLink aria-hidden className="size-4" />
+        Track on courier website <ExternalLink aria-hidden className="size-4" />
       </a>
     </div>
   );

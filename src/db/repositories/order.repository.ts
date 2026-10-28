@@ -3,11 +3,16 @@ import type {
   CustomerOrderDTO,
   CustomerOrderSummaryDTO,
   PackageStatus,
+  ShipmentDTO,
+  TimelineEntryDTO,
   TrackResultDTO,
 } from "@/modules/orders/types";
 import { connectDB } from "../mongoose";
 import { OrderEventModel } from "../models/order-event.model";
 import { OrderModel } from "../models/order.model";
+import { ProductModel } from "../models/product.model";
+import { ReviewModel } from "../models/review.model";
+import { $in } from "../operators";
 import { findLeanSellers } from "./seller.repository";
 
 type LeanOrderForTracking = {
@@ -76,10 +81,25 @@ export async function findOrderForTracking(
 
 // ---- Customer reads (confirmation page, /account/orders) — always scoped to the customer ----
 
+type LeanShipment = { courierName: string; trackingCode: string; trackingUrl: string; handedOverAt: Date };
+
+const toShipment = (s: LeanShipment | null | undefined): ShipmentDTO | null =>
+  s
+    ? {
+        courierName: s.courierName,
+        trackingCode: s.trackingCode,
+        trackingUrl: s.trackingUrl,
+        handedOverAt: s.handedOverAt.toISOString(),
+      }
+    : null;
+
 type LeanCustomerOrder = {
+  _id: Types.ObjectId;
   orderNo: string;
   placedAt: Date;
   status: CustomerOrderDTO["status"];
+  cancelledAt?: Date | null;
+  cancelReason?: string | null;
   deliveryMethod: CustomerOrderDTO["deliveryMethod"];
   subtotalCents: number;
   deliveryCents: number;
@@ -91,10 +111,28 @@ type LeanCustomerOrder = {
     status: PackageStatus;
     subtotalCents: number;
     deliveryCents: number;
-    items: CustomerOrderDTO["packages"][number]["items"];
+    shipment?: LeanShipment | null;
+    items: (Omit<
+      CustomerOrderDTO["packages"][number]["items"][number],
+      "id" | "productSlug" | "myRating" | "canReview"
+    > & {
+      _id: Types.ObjectId;
+      productId: Types.ObjectId;
+    })[];
   }[];
 };
 
+type LeanEvent = {
+  packageId: Types.ObjectId | null;
+  toStatus: TimelineEntryDTO["status"];
+  note: string;
+  createdAt: Date;
+};
+
+/**
+ * The customer's own order with each package's timeline, shipment and the customer's ratings.
+ * `canCancel` / `canReview` are business rules — left false here and set by the orders service.
+ */
 export async function findCustomerOrder(
   customerId: string,
   orderNo: string,
@@ -102,12 +140,31 @@ export async function findCustomerOrder(
   await connectDB();
   const o = await OrderModel.findOne({ orderNo, customerId }).lean<LeanCustomerOrder>();
   if (!o) return null;
-  const sellers = await findLeanSellers({ ids: o.packages.map((p) => p.sellerId) });
+  const productIds = o.packages.flatMap((p) => p.items.map((i) => i.productId));
+  const [sellers, events, reviews, products] = await Promise.all([
+    findLeanSellers({ ids: o.packages.map((p) => p.sellerId) }),
+    OrderEventModel.find({ orderId: o._id })
+      .sort({ createdAt: 1, _id: 1 })
+      .select("packageId toStatus note createdAt")
+      .lean<LeanEvent[]>(),
+    ReviewModel.find({ orderId: o._id, customerId })
+      .select("itemId rating")
+      .lean<{ itemId: Types.ObjectId; rating: number }[]>(),
+    ProductModel.find({ _id: $in(productIds) })
+      .select("slug")
+      .lean<{ _id: Types.ObjectId; slug: string }[]>(),
+  ]);
   const byId = new Map(sellers.map((s) => [s._id.toString(), s]));
+  const ratingByItem = new Map(reviews.map((r) => [r.itemId.toString(), r.rating]));
+  const slugById = new Map(products.map((p) => [p._id.toString(), p.slug]));
+
   return {
     orderNo: o.orderNo,
     placedAt: o.placedAt.toISOString(),
     status: o.status,
+    cancelledAt: o.cancelledAt?.toISOString() ?? null,
+    cancelReason: o.cancelReason ?? null,
+    canCancel: false,
     deliveryMethod: o.deliveryMethod,
     paymentMethod: "cod",
     subtotalCents: o.subtotalCents,
@@ -124,14 +181,24 @@ export async function findCustomerOrder(
     },
     packages: o.packages.map((p) => {
       const seller = byId.get(p.sellerId.toString());
+      const pid = p._id.toString();
       return {
-        id: p._id.toString(),
+        id: pid,
         sellerName: seller?.shopName ?? "Teleshop seller",
         sellerSlug: seller?.slug ?? "",
         status: p.status,
         subtotalCents: p.subtotalCents,
         deliveryCents: p.deliveryCents,
+        shipment: toShipment(p.shipment),
+        // Order-wide events (packageId null, e.g. "placed") belong to every package's history.
+        timeline: events
+          .filter((e) => !e.packageId || e.packageId.toString() === pid)
+          .map((e) => ({ at: e.createdAt.toISOString(), status: e.toStatus, note: e.note })),
         items: p.items.map((i) => ({
+          id: i._id.toString(),
+          productSlug: slugById.get(i.productId.toString()) ?? "",
+          myRating: ratingByItem.get(i._id.toString()) ?? null,
+          canReview: false,
           sku: i.sku,
           name: i.name,
           variantLabel: i.variantLabel,
@@ -145,27 +212,37 @@ export async function findCustomerOrder(
   };
 }
 
-export async function listCustomerOrders(customerId: string, limit = 50): Promise<CustomerOrderSummaryDTO[]> {
+export async function listCustomerOrders(
+  customerId: string,
+  limit = 200,
+): Promise<CustomerOrderSummaryDTO[]> {
   await connectDB();
   const rows = await OrderModel.find({ customerId })
     .sort({ placedAt: -1 })
     .limit(limit)
-    .select("orderNo placedAt status totalCents packages.items.qty")
+    .select(
+      "orderNo placedAt status totalCents packages.items.qty packages.items.name packages.items.imageUrl",
+    )
     .lean<
       {
         orderNo: string;
         placedAt: Date;
         status: CustomerOrderSummaryDTO["status"];
         totalCents: number;
-        packages: { items: { qty: number }[] }[];
+        packages: { items: { qty: number; name: string; imageUrl?: string | null }[] }[];
       }[]
     >();
-  return rows.map((o) => ({
-    orderNo: o.orderNo,
-    placedAt: o.placedAt.toISOString(),
-    status: o.status,
-    totalCents: o.totalCents,
-    itemCount: o.packages.reduce((n, p) => n + p.items.reduce((m, i) => m + i.qty, 0), 0),
-    packageCount: o.packages.length,
-  }));
+  return rows.map((o) => {
+    const items = o.packages.flatMap((p) => p.items);
+    return {
+      orderNo: o.orderNo,
+      placedAt: o.placedAt.toISOString(),
+      status: o.status,
+      totalCents: o.totalCents,
+      itemCount: items.reduce((n, i) => n + i.qty, 0),
+      packageCount: o.packages.length,
+      itemNames: items.map((i) => i.name),
+      imageUrl: items.find((i) => i.imageUrl)?.imageUrl ?? null,
+    };
+  });
 }

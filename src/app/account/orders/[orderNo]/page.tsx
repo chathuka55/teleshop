@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Banknote, CircleCheck, MapPin, Store, Truck } from "lucide-react";
+import { Banknote, CircleCheck, CircleX, MapPin, Store, Truck } from "lucide-react";
+import { CancelOrderForm } from "@/components/orders/CancelOrderForm";
 import { orderStatusLabel, packageStatusLabel } from "@/components/orders/order-status";
+import { PackageTimeline } from "@/components/orders/PackageTimeline";
 import { StatusStepper } from "@/components/orders/StatusStepper";
+import { TrackingCodeBox } from "@/components/orders/TrackingCodeBox";
 import { ProductArt } from "@/components/product/ProductArt";
+import { Stars } from "@/components/product/Rating";
+import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { Badge } from "@/components/ui/Badge";
 import { formatLKR } from "@/lib/utils/money";
 import { formatPhoneLK } from "@/lib/utils/strings";
@@ -24,7 +29,8 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const order = await getMyOrder(parsed.data);
   // Also for other customers' orders — the page gives no hint that the order exists.
   if (!order) notFound();
-  const placed = (await searchParams).placed === "1";
+  // The thank-you banner only makes sense while the order is still live.
+  const placed = (await searchParams).placed === "1" && order.status !== "cancelled";
   const status = orderStatusLabel[order.status];
   const a = order.deliveryAddress;
 
@@ -41,6 +47,30 @@ export default async function OrderPage({ params, searchParams }: Props) {
             <p className="text-sm text-text-secondary">
               We&apos;ve emailed the details. Each shop confirms and packs its own package; you pay in cash
               when it arrives.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {order.status === "cancelled" && (
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-[20px] border border-danger/30 bg-danger/8 p-5"
+        >
+          <CircleX aria-hidden className="size-6 shrink-0 text-danger" />
+          <div>
+            <p className="font-display text-lg font-bold">This order is cancelled</p>
+            <p className="text-sm text-text-secondary">
+              {order.cancelledAt &&
+                `Cancelled ${new Date(order.cancelledAt).toLocaleString("en-LK", {
+                  timeZone: "Asia/Colombo",
+                  day: "numeric",
+                  month: "short",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}. `}
+              {order.cancelReason && `Reason: ${order.cancelReason}. `}
+              Nothing is due.
             </p>
           </div>
         </div>
@@ -67,6 +97,11 @@ export default async function OrderPage({ params, searchParams }: Props) {
             minute: "2-digit",
           })}
         </p>
+        {order.canCancel && (
+          <div className="mt-4">
+            <CancelOrderForm orderNo={order.orderNo} />
+          </div>
+        )}
       </header>
 
       {order.packages.map((p, i) => (
@@ -88,9 +123,14 @@ export default async function OrderPage({ params, searchParams }: Props) {
               <StatusStepper status={p.status} />
             </div>
           )}
+          {p.shipment && (
+            <div className="mt-4">
+              <TrackingCodeBox shipment={p.shipment} />
+            </div>
+          )}
           <ul className="mt-4 flex flex-col gap-3 border-t border-line pt-4">
             {p.items.map((item) => (
-              <li key={item.sku} className="flex items-center gap-3 text-sm">
+              <li key={item.id} className="flex flex-wrap items-center gap-3 text-sm">
                 <ProductArt
                   product={{ art: { kind: "phone", tint: "blue" }, imageUrl: item.imageUrl, name: item.name }}
                   size="sm"
@@ -104,6 +144,24 @@ export default async function OrderPage({ params, searchParams }: Props) {
                   </span>
                 </span>
                 <span className="font-semibold">{formatLKR(item.lineTotalCents)}</span>
+                {item.myRating !== null && (
+                  <span className="flex w-full items-center gap-2 pl-[68px] text-xs text-text-secondary">
+                    <Stars value={item.myRating} /> You reviewed this item
+                    {item.productSlug && (
+                      <Link
+                        href={`/p/${item.productSlug}#reviews`}
+                        className="text-primary-light hover:text-text"
+                      >
+                        See it
+                      </Link>
+                    )}
+                  </span>
+                )}
+                {item.canReview && (
+                  <div className="w-full pl-[68px]">
+                    <ReviewForm orderNo={order.orderNo} itemId={item.id} itemName={item.name} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -111,6 +169,16 @@ export default async function OrderPage({ params, searchParams }: Props) {
             <span>Delivery</span>
             <span>{p.deliveryCents ? formatLKR(p.deliveryCents) : "Free"}</span>
           </p>
+          {p.timeline.length > 0 && (
+            <details className="group mt-4 border-t border-line pt-4" open={p.timeline.length <= 4}>
+              <summary className="cursor-pointer text-sm font-semibold text-text-secondary marker:text-text-muted hover:text-text">
+                Package history
+              </summary>
+              <div className="mt-3">
+                <PackageTimeline entries={p.timeline} />
+              </div>
+            </details>
+          )}
         </section>
       ))}
 
