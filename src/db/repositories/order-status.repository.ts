@@ -21,11 +21,14 @@ export type OrderForUpdate = {
   id: string;
   orderNo: string;
   customerId: string;
+  placedAt: Date;
   updatedAt: Date;
   packages: {
     id: string;
     sellerId: string;
     status: PackageStatus;
+    /** What the courier collects for this package. */
+    amountCents: number;
     items: {
       id: string;
       productId: string;
@@ -41,11 +44,14 @@ type LeanForUpdate = {
   _id: Types.ObjectId;
   orderNo: string;
   customerId: Types.ObjectId;
+  placedAt: Date;
   updatedAt: Date;
   packages: {
     _id: Types.ObjectId;
     sellerId: Types.ObjectId;
     status: PackageStatus;
+    subtotalCents: number;
+    deliveryCents: number;
     items: {
       _id: Types.ObjectId;
       productId: Types.ObjectId;
@@ -64,7 +70,7 @@ export async function findOrderForUpdate(
   await connectDB();
   const o = await OrderModel.findOne({ orderNo })
     .select(
-      "orderNo customerId updatedAt packages._id packages.sellerId packages.status packages.items._id packages.items.productId packages.items.sku packages.items.name packages.items.qty packages.items.serialNumbers",
+      "orderNo customerId placedAt updatedAt packages._id packages.sellerId packages.status packages.subtotalCents packages.deliveryCents packages.items._id packages.items.productId packages.items.sku packages.items.name packages.items.qty packages.items.serialNumbers",
     )
     .session(session ?? null)
     .lean<LeanForUpdate>();
@@ -73,11 +79,13 @@ export async function findOrderForUpdate(
     id: o._id.toString(),
     orderNo: o.orderNo,
     customerId: o.customerId.toString(),
+    placedAt: o.placedAt,
     updatedAt: o.updatedAt,
     packages: o.packages.map((p) => ({
       id: p._id.toString(),
       sellerId: p.sellerId.toString(),
       status: p.status,
+      amountCents: p.subtotalCents + p.deliveryCents,
       items: p.items.map((i) => ({
         id: i._id.toString(),
         productId: i.productId.toString(),
@@ -99,6 +107,8 @@ export async function updatePackageStatuses(
   changes: ReadonlyMap<string, PackageStatus>,
   fields: { status: OrderStatus; cancelledAt?: Date | null; cancelReason?: string | null },
   session: ClientSession,
+  /** Extra package fields to set with the status, e.g. `{ shipment }` when it ships. */
+  packageFields?: ReadonlyMap<string, Record<string, unknown>>,
 ): Promise<void> {
   const set: Record<string, unknown> = { status: fields.status };
   if (fields.cancelledAt !== undefined) set.cancelledAt = fields.cancelledAt;
@@ -106,6 +116,7 @@ export async function updatePackageStatuses(
   order.packages.forEach((p, i) => {
     const next = changes.get(p.id);
     if (next) set[`packages.${i}.status`] = next;
+    for (const [k, v] of Object.entries(packageFields?.get(p.id) ?? {})) set[`packages.${i}.${k}`] = v;
   });
   const r = await OrderModel.updateOne(
     { _id: new Types.ObjectId(order.id), updatedAt: order.updatedAt },
@@ -162,4 +173,16 @@ export async function insertOrderEvents(
     })),
     { session, ordered: true },
   );
+}
+
+/** The order + package that already carries this tracking code (codes are unique per courier). */
+export async function findTrackingCodeUse(courierName: string, trackingCode: string): Promise<string | null> {
+  await connectDB();
+  const o = await OrderModel.findOne({
+    "packages.shipment.trackingCode": trackingCode,
+    "packages.shipment.courierName": courierName,
+  })
+    .select("orderNo")
+    .lean<{ orderNo: string }>();
+  return o?.orderNo ?? null;
 }

@@ -44,9 +44,9 @@
 | `applySellerAction` (verified customer), `updateShopAction`, `shopCoverAction` (approved seller, own shop) | sellers | customer/seller | 5/min/IP |
 | `saveProductAction`, `productStatusAction` (submit · deactivate · reactivate), `uploadProductImageAction`, `productImageAction` (cover · remove), `stockChangeAction` (add · remove · set) | products / inventory | seller — own products only | 30/min/IP |
 | `packageStepAction` (accept · pack · ready · cancel + reason), `recordSerialAction` | fulfilment | seller — own package only | 30/min/IP |
-| `addTrackingCodeAction` | shipments | admin | 60/min |
-| `markPaymentPaidAction` | payments | admin | 60/min |
-| `approveSellerAction`, `rejectSellerAction`, `suspendUserAction`, `moderateReviewAction` | admin | admin | 60/min |
+| `addTrackingCodeAction`, `adminPackageStepAction` (deliver + COD · return · cancel) | orders | admin (TOTP) | 60/min/IP |
+| `decideSellerAction` (approve · reject), `moderateProductAction` (approve · return · block) | admin | admin (TOTP) | 60/min/IP |
+| `suspendUserAction`, `moderateReviewAction` (planned, P7-T04) | admin | admin | 60/min |
 
 ## 4. REST endpoints `/api/v1`
 

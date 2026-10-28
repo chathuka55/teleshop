@@ -52,7 +52,12 @@ export default async function EditProductPage({ params, searchParams }: Props) {
         </p>
       )}
 
-      <ProductStatusBar id={product.id} status={product.status} hasImages={product.images.length > 0} />
+      <ProductStatusBar
+        id={product.id}
+        status={product.status}
+        hasImages={product.images.length > 0}
+        note={product.moderationNote}
+      />
       <ProductImages id={product.id} images={product.images} />
       <ProductForm key={product.variants.map((v) => v.sku).join()} options={options} product={product} />
     </div>

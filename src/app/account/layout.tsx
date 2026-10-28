@@ -21,7 +21,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
         id="main"
         className="container-page grid min-h-[60vh] gap-6 pt-8 pb-16 lg:grid-cols-[240px_1fr] lg:gap-10"
       >
-        <aside className="lg:pt-1">
+        <aside className="min-w-0 lg:pt-1">
           <AccountSidebar seller={user.role === "seller" && !!user.sellerId} />
         </aside>
         <div className="min-w-0">{children}</div>

@@ -75,6 +75,8 @@ const productSchema = new Schema(
     },
     rating: { type: ratingCache, default: () => ({}) },
     publishedAt: { type: Date, default: null },
+    /** Why an admin sent the product back or blocked it — shown to the seller (P7-T03). */
+    moderationNote: { type: String, default: null, maxlength: 300 },
   },
   baseOptions,
 );
