@@ -113,6 +113,53 @@ export async function addRatingToCaches(
   await SellerModel.updateOne({ _id: new Types.ObjectId(sellerId) }, addToRating(rating), { session });
 }
 
+/** Inverse of addToRating: (average × count − rating) / (count − 1); 0 when none are left. */
+const removeFromRating = (rating: number) => {
+  const count = { $ifNull: ["$rating.count", 0] };
+  const average = { $ifNull: ["$rating.average", 0] };
+  const left = { $max: [{ $subtract: [count, 1] }, 0] };
+  return [
+    {
+      $set: {
+        "rating.average": {
+          $cond: [
+            { $eq: [left, 0] },
+            0,
+            {
+              $min: [
+                5,
+                {
+                  $max: [
+                    0,
+                    {
+                      $round: [
+                        { $divide: [{ $subtract: [{ $multiply: [average, count] }, rating] }, left] },
+                        2,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        "rating.count": left,
+      },
+    },
+  ];
+};
+
+/** A hidden review stops counting (A11). Uses the cached numbers, so seeded ratings stay intact. */
+export async function removeRatingFromCaches(
+  productId: string,
+  sellerId: string,
+  rating: number,
+  session: ClientSession,
+): Promise<void> {
+  await ProductModel.updateOne({ _id: new Types.ObjectId(productId) }, removeFromRating(rating), { session });
+  await SellerModel.updateOne({ _id: new Types.ObjectId(sellerId) }, removeFromRating(rating), { session });
+}
+
 export async function listVisibleProductReviews(productId: string, limit = 20): Promise<ProductReviewDTO[]> {
   if (!/^[a-f0-9]{24}$/.test(productId)) return [];
   await connectDB();

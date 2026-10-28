@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, LayoutDashboard, PackageSearch, Store, type LucideIcon } from "lucide-react";
+import {
+  ClipboardList,
+  Landmark,
+  LayoutDashboard,
+  MessageSquareText,
+  PackageSearch,
+  ScrollText,
+  Store,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 type Item = { label: string; href: string; icon: LucideIcon; badge?: number };
@@ -21,6 +31,10 @@ export function AdminSidebar({
     { label: "Orders", href: "/admin/orders", icon: ClipboardList },
     { label: "Shops", href: "/admin/sellers", icon: Store, badge: pendingShops },
     { label: "Products", href: "/admin/products", icon: PackageSearch, badge: productsInReview },
+    { label: "Customers", href: "/admin/customers", icon: Users },
+    { label: "Reviews", href: "/admin/reviews", icon: MessageSquareText },
+    { label: "Payouts", href: "/admin/payouts", icon: Landmark },
+    { label: "Audit log", href: "/admin/audit-log", icon: ScrollText },
   ];
   return (
     <nav aria-label="Admin" className="no-scrollbar -mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">

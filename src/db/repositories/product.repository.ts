@@ -7,6 +7,7 @@ import { findLeanBrands } from "./brand.repository";
 import { toProductCardDTO, toProductDetailDTO, type LeanProduct } from "./catalog-mappers";
 import { findLeanCategories } from "./category.repository";
 import { findLeanSellers } from "./seller.repository";
+import { liveProductFilter } from "./storefront-filter";
 import { $gt, $in } from "../operators";
 
 export const DEFAULT_PAGE_SIZE = 12;
@@ -52,7 +53,7 @@ const SORTS: Record<NonNullable<ProductQuery["sort"]>, Record<string, 1 | -1>> =
 export async function searchPublishedProducts(query: ProductQuery): Promise<ProductPage> {
   await connectDB();
 
-  const match: Record<string, unknown> = { status: "published" };
+  const match: Record<string, unknown> = await liveProductFilter();
   if (query.category) {
     const [cat] = await findLeanCategories({ slugs: [query.category] });
     if (!cat) return { items: [], total: 0, nextCursor: null };
@@ -152,7 +153,7 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
 
 export async function findPublishedProductBySlug(slug: string): Promise<ProductDetailDTO | null> {
   await connectDB();
-  const p = await ProductModel.findOne({ slug, status: "published" }).lean<LeanProduct>();
+  const p = await ProductModel.findOne({ ...(await liveProductFilter()), slug }).lean<LeanProduct>();
   if (!p) return null;
   return toProductDetailDTO(p, await lookupsFor([p], true));
 }
@@ -160,7 +161,9 @@ export async function findPublishedProductBySlug(slug: string): Promise<ProductD
 export async function findPublishedProductsBySlugs(slugs: readonly string[]): Promise<ProductDetailDTO[]> {
   if (!slugs.length) return [];
   await connectDB();
-  const docs = await ProductModel.find({ status: "published", slug: $in(slugs) }).lean<LeanProduct[]>();
+  const docs = await ProductModel.find({ ...(await liveProductFilter()), slug: $in(slugs) }).lean<
+    LeanProduct[]
+  >();
   const l = await lookupsFor(docs, true);
   // keep the caller's order (compare page)
   return slugs.flatMap((s) => docs.filter((d) => d.slug === s)).map((p) => toProductDetailDTO(p, l));
@@ -171,7 +174,9 @@ export async function findPublishedProductCardsByIds(ids: readonly string[]): Pr
   const valid = ids.filter((id) => /^[a-f0-9]{24}$/.test(id));
   if (!valid.length) return [];
   await connectDB();
-  const docs = await ProductModel.find({ status: "published", _id: $in(valid) }).lean<LeanProduct[]>();
+  const docs = await ProductModel.find({ ...(await liveProductFilter()), _id: $in(valid) }).lean<
+    LeanProduct[]
+  >();
   const l = await lookupsFor(docs, false);
   const byId = new Map(docs.map((d) => [d._id.toString(), d]));
   return valid.flatMap((id) => {
@@ -184,7 +189,7 @@ export async function findPublishedProductCardsByIds(ids: readonly string[]): Pr
 export async function findPublishedProductsBySkus(skus: readonly string[]): Promise<ProductDetailDTO[]> {
   if (!skus.length) return [];
   await connectDB();
-  const docs = await ProductModel.find({ status: "published", "variants.sku": $in(skus) }).lean<
+  const docs = await ProductModel.find({ ...(await liveProductFilter()), "variants.sku": $in(skus) }).lean<
     LeanProduct[]
   >();
   const l = await lookupsFor(docs, true);
@@ -211,7 +216,7 @@ export async function listRelatedProducts(
 
 export async function listPublishedSlugs(): Promise<string[]> {
   await connectDB();
-  const rows = await ProductModel.find({ status: "published" })
+  const rows = await ProductModel.find(await liveProductFilter())
     .select("slug")
     .lean<{ slug: string; _id: Types.ObjectId }[]>();
   return rows.map((r) => r.slug);

@@ -52,6 +52,7 @@ export async function seedDatabase(opts: { fixedPassword?: string } = {}): Promi
     "orders",
     "order_events",
     "payments",
+    "payouts",
     "carts",
     "wishlists",
     "addresses",

@@ -46,7 +46,7 @@
 | `packageStepAction` (accept · pack · ready · cancel + reason), `recordSerialAction` | fulfilment | seller — own package only | 30/min/IP |
 | `addTrackingCodeAction`, `adminPackageStepAction` (deliver + COD · return · cancel) | orders | admin (TOTP) | 60/min/IP |
 | `decideSellerAction` (approve · reject), `moderateProductAction` (approve · return · block) | admin | admin (TOTP) | 60/min/IP |
-| `suspendUserAction`, `moderateReviewAction` (planned, P7-T04) | admin | admin | 60/min |
+| `customerStatusAction` (suspend · reactivate), `moderateReviewAction` (hide · show), `createPayoutAction`, `markPayoutPaidAction`; `decideSellerAction` also suspends / reinstates shops | admin | admin (TOTP) | 60/min/IP |
 
 ## 4. REST endpoints `/api/v1`
 
