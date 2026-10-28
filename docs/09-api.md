@@ -39,8 +39,8 @@
 | `toggleWishlistAction` | cart | customer | 30/min |
 | `saveAddressAction`, `deleteAddressAction` | users | customer | 10/min |
 | `placeOrderAction` | orders | customer | 5/min/user |
-| `cancelOrderAction` | orders | customer/seller/admin | 5/min |
-| `createReviewAction` | reviews | customer | 5/min |
+| `cancelOrderAction` | orders | customer (seller/admin in Phases 6–7) — whole order, before any package ships | 5/min/IP |
+| `createReviewAction` | reviews | customer — delivered item from own order, once per item | 5/min/IP |
 | `applySellerAction`, `updateShopAction` | sellers | customer/seller | 5/min |
 | `upsertProductAction`, `setProductStatusAction`, `adjustStockAction` | catalog / inventory | seller | 30/min |
 | `acceptPackageAction`, `recordSerialAction`, `markReadyToShipAction` | fulfilment | seller | 30/min |

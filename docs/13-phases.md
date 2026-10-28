@@ -49,11 +49,11 @@
 - [x] **P4-T05** Checkout page (stepper, delivery method, COD) + confirmation page + emails. — _`/checkout` (address → standard/express → COD → server-priced summary), confirmation = `/account/orders/[no]?placed=1`, plain-text confirmation email; `/account/orders` lists orders._
 
 ## Phase 5 — Orders & tracking · [details](phases/phase-5-tracking.md)
-- [ ] **P5-T01** My Orders list (tabs, search) and order detail with per-package timeline from `order_events`.
-- [ ] **P5-T02** Tracking box: courier name, tracking code (copy), **"Track on courier website"** link built from courier template.
-- [ ] **P5-T03** Public `/track` lookup (order no. + phone), rate limited.
-- [ ] **P5-T04** Cancel order rules (before shipped), stock release, notifications.
-- [ ] **P5-T05** Reviews after delivery (verified purchase), rating caches.
+- [x] **P5-T01** My Orders list (tabs, search) and order detail with per-package timeline from `order_events`. — _tabs All/Active/Delivered/Cancelled + search by order no. or product (`?tab=&q=`); "Package history" per package (order-wide events such as "placed" appear in every package)._
+- [x] **P5-T02** Tracking box: courier name, tracking code (copy), **"Track on courier website"** link built from courier template. — _`TrackingCodeBox` on `/track` and on the order page for shipped packages._
+- [x] **P5-T03** Public `/track` lookup (order no. + phone), rate limited. — _Server Action, 10/min/IP, same answer for unknown order and wrong phone; the REST `GET /api/v1/track` comes with the rest of `/api/v1`._
+- [x] **P5-T04** Cancel order rules (before shipped), stock release, notifications. — _customer cancels the whole order while every package is pending → ready_to_ship; one transaction releases reserved stock, sets statuses, adds timeline events, written only if the order is unchanged; customer + shop emails. Seller/admin cancels arrive with Phases 6–7._
+- [x] **P5-T05** Reviews after delivery (verified purchase), rating caches. — _from the order page per delivered item, one per item (unique index), own-shop products refused; product + shop `rating` updated as a running average in the same transaction; shown on the product page as "First L." with a verified badge. Moderation is P7._
 
 ## Phase 6 — Seller portal · [details](phases/phase-6-seller.md)
 - [ ] **P6-T01** Seller application (S register, document upload) → pending state.

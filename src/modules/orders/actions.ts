@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { clientIp } from "@/lib/security/client-ip";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { placeOrderSchema, trackOrderSchema } from "./schema";
-import { placeOrder } from "./customer";
+import { echoValues, invalid, type FormState } from "@/lib/validation/form";
+import { cancelOrderSchema, placeOrderSchema, trackOrderSchema } from "./schema";
+import { cancelMyOrder, placeOrder } from "./customer";
 import { trackOrder } from "./service";
 import type { PlaceOrderResult, TrackResultDTO } from "./types";
 
@@ -34,8 +34,7 @@ export async function trackOrderAction(_prev: TrackState, formData: FormData): P
     return { status: "error", message: "Check the highlighted fields.", fields, values };
   }
 
-  const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = (await clientIp()) ?? "unknown";
   const limit = await rateLimit(`track:${ip}`, { limit: 10, windowMs: 60_000 });
   if (!limit.ok) {
     return {
@@ -77,4 +76,25 @@ export async function placeOrderAction(input: unknown): Promise<PlaceOrderResult
   const result = await placeOrder(parsed.data, ip);
   if (result.ok) revalidatePath("/account/orders");
   return result;
+}
+
+/** "Cancel order" on the order page. parse → rate limit 5/min (doc 09) → service (owner, before shipped). */
+export async function cancelOrderAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = cancelOrderSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return invalid(parsed.error, echoValues(formData));
+
+  const ip = await clientIp();
+  const limit = await rateLimit(`cancel:${ip ?? "unknown"}`, { limit: 5, windowMs: 60_000 });
+  if (!limit.ok) {
+    return {
+      status: "error",
+      message: `Too many attempts. Try again in ${limit.retryAfterSeconds} seconds.`,
+    };
+  }
+
+  const r = await cancelMyOrder(parsed.data, ip);
+  if (!r.ok) return { status: "error", message: r.message };
+  revalidatePath(`/account/orders/${parsed.data.orderNo}`);
+  revalidatePath("/account/orders");
+  return { status: "ok", message: "Your order is cancelled." };
 }
