@@ -1,7 +1,7 @@
 import type { Types } from "mongoose";
 import { connectDB } from "../mongoose";
 import { UserModel } from "../models/user.model";
-import { $gt, $lt, $ne } from "../operators";
+import { $gt, $in, $lt, $ne } from "../operators";
 
 /** Safe user DTO — never contains passwordHash, twoFactor secrets or lockout counters. */
 export type UserDTO = {
@@ -181,6 +181,22 @@ export async function resetPasswordAndRevokeSessions(
       },
     },
   ]);
+}
+
+export type UserIdentity = Pick<UserDTO, "id" | "email" | "role" | "status">;
+
+/** Users by email or by role, sorted by email — for the db:set-password CLI. */
+export async function findUserIdentities(
+  filter: { emails: string[] } | { role: UserDTO["role"] },
+): Promise<UserIdentity[]> {
+  await connectDB();
+  const query =
+    "emails" in filter ? { email: $in(filter.emails.map((e) => e.toLowerCase())) } : { role: filter.role };
+  const users = await UserModel.find(query)
+    .select("email role status")
+    .sort({ email: 1 })
+    .lean<Pick<LeanUser, "_id" | "email" | "role" | "status">[]>();
+  return users.map((u) => ({ id: u._id.toString(), email: u.email, role: u.role, status: u.status }));
 }
 
 // ---- Account (P2-T06) — used by modules/users/service.ts ----

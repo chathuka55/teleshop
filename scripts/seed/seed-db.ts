@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import mongoose, { type Types } from "mongoose";
 import { buildTrackingUrl } from "@/config/couriers";
 import { demoShopPhotos, demoShopProfiles } from "@/config/demo-shops";
@@ -19,6 +18,7 @@ import {
 } from "@/db/models";
 import { hashPassword } from "@/lib/auth/password";
 import { seedBrands, seedCategories, seedDemoOrder, seedProducts, seedSellers } from "./data/catalog";
+import { devPassword } from "./set-password-db";
 
 const lkr = (rupees: number): number => Math.round(rupees * 100);
 const slugify = (s: string): string =>
@@ -32,11 +32,6 @@ export type SeedResult = {
   accounts: { role: string; email: string; password: string }[];
   counts: Record<string, number>;
 };
-
-/** Random readable dev password, printed once by the CLI. */
-function devPassword(): string {
-  return `Ts-${randomBytes(9).toString("base64url")}`;
-}
 
 /**
  * Wipes and re-creates the development catalogue + demo order. Runs pending migrations first.
