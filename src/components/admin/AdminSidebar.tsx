@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
+  Boxes,
   ClipboardList,
+  FolderTree,
   Landmark,
   LayoutDashboard,
   MessageSquareText,
   PackageSearch,
   ScrollText,
+  Settings,
   Store,
   Users,
   type LucideIcon,
@@ -31,9 +35,13 @@ export function AdminSidebar({
     { label: "Orders", href: "/admin/orders", icon: ClipboardList },
     { label: "Shops", href: "/admin/sellers", icon: Store, badge: pendingShops },
     { label: "Products", href: "/admin/products", icon: PackageSearch, badge: productsInReview },
+    { label: "Catalog", href: "/admin/catalog", icon: FolderTree },
+    { label: "Stock", href: "/admin/inventory", icon: Boxes },
     { label: "Customers", href: "/admin/customers", icon: Users },
     { label: "Reviews", href: "/admin/reviews", icon: MessageSquareText },
     { label: "Payouts", href: "/admin/payouts", icon: Landmark },
+    { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+    { label: "Settings", href: "/admin/settings", icon: Settings },
     { label: "Audit log", href: "/admin/audit-log", icon: ScrollText },
   ];
   return (
