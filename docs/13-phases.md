@@ -71,7 +71,7 @@
 - [x] **P7-T06** Admin mobile views (AM1–AM3). — _every admin page checked at 390 px: no sideways scroll; the menu becomes a scrolling row of pills, tables scroll inside their card._
 
 ## Phase 8 — Hardening · [details](phases/phase-8-hardening.md)
-- [ ] **P8-T01** Security review against doc 10 checklist (run `/code-review` on every module).
+- [x] **P8-T01** Security review against doc 10 checklist (run `/code-review` on every module). — _Every Server Action checked for Zod, role/ownership, rate limit and audit: cart, wishlist and address actions gained limits (per account when signed in — `limitAction`); address ownership test added; Dependabot weekly; `pnpm audit --prod` clean. Plus the auto-cancel job left over from P7: daily Vercel Cron `/api/cron/auto-cancel` (CRON_SECRET) cancels packages not accepted within `settings.autoCancelHours`, now on the admin Settings form._
 - [ ] **P8-T02** Performance: Lighthouse CI, bundle analysis, image + GLB budgets.
 - [ ] **P8-T03** Accessibility: axe on key pages, keyboard paths, focus states.
 - [ ] **P8-T04** Full E2E suite (customer, seller, admin flows) on preview.

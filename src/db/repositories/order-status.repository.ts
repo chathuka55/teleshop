@@ -3,6 +3,7 @@ import type { OrderStatus, PackageStatus } from "@/modules/orders/types";
 import { OrderEventModel } from "../models/order-event.model";
 import { OrderModel } from "../models/order.model";
 import { connectDB } from "../mongoose";
+import { $in, $lt } from "../operators";
 
 /**
  * Status changes on existing orders (cancel now; seller fulfilment and shipping later). Writes
@@ -173,6 +174,24 @@ export async function insertOrderEvents(
     })),
     { session, ordered: true },
   );
+}
+
+/**
+ * Orders placed before `placedBefore` that still have a package no shop has accepted, oldest
+ * first. Order statuses that can hold a "pending" package keep the query on the status index.
+ */
+export async function findUnconfirmedOrderNos(placedBefore: Date, limit: number): Promise<string[]> {
+  await connectDB();
+  const rows = await OrderModel.find({
+    status: $in<OrderStatus>(["pending", "in_progress", "partially_delivered"]),
+    placedAt: $lt(placedBefore),
+    "packages.status": "pending",
+  })
+    .sort({ placedAt: 1 })
+    .limit(limit)
+    .select("orderNo")
+    .lean<{ orderNo: string }[]>();
+  return rows.map((r) => r.orderNo);
 }
 
 /** The order + package that already carries this tracking code (codes are unique per courier). */

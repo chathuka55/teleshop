@@ -101,3 +101,52 @@ export function sendSellerNewOrderEmail(
   ].join("\n");
   return sendEmail({ to, subject: `New order ${orderNo} — please accept`, text });
 }
+
+/** The shop didn't accept in time, so Teleshop cancelled its package (auto-cancel job). */
+export function sendPackageAutoCancelledEmail(
+  to: string,
+  name: string,
+  orderNo: string,
+  shopName: string,
+  hours: number,
+  items: readonly { name: string; qty: number }[],
+): Promise<SendResult> {
+  const text = [
+    `Hi ${name},`,
+    "",
+    `Sorry — ${shopName} didn't confirm part of your order ${orderNo} within ${hours} hours, so we`,
+    "cancelled it rather than keep you waiting:",
+    "",
+    ...items.map((i) => `  ${i.qty} × ${i.name}`),
+    "",
+    "You won't be asked to pay for these items. Other shops' packages in this order are not affected.",
+    "",
+    `Order details: ${siteConfig.url}/account/orders/${orderNo}`,
+    "",
+    "— Teleshop",
+  ].join("\n");
+  return sendEmail({ to, subject: `Part of order ${orderNo} was cancelled`, text });
+}
+
+/** Tells a shop its unaccepted package was cancelled automatically and the stock released. */
+export function sendSellerPackageAutoCancelledEmail(
+  to: string,
+  shopName: string,
+  orderNo: string,
+  hours: number,
+  items: readonly { name: string; qty: number }[],
+): Promise<SendResult> {
+  const text = [
+    `Hi ${shopName},`,
+    "",
+    `Order ${orderNo} wasn't accepted within ${hours} hours, so Teleshop cancelled your package and`,
+    "told the customer. The stock is back on sale in your listings:",
+    "",
+    ...items.map((i) => `  ${i.qty} × ${i.name}`),
+    "",
+    `Please accept new orders in time: ${siteConfig.url}/seller/orders`,
+    "",
+    "— Teleshop",
+  ].join("\n");
+  return sendEmail({ to, subject: `Order ${orderNo} cancelled — not accepted in time`, text });
+}

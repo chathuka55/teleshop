@@ -29,10 +29,10 @@
 | `resendVerificationAction` | auth | signed in | 5/min/IP |
 | `signOutAction`, `signInWithGoogleAction` | auth | public | — |
 | `updateProfileAction`, `changePasswordAction`, `signOutEverywhereAction`, `avatarAction` | users | signed in | 10/min/IP |
-| `toggleWishlistAction`, `syncWishlistAction` | wishlist | public (guests: no-op) / signed in | — |
-| `syncCartAction`, `saveCartAction` | cart | public (guests: no-op) / signed in | — |
-| `priceCheckoutAction` | cart | signed in | — |
-| `saveAddressAction`, `deleteAddressAction` | addresses | signed in (owner) | — |
+| `toggleWishlistAction`, `syncWishlistAction` | wishlist | public (guests: no-op) / signed in | 30/min/user (over it: kept in the browser, merged on the next sync) |
+| `syncCartAction`, `saveCartAction` | cart | public (guests: no-op) / signed in | 60/min/user (over it: the browser cart stays as is) |
+| `priceCheckoutAction` | cart | signed in | 30/min/user |
+| `saveAddressAction`, `deleteAddressAction` | addresses | signed in (owner) | 10/min/user |
 | `placeOrderAction` | orders | signed in, verified email | 10/min/IP |
 | `confirmEnrolmentAction`, `verifySecondFactorAction`, `finishEnrolmentAction` (TOTP) | auth | admin (password step done) | 5/min/user |
 | `addToCartAction`, `updateCartItemAction`, `removeCartItemAction` | cart | guest/customer | 30/min |
@@ -63,6 +63,14 @@
 | GET | `/admin/orders` · `/admin/shipments/pending` · `/admin/reports` · `/admin/audit-logs` | admin | |
 | POST | `/uploads/sign` | seller/admin/customer(avatar) | Upstash Blob upload handler (authorises + sets path); type + size limits |
 | POST | `/auth/[...nextauth]` | Auth.js | managed by Auth.js |
+
+Signed-in actions are limited **per account**, guests **per IP** (`src/lib/security/action-limit.ts`): Sri Lankan mobile carriers put many customers behind one IP, so a per-IP limit on everyday actions would block strangers who share it.
+
+### Scheduled jobs (Vercel Cron, `vercel.json`)
+
+| Method | Path | Schedule | Notes |
+| --- | --- | --- | --- |
+| GET | `/api/cron/auto-cancel` | daily 00:30 UTC (06:00 Colombo) | Needs `Authorization: Bearer <CRON_SECRET>` (Vercel sends it); 503 without the secret configured. Cancels packages no shop accepted within `settings.autoCancelHours` (admin Settings, 12–168 h): stock released, `order_events` actor `system`, `audit.log('order.auto_cancelled')`, customer + shop emailed. Returns `{ orders, packages, failed }`. |
 
 ## 5. Example — add tracking code
 

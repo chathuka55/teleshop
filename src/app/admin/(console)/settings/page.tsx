@@ -24,6 +24,7 @@ export default async function AdminSettingsPage() {
           expressFeeCents={settings.expressFeeCents}
           codEnabled={settings.codEnabled}
           platformFeeBp={settings.platformFeeBp}
+          autoCancelHours={settings.autoCancelHours}
         />
       </section>
 

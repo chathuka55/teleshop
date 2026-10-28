@@ -47,6 +47,11 @@ export const serverSchema = z.object({
   ),
   EMAIL_SERVER: optionalString,
   EMAIL_FROM: optionalString,
+  // Vercel Cron sends it as "Authorization: Bearer …"; without it the cron routes refuse to run.
+  CRON_SECRET: z.preprocess(
+    emptyToUndefined,
+    z.string().min(32, "CRON_SECRET must be at least 32 characters (openssl rand -hex 32)").optional(),
+  ),
 });
 
 export const publicSchema = z.object({

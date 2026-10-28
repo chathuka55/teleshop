@@ -19,17 +19,19 @@ function useRefreshOnSave(state: FormState): void {
 
 const rupees = (cents: number): string => (cents % 100 ? (cents / 100).toFixed(2) : String(cents / 100));
 
-/** Site settings (A13): delivery fees, Cash on Delivery switch, platform fee. */
+/** Site settings (A13): delivery fees, Cash on Delivery switch, platform fee, auto-cancel. */
 export function SettingsForm({
   deliveryFeeCents,
   expressFeeCents,
   codEnabled,
   platformFeeBp,
+  autoCancelHours,
 }: {
   deliveryFeeCents: number;
   expressFeeCents: number;
   codEnabled: boolean;
   platformFeeBp: number;
+  autoCancelHours: number;
 }) {
   const [state, action, pending] = useActionState(saveSettingsAction, idleState);
   useRefreshOnSave(state);
@@ -37,7 +39,7 @@ export function SettingsForm({
   const v = valuesOf(state);
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <TextField
           label="Standard delivery (LKR)"
           name="deliveryFee"
@@ -59,13 +61,21 @@ export function SettingsForm({
           defaultValue={v.platformFeePct ?? String(platformFeeBp / 100)}
           error={f.platformFeePct}
         />
+        <TextField
+          label="Auto-cancel after (hours)"
+          name="autoCancelHours"
+          inputMode="numeric"
+          defaultValue={v.autoCancelHours ?? String(autoCancelHours)}
+          error={f.autoCancelHours}
+        />
       </div>
       <CheckboxField name="codEnabled" defaultChecked={codEnabled}>
         Accept Cash on Delivery orders. Untick to pause all new orders (for example during a courier strike).
       </CheckboxField>
       <p className="text-xs text-text-muted">
         Fee changes apply to new orders and new payouts only. Products with free delivery stay free on
-        standard delivery.
+        standard delivery. Auto-cancel: a package its shop hasn&apos;t accepted within that many hours of the
+        order is cancelled by a check that runs once a day (6 AM); the customer and shop are emailed.
       </p>
       <FormMessage state={state} />
       <div>

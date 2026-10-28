@@ -1,17 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
 import { siteConfig } from "@/config/site";
 import { sendEmail } from "@/lib/email/send";
-import { rateLimit } from "@/lib/security/rate-limit";
+import { limitAction } from "@/lib/security/action-limit";
 import { echoValues } from "@/lib/validation/form";
 import { contactSchema, type ContactInput } from "./contact";
 import { newsletterSchema } from "./schema";
-
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-}
 
 export type ContactState =
   | { status: "idle" }
@@ -49,7 +43,7 @@ export async function sendContactMessageAction(
     };
   }
 
-  const limit = await rateLimit(`contact:${await clientIp()}`, { limit: 5, windowMs: 60_000 });
+  const limit = await limitAction("contact", 5);
   if (!limit.ok)
     return { status: "error", message: "Too many messages. Please wait a minute and try again." };
 
@@ -88,7 +82,7 @@ export async function subscribeNewsletterAction(
     return { status: "error", message: parsed.error.issues[0]?.message ?? "Enter a valid email address" };
   }
 
-  const limit = await rateLimit(`newsletter:${await clientIp()}`, { limit: 5, windowMs: 60_000 });
+  const limit = await limitAction("newsletter", 5);
   if (!limit.ok) return { status: "error", message: "Too many attempts. Please try again in a minute." };
 
   // TODO(P1): persist to a `newsletter_subscribers` collection (add to docs/08 first).
