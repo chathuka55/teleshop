@@ -60,3 +60,14 @@ export async function deleteObject(path: string): Promise<void> {
     // ignore
   }
 }
+
+/** Raw object write (no public URL needed) — used for encrypted seller documents. */
+export async function putObject(path: string, bytes: Uint8Array, contentType: string): Promise<void> {
+  await getBucket().put(path, bytes, { contentType, cache: "no-store", allowOverwrite: false });
+}
+
+/** Reads a whole object into memory (documents are at most a few MB). */
+export async function readObject(path: string): Promise<Buffer> {
+  const blob = await getBucket().get(path);
+  return Buffer.from(await new Response(blob.body).arrayBuffer());
+}

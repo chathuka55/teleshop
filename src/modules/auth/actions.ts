@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/lib/auth";
 import { requireUser } from "@/lib/auth/guards";
@@ -14,19 +15,14 @@ import {
   sellerApplicationSchema,
   signInSchema,
 } from "./schema";
+import { applyForShop } from "@/modules/sellers/seller";
 import { registerCustomer, requestPasswordReset, resendVerification, resetPassword } from "./service";
 
 /*
  * Auth Server Actions — parse (Zod) → rate limit 5/min/IP (docs/09 §3) → service.
  * Sign-in/out go through Auth.js (src/lib/auth); register, verification and password reset through
- * modules/auth/service. The seller application still returns NOT_CONNECTED until P6-T01.
+ * modules/auth/service; the seller application through modules/sellers (P6-T01).
  */
-
-const notConnected = (formData: FormData): FormState => ({
-  status: "error",
-  message: "Accounts aren’t connected yet — this form goes live when the database is set up (Phase 2).",
-  values: echoValues(formData),
-});
 
 async function limited(scope: string): Promise<FormState | null> {
   const ip = (await clientIp()) ?? "unknown";
@@ -96,7 +92,14 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
 export async function applySellerAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = sellerApplicationSchema.safeParse(fd(formData));
   if (!parsed.success) return invalid(parsed.error, echoValues(formData));
-  return (await limited("seller:apply")) ?? notConnected(formData);
+  const blocked = await limited("seller:apply");
+  if (blocked) return { ...blocked, values: echoValues(formData) } as FormState;
+  const file = formData.get("brDocument");
+  const document = file instanceof File && file.size > 0 ? new Uint8Array(await file.arrayBuffer()) : null;
+  const r = await applyForShop(parsed.data, document, await clientIp());
+  if (!r.ok) return { status: "error", message: r.message, fields: r.fields, values: echoValues(formData) };
+  revalidatePath("/register/seller");
+  return { status: "ok", message: r.message };
 }
 
 export async function requestPasswordResetAction(_prev: FormState, formData: FormData): Promise<FormState> {

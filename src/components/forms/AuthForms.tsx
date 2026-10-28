@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { ArrowRight, Hash, Lock, Mail, MapPin, Smartphone, Store, User } from "lucide-react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, FileText, Hash, Lock, Mail, MapPin, Smartphone, Store, User } from "lucide-react";
 import { districts } from "@/config/districts";
 import {
   applySellerAction,
@@ -15,6 +16,7 @@ import {
 import { shopTypes } from "@/modules/auth/schema";
 import { idleState, type FormState } from "@/lib/validation/form";
 import { Button } from "@/components/ui/Button";
+import { FieldError } from "@/components/ui/Input";
 import { CheckboxField, FormMessage, PasswordField, SelectField, TextField } from "./fields";
 
 const fieldsOf = (s: FormState): Record<string, string> => (s.status === "error" && s.fields) || {};
@@ -183,6 +185,11 @@ export function SellerApplicationForm() {
   const [state, action, pending] = useActionState(applySellerAction, idleState);
   const f = fieldsOf(state);
   const v = valuesOf(state);
+  const router = useRouter();
+  // Sent: re-render the page, which now shows the "being reviewed" card.
+  useEffect(() => {
+    if (state.status === "ok") router.refresh();
+  }, [state, router]);
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
       <TextField
@@ -248,9 +255,31 @@ export function SellerApplicationForm() {
         error={f.phone}
         required
       />
-      <p className="rounded-[14px] border border-dashed border-line px-4 py-3 text-xs text-text-secondary">
-        Next step: upload your business registration (PDF/JPG, max 5 MB) for verification.
-      </p>
+      <div>
+        <label htmlFor="br-document" className="mb-2 block text-[13px] font-medium text-text-secondary">
+          Business registration certificate
+        </label>
+        <label
+          className={`flex cursor-pointer items-center gap-3 rounded-[14px] border border-dashed px-4 py-3 text-sm ${
+            f.brDocument ? "border-danger/60" : "border-line"
+          }`}
+        >
+          <FileText aria-hidden className="size-5 shrink-0 text-primary-light" />
+          <input
+            id="br-document"
+            name="brDocument"
+            type="file"
+            accept="application/pdf,image/jpeg,image/png"
+            aria-invalid={!!f.brDocument || undefined}
+            aria-describedby="br-document-help"
+            className="min-w-0 flex-1 text-xs text-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-white/8 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-text"
+          />
+        </label>
+        <p id="br-document-help" className="mt-1.5 text-xs text-text-muted">
+          PDF, JPG or PNG up to 4 MB. Stored encrypted — only Teleshop&apos;s review team can open it.
+        </p>
+        <FieldError>{f.brDocument}</FieldError>
+      </div>
       <CheckboxField name="agree" error={f.agree}>
         I agree to the{" "}
         <Link href="/help#fees" className="text-primary-light">
@@ -260,7 +289,7 @@ export function SellerApplicationForm() {
       </CheckboxField>
       <FormMessage state={state} />
       <Button type="submit" size="lg" disabled={pending} className="w-full">
-        {pending ? "Submitting…" : "Continue to verification"} <ArrowRight aria-hidden />
+        {pending ? "Sending…" : "Send application"} <ArrowRight aria-hidden />
       </Button>
     </form>
   );

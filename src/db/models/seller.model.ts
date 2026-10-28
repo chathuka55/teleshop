@@ -71,6 +71,26 @@ const sellerSchema = new Schema(
       required: true,
     },
     rejectionReason: { type: String, default: null },
+    /**
+     * Business-registration file(s) (P6-T01). The bytes are AES-256-GCM encrypted in storage
+     * (ADR-006); only admins can read them. Never selected by public queries.
+     */
+    documents: {
+      type: [
+        new Schema(
+          {
+            kind: { type: String, enum: ["business_registration"], required: true },
+            path: { type: String, required: true, maxlength: 200 },
+            contentType: { type: String, enum: ["application/pdf", "image/jpeg"], required: true },
+            size: intMin(1, { required: true }),
+            uploadedAt: { type: Date, default: () => new Date() },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+      validate: (v: unknown[]) => v.length <= 5,
+    },
     approvedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     approvedAt: { type: Date, default: null },
     settings: {
