@@ -74,6 +74,7 @@ export async function saveSettingsFor(
     expressFeeCents: input.expressFee,
     codEnabled: input.codEnabled,
     platformFeeBp: input.platformFeePct,
+    autoCancelHours: input.autoCancelHours,
   };
   await saveSettings(next);
   // Old → new for every value that changed (all of them are plain numbers / booleans).

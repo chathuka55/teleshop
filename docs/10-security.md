@@ -18,7 +18,7 @@
 | Secrets exposure | Env validated with Zod; only `NEXT_PUBLIC_*` reach the browser; secrets in Vercel env (Production/Preview separated); GitHub secret scanning + push protection on. |
 | Vulnerable dependencies | Dependabot weekly, `pnpm audit --prod` in CI, lockfile committed, pin versions. |
 | Logging & monitoring | `audit_logs` for sensitive actions; Sentry for errors (PII scrubbed); alert on > 20 failed logins/min. |
-| Abuse / DoS | Upstash rate limits per IP + per user (see doc 09), Vercel Firewall / attack challenge mode for bursts. |
+| Abuse / DoS | Upstash rate limits on every Server Action — per account when signed in, per IP for guests (see doc 09 §3) — Vercel Firewall / attack challenge mode for bursts. Cron routes need `CRON_SECRET`. |
 
 ## 2. Security headers (set in `middleware.ts` / `next.config.ts`)
 

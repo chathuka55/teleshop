@@ -8,20 +8,33 @@ describe("site settings form", () => {
       expressFee: "1,250.50",
       codEnabled: "on",
       platformFeePct: "2.5",
+      autoCancelHours: "48",
     });
-    expect(r).toEqual({ deliveryFee: 45_000, expressFee: 125_050, codEnabled: true, platformFeePct: 250 });
-    expect(settingsSchema.parse({ deliveryFee: "0", expressFee: "0", platformFeePct: "0" }).codEnabled).toBe(
-      false,
-    );
+    expect(r).toEqual({
+      deliveryFee: 45_000,
+      expressFee: 125_050,
+      codEnabled: true,
+      platformFeePct: 250,
+      autoCancelHours: 48,
+    });
+    expect(
+      settingsSchema.parse({ deliveryFee: "0", expressFee: "0", platformFeePct: "0", autoCancelHours: "72" })
+        .codEnabled,
+    ).toBe(false);
   });
   it("refuses nonsense and limits", () => {
+    const ok = { deliveryFee: "450", expressFee: "0", platformFeePct: "3", autoCancelHours: "48" };
     for (const bad of [
-      { deliveryFee: "-1", expressFee: "0", platformFeePct: "3" },
-      { deliveryFee: "450", expressFee: "0", platformFeePct: "31" },
-      { deliveryFee: "450", expressFee: "0", platformFeePct: "3.333" },
-      { deliveryFee: "20000", expressFee: "0", platformFeePct: "3" },
+      { deliveryFee: "-1" },
+      { platformFeePct: "31" },
+      { platformFeePct: "3.333" },
+      { deliveryFee: "20000" },
+      { autoCancelHours: "6" },
+      { autoCancelHours: "169" },
+      { autoCancelHours: "36.5" },
+      { autoCancelHours: "" },
     ]) {
-      expect(settingsSchema.safeParse(bad).success).toBe(false);
+      expect(settingsSchema.safeParse({ ...ok, ...bad }).success).toBe(false);
     }
   });
 });

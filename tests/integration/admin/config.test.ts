@@ -50,7 +50,13 @@ describe("admin configuration (P7-T03/T05)", () => {
   it("settings: checkout uses the new fees and COD switch; changes are audit-logged", async () => {
     const r = await saveSettingsFor(
       admin,
-      { deliveryFee: 50_000, expressFee: 100_000, codEnabled: false, platformFeePct: 250 },
+      {
+        deliveryFee: 50_000,
+        expressFee: 100_000,
+        codEnabled: false,
+        platformFeePct: 250,
+        autoCancelHours: 36,
+      },
       ctx,
     );
     expect(r.ok && r.message).toMatch(/OFF/);
@@ -58,14 +64,14 @@ describe("admin configuration (P7-T03/T05)", () => {
       fees: { standard: 50_000, express: 100_000 },
       codEnabled: false,
     });
-    expect((await getSettings()).platformFeeBp).toBe(250);
+    expect(await getSettings()).toMatchObject({ platformFeeBp: 250, autoCancelHours: 36 });
     const log = await AuditLogModel.findOne({ action: "settings.updated" }).lean();
     expect(log?.data).toMatchObject({ codEnabled: { from: true, to: false } });
     // An admin who hasn't passed TOTP is refused.
     await expect(
       saveSettingsFor(
         { ...admin, twoFactorVerified: false },
-        { deliveryFee: 0, expressFee: 0, codEnabled: true, platformFeePct: 0 },
+        { deliveryFee: 0, expressFee: 0, codEnabled: true, platformFeePct: 0, autoCancelHours: 48 },
         ctx,
       ),
     ).rejects.toThrow();

@@ -19,7 +19,10 @@ const oid = (id: string): Types.ObjectId => new Types.ObjectId(id);
 // ---- Settings ----
 
 export async function saveSettings(
-  s: Pick<SettingsDTO, "deliveryFeeCents" | "expressFeeCents" | "codEnabled" | "platformFeeBp">,
+  s: Pick<
+    SettingsDTO,
+    "deliveryFeeCents" | "expressFeeCents" | "codEnabled" | "platformFeeBp" | "autoCancelHours"
+  >,
 ): Promise<void> {
   await connectDB();
   await SettingsModel.updateOne({ _id: "global" }, { $set: s }, { upsert: true, runValidators: true });

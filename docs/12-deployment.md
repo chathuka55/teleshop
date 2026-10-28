@@ -34,6 +34,7 @@
 | `DOCS_ENCRYPTION_KEY` | random (32 bytes, base64) | **the same key everywhere documents are read** — losing it makes stored seller documents unreadable ([ADR-006](adr/ADR-006-encrypted-seller-documents.md)) |
 | `UPSTASH_REDIS_REST_URL/TOKEN` | Upstash (Marketplace) | separate DB |
 | `EMAIL_SERVER`, `EMAIL_FROM` | sandbox SMTP | real SMTP |
+| `CRON_SECRET` | (not needed — crons run on production only) | random, 32+ chars (`openssl rand -hex 32`); Vercel sends it to `/api/cron/*`. Without it the daily auto-cancel job refuses to run. |
 | `NEXT_PUBLIC_SITE_URL` | preview URL | `https://teleshop.lk` |
 
 > **Preview variables in one step:** `pnpm vercel:preview-env` (`scripts/dev/vercel-preview-env.mjs`) writes the *Preview* set from `.env.local` with its own database `teleshop_preview` and freshly generated `AUTH_SECRET` / `TOTP_ENCRYPTION_KEY`. Needs a Vercel token in `~/.vercel-token` or `VERCEL_TOKEN`. Then fill the preview database once: `MONGODB_DB=teleshop_preview pnpm db:seed` (PowerShell: `$env:MONGODB_DB='teleshop_preview'; pnpm db:seed`). Without these, every PR preview build fails with "Invalid environment variables".

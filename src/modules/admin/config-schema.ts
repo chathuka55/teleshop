@@ -34,6 +34,13 @@ export const settingsSchema = z.object({
     }, "Enter a percentage, e.g. 3 or 2.5")
     .transform((v) => Math.round(Number(v) * 100))
     .refine((bp) => bp <= 3000, "At most 30 %"),
+  /** Whole hours a shop has to accept an order before the daily job cancels its package. */
+  autoCancelHours: z
+    .string()
+    .trim()
+    .regex(/^\d{1,3}$/, "Enter whole hours, e.g. 48")
+    .transform(Number)
+    .refine((h) => h >= 12 && h <= 168, "Between 12 and 168 hours (7 days)"),
 });
 export type SettingsInput = z.infer<typeof settingsSchema>;
 
