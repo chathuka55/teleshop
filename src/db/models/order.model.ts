@@ -33,8 +33,17 @@ const itemSchema = new Schema({
   qty: intMin(1, { required: true, max: 10 }),
   lineTotalCents: cents(),
   warrantyMonths: intMin(0, { default: 0 }),
-  /** IMEI / serial recorded by the seller before ready_to_ship */
-  serialNumber: { type: String, default: null, maxlength: 30 },
+  /** IMEI / serial per unit (≤ qty), recorded by the seller before ready_to_ship (P6-T04) */
+  serialNumbers: {
+    type: [{ type: String, maxlength: 30 }],
+    default: [],
+    validate: {
+      validator(this: { qty?: number }, v: unknown[]) {
+        return v.length <= (this.qty ?? 10);
+      },
+      message: "More serial numbers than units",
+    },
+  },
 });
 
 const shipmentSchema = new Schema(

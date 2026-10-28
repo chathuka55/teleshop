@@ -59,7 +59,7 @@
 - [ ] **P6-T01** Seller application (S register, document upload) → pending state.
 - [ ] **P6-T02** Seller dashboard (S1): KPIs, to-do list, recent orders, payout card.
 - [ ] **P6-T03** Products & stock (S3): create/edit product with spec template + variants, image upload, stock steppers.
-- [ ] **P6-T04** Orders & fulfilment (S2): accept, pack, **record IMEI/serial**, mark ready to ship.
+- [x] **P6-T04** Orders & fulfilment (S2): accept, pack, **record IMEI/serial**, mark ready to ship. — _`/seller/orders` (tabs New / To pack / Ready / Shipped / Delivered / Cancelled, search) and `/seller/orders/[no]`; accept → pack → one IMEI/serial per unit (15-digit IMEIs Luhn-checked; required for `requiresSerial` categories) → ready to ship, or cancel with a reason (stock released). Every query filtered by the shop's own id; full address + phone only after accepting; new-order email to the shop, confirmed/cancelled emails to the customer. Order items now hold `serialNumbers[]` (migration 0008). `/seller` shows the to-do counts and recent orders (rest of S1 is P6-T02)._
 - [ ] **P6-T05** Payouts & shop settings (S4); public shop page data.
 
 ## Phase 7 — Admin console · [details](phases/phase-7-admin.md)

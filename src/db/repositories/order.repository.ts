@@ -114,10 +114,11 @@ type LeanCustomerOrder = {
     shipment?: LeanShipment | null;
     items: (Omit<
       CustomerOrderDTO["packages"][number]["items"][number],
-      "id" | "productSlug" | "myRating" | "canReview"
+      "id" | "productSlug" | "myRating" | "canReview" | "serialNumbers"
     > & {
       _id: Types.ObjectId;
       productId: Types.ObjectId;
+      serialNumbers?: string[];
     })[];
   }[];
 };
@@ -199,6 +200,7 @@ export async function findCustomerOrder(
           productSlug: slugById.get(i.productId.toString()) ?? "",
           myRating: ratingByItem.get(i._id.toString()) ?? null,
           canReview: false,
+          serialNumbers: i.serialNumbers ?? [],
           sku: i.sku,
           name: i.name,
           variantLabel: i.variantLabel,

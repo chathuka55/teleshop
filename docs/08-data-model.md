@@ -226,7 +226,7 @@ Validator (`$jsonSchema`, added by migration 0002): `available`, `reserved`, `on
 | `packages` | `[Package]` embedded | one per seller |
 | `placedAt`, `cancelledAt`, `cancelReason` | | |
 **Package:** `{ _id, sellerId, status: pending|confirmed|processing|ready_to_ship|shipped|delivered|cancelled|returned, items[], subtotalCents, deliveryCents, shipment }`.
-**Item:** `{ _id, productId, sku, name, variantLabel, imageUrl, unitPriceCents, qty, lineTotalCents, warrantyMonths, serialNumber (IMEI, set by seller) }`.
+**Item:** `{ _id, productId, sku, name, variantLabel, imageUrl, unitPriceCents, qty, lineTotalCents, warrantyMonths, serialNumbers[] (IMEI / serial per unit, ≤ qty, set by the seller — v0.4, was a single serialNumber) }`.
 **Shipment:** `{ courierId, courierName, trackingCode, trackingUrl, handedOverAt, estimatedDelivery, addedBy (admin userId), addedAt }`.
 Indexes: `{ orderNo: 1 }` unique, `{ idempotencyKey: 1 }` unique, `{ customerId: 1, placedAt: -1 }`, `{ 'packages.sellerId': 1, 'packages.status': 1, placedAt: -1 }`, `{ 'packages.shipment.trackingCode': 1 }` sparse, `{ status: 1, placedAt: -1 }`. Writes: `orders.service`, `shipments.service`.
 
@@ -294,6 +294,7 @@ Other rules:
 | 0005 | `0005-demo-product-photo-sets.ts` | Replace the legacy single demo photo (`<slug>.webp`, from the first 0004) with the photo set (`<slug>-1…4.webp`, backgrounds removed); seller uploads untouched | 2026-10-26 |
 | 0006 | `0006-demo-shop-profiles.ts` | Cover photo, photos (Commons, credited on `/credits`), map pin and opening hours for the demo shops; only empty fields are set | 2026-10-27 |
 | 0007 | `0007-fill-missing-shop-fields.ts` | Fill demo shop `photos` + `openingHours` where the field is **missing** (records older than v0.3 — 0006 only matched empty values) | 2026-10-27 |
+| 0008 | `0008-order-item-serial-numbers.ts` | Order items: single `serialNumber` → `serialNumbers[]` (one IMEI/serial per unit); `down` keeps the first | 2026-10-28 |
 
 Applied migrations are recorded in the `_migrations` collection (`_id` = migration id, `appliedAt`). Runner: `scripts/seed/migrate.ts` (`--status`, `--down <id>`); list of migrations: `src/db/migrations/index.ts`.
 

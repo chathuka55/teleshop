@@ -144,6 +144,12 @@ export default async function OrderPage({ params, searchParams }: Props) {
                   </span>
                 </span>
                 <span className="font-semibold">{formatLKR(item.lineTotalCents)}</span>
+                {item.serialNumbers.length > 0 && (
+                  <span className="w-full pl-[68px] text-xs text-text-secondary">
+                    IMEI / serial:{" "}
+                    <span className="font-mono text-text">{item.serialNumbers.join(", ")}</span>
+                  </span>
+                )}
                 {item.myRating !== null && (
                   <span className="flex w-full items-center gap-2 pl-[68px] text-xs text-text-secondary">
                     <Stars value={item.myRating} /> You reviewed this item
