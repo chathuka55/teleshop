@@ -109,6 +109,16 @@ export async function releaseStock(sku: string, qty: number, session: ClientSess
   return r.modifiedCount === 1;
 }
 
+/** Delivered: the reserved units leave the shelf for good (reserved → sold). */
+export async function commitSoldStock(sku: string, qty: number, session: ClientSession): Promise<boolean> {
+  const r = await InventoryModel.updateOne(
+    { sku, reserved: $gte(qty), onHand: $gte(qty) },
+    { $inc: { reserved: -qty, onHand: -qty, version: 1 } },
+    { session },
+  );
+  return r.modifiedCount === 1;
+}
+
 /** Inserts order + COD payment + first timeline event. Returns the order id. */
 export async function insertOrder(
   order: NewOrder,

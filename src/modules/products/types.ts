@@ -39,6 +39,8 @@ export type SellerProductDTO = {
   slug: string;
   status: ProductStatus;
   publishedAt: string | null;
+  /** Admin's note when the product was sent back or blocked. */
+  moderationNote: string | null;
   categoryId: string;
   brandId: string;
   name: string;

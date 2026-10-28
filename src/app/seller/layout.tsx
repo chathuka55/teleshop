@@ -22,7 +22,7 @@ export default async function SellerLayout({ children }: { children: ReactNode }
         id="main"
         className="container-page grid min-h-[60vh] gap-6 pt-8 pb-16 lg:grid-cols-[240px_1fr] lg:gap-10"
       >
-        <aside className="lg:pt-1">
+        <aside className="min-w-0 lg:pt-1">
           <SellerSidebar shopName={nav.shopName} newOrders={nav.newOrders} />
         </aside>
         <div className="min-w-0">{children}</div>

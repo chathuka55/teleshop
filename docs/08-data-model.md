@@ -181,6 +181,7 @@ Indexes: `{ slug: 1 }` unique, `{ approvalStatus: 1 }`. Writes: `sellers.service
 | `freeDelivery` | boolean | seller pays delivery; package ships free only if all its items do — added v0.2 |
 | `warranty` | `{ months, type: manufacturer|shop|none }` | |
 | `status` | enum | `draft`, `pending_review`, `published`, `inactive`, `blocked` |
+| `moderationNote` | string \| null | why an admin sent the product back to draft or blocked it; shown to the seller (v0.4, P7-T03) |
 | `rating` | `{ average, count }` | cached |
 | `publishedAt` | Date | |
 **Variant:** `{ _id, sku (unique), label: "256GB / Cosmic Orange", attributes: Map { storage, ram, colour, size… }, priceCents, compareAtCents, imageUrl, isActive }`. A product has 1–50 variants with no duplicate SKUs.

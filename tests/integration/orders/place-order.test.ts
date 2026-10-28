@@ -138,6 +138,29 @@ describe("placeOrder (P4-T04)", () => {
     expect((await stock(skuA))?.available).toBe((before?.available ?? 0) - 1);
   });
 
+  it("a repeat that arrives after the first emptied the cart still gets the order", async () => {
+    const { user, addressId } = await makeCustomer("late-repeat@test.lk");
+    // skuB: skuA's small stock is shared by the other tests in this file.
+    await saveUserCartItems(user.id, [{ sku: skuB, qty: 1 }]);
+    const input = { addressId, deliveryMethod: "standard" as const, idempotencyKey: randomUUID() };
+    const first = await placeOrderFor(user, input, ctx);
+    if (!first.ok) throw new Error(first.code);
+    // Simulate the race: the repeat's own replay check ran before the order existed. Its cart read
+    // now finds the cart empty — it must still answer with the placed order.
+    await OrderModel.updateOne(
+      { orderNo: first.orderNo },
+      { $set: { idempotencyKey: `${input.idempotencyKey}-hidden` } },
+    );
+    const blind = await placeOrderFor(user, input, ctx);
+    expect(blind.ok || blind.code).toBe("EMPTY_CART"); // control: no order with that key → empty cart
+    await OrderModel.updateOne(
+      { orderNo: first.orderNo },
+      { $set: { idempotencyKey: input.idempotencyKey } },
+    );
+    const repeat = await placeOrderFor(user, input, ctx);
+    expect(repeat).toEqual({ ok: true, orderNo: first.orderNo, replay: true });
+  });
+
   it("two buyers, one unit left: exactly one order, stock never below zero", async () => {
     await InventoryModel.updateOne({ sku: skuB }, { $set: { available: 1 } });
     const buyers = await Promise.all([makeCustomer("race1@test.lk"), makeCustomer("race2@test.lk")]);

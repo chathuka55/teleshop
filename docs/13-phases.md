@@ -63,10 +63,10 @@
 - [x] **P6-T05** Payouts & shop settings (S4); public shop page data. — _`/seller/payouts`: delivered COD minus the platform fee (`settings.platformFeeBp`, on item value only), paid / scheduled / ready / still to collect, payout history (payout records are created by admins — P7). `/seller/settings`: description, hours, phone, address, tags, dispatch days, bank (name, branch, last 4 only), cover photo — all shown on `/s/[shop]`._
 
 ## Phase 7 — Admin console · [details](phases/phase-7-admin.md)
-- [ ] **P7-T01** Admin layout (sidebar), dashboard (A2) with "awaiting tracking code" queue.
-- [ ] **P7-T02** Orders list (A3) + order detail (A4) with **Courier & Tracking panel** → `addTrackingCode`, mark COD paid.
-- [ ] **P7-T03** Products moderation (A5/A6), categories + spec templates, brands (A7), inventory (A8).
-- [ ] **P7-T04** Customers (A9), sellers approvals (A10), reviews moderation (A11).
+- [x] **P7-T01** Admin layout (sidebar), dashboard (A2) with "awaiting tracking code" queue. — _`/admin` route group `(console)` (login stays outside): orders today / this month, delivered value, waiting counts (tracking codes, with couriers, shops, products), the oldest-first tracking queue._
+- [x] **P7-T02** Orders list (A3) + order detail (A4) with **Courier & Tracking panel** → `addTrackingCode`, mark COD paid. — _list with status tabs, search by order no. / phone / customer email, pages of 25. Per package: courier + code checked against `codePattern` (normalised, unique per courier) + hand-over time + link preview → shipped + customer email; "Delivered & COD collected" (stock reserved → sold, per-package payment, order payment `paid` when every live package is); "Returned" (stock back, nothing due); cancel with a reason (customer + shop emailed). One transaction per step, order re-read inside it._
+- [ ] **P7-T03** Products moderation (A5/A6), categories + spec templates, brands (A7), inventory (A8). — _done: `/admin/products` queue (new listing vs price change) + review page → approve (publishes), send back to drafts with a note, block; the seller sees the note (`products.moderationNote`). To do: categories, brands, inventory._
+- [ ] **P7-T04** Customers (A9), sellers approvals (A10), reviews moderation (A11). — _done: `/admin/sellers` (to approve / approved / rejected / suspended) + application page with the encrypted certificate download → approve (owner becomes a seller; certificate required) or reject with a reason; emails. To do: customers, suspend shops, reviews._
 - [ ] **P7-T05** Reports (A12), couriers & settings (A13), audit logs viewer (A14).
 - [ ] **P7-T06** Admin mobile views (AM1–AM3).
 

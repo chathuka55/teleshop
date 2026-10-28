@@ -27,10 +27,13 @@ export function ProductStatusBar({
   id,
   status,
   hasImages,
+  note,
 }: {
   id: string;
   status: ProductStatus;
   hasImages: boolean;
+  /** Admin's note when the product was sent back or blocked. */
+  note: string | null;
 }) {
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -63,6 +66,11 @@ export function ProductStatusBar({
             </Button>
           ))}
       </div>
+      {note && (status === "draft" || status === "blocked") && (
+        <p className="rounded-xl border border-accent/30 bg-accent/8 px-3.5 py-2.5 text-[13px]">
+          <span className="font-semibold">Note from Teleshop:</span> {note}
+        </p>
+      )}
       {status === "draft" && !hasImages && (
         <p className="text-[13px] text-accent">Add at least one photo before sending it for review.</p>
       )}

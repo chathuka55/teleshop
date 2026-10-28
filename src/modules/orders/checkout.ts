@@ -70,7 +70,13 @@ export async function placeOrderFor(
   if (!address) return fail("ADDRESS_NOT_FOUND", "Choose a delivery address.");
 
   const items = await getUserCartItems(user.id);
-  if (!items.length) return fail("EMPTY_CART", "Your cart is empty.");
+  if (!items.length) {
+    // A double-submit: the other request placed the order (and emptied the cart) after our first
+    // replay check — answer with that order, not "your cart is empty".
+    const placed = await findOrderNoByIdempotencyKey(user.id, input.idempotencyKey);
+    if (placed) return { ok: true, orderNo: placed, replay: true };
+    return fail("EMPTY_CART", "Your cart is empty.");
+  }
 
   // ---- price from the database ----
   const products = await getProductsBySkus(items.map((i) => i.sku));

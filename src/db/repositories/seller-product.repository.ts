@@ -39,7 +39,11 @@ type LeanStock = {
   lowStockAt?: number;
 };
 
-type LeanSellerProduct = LeanProduct & { status: ProductStatus; updatedAt: Date };
+type LeanSellerProduct = LeanProduct & {
+  status: ProductStatus;
+  updatedAt: Date;
+  moderationNote?: string | null;
+};
 
 type LeanTemplate = { _id: Types.ObjectId; name: string; specTemplate?: SpecFieldDTO[] };
 
@@ -144,6 +148,7 @@ export async function findSellerProduct(
     slug: p.slug,
     status: p.status,
     publishedAt: p.publishedAt?.toISOString() ?? null,
+    moderationNote: p.moderationNote ?? null,
     categoryId: p.categoryId.toString(),
     brandId: p.brandId.toString(),
     name: p.name,
