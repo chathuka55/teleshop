@@ -40,7 +40,7 @@
     "clsx": "2.1.1",
     "lucide-react": "1.60.0",
     "mongoose": "8.24.6",
-    "next": "15.5.28",
+    "next": "16.4.3",
     "next-auth": "5.0.0-beta.32",
     "nodemailer": "10.1.7",
     "otplib": "13.5.0",
