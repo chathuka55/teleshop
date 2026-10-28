@@ -47,6 +47,7 @@
 | `addTrackingCodeAction`, `adminPackageStepAction` (deliver + COD · return · cancel) | orders | admin (TOTP) | 60/min/IP |
 | `decideSellerAction` (approve · reject), `moderateProductAction` (approve · return · block) | admin | admin (TOTP) | 60/min/IP |
 | `customerStatusAction` (suspend · reactivate), `moderateReviewAction` (hide · show), `createPayoutAction`, `markPayoutPaidAction`; `decideSellerAction` also suspends / reinstates shops | admin | admin (TOTP) | 60/min/IP |
+| `saveSettingsAction`, `saveCourierAction`, `saveBrandAction`, `saveCategoryAction` (with spec template) | admin | admin (TOTP) | 60/min/IP |
 
 ## 4. REST endpoints `/api/v1`
 

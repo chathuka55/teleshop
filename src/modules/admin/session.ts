@@ -1,6 +1,20 @@
 import "server-only";
 import { getCurrentUser } from "@/lib/auth/guards";
 import {
+  getCategoryAdminFor,
+  getReportFor,
+  getSettingsFor,
+  listBrandsAdminFor,
+  listCategoriesAdminFor,
+  listCouriersAdminFor,
+  listLowStockFor,
+  saveBrandFor,
+  saveCategoryFor,
+  saveCourierFor,
+  saveSettingsFor,
+} from "./config";
+import type { BrandInput, CategoryInput, CourierInput, SettingsInput } from "./config-schema";
+import {
   addTrackingCodeFor,
   adminPackageStepFor,
   getOrderFor,
@@ -97,3 +111,20 @@ export const adminAudit = async (f: {
   actorEmail?: string;
   page: number;
 }) => listAuditFor(await getCurrentUser(), f);
+
+// ---- Configuration (P7-T03/T05) ----
+export const adminSettings = async () => getSettingsFor(await getCurrentUser());
+export const adminCouriersAll = async () => listCouriersAdminFor(await getCurrentUser());
+export const adminBrands = async () => listBrandsAdminFor(await getCurrentUser());
+export const adminCategories = async () => listCategoriesAdminFor(await getCurrentUser());
+export const adminCategory = async (id: string) => getCategoryAdminFor(await getCurrentUser(), id);
+export const adminLowStock = async () => listLowStockFor(await getCurrentUser());
+export const adminReport = async () => getReportFor(await getCurrentUser());
+export const adminSaveSettings = async (input: SettingsInput, ip: string | null) =>
+  saveSettingsFor(await getCurrentUser(), input, { ip });
+export const adminSaveCourier = async (input: CourierInput, ip: string | null) =>
+  saveCourierFor(await getCurrentUser(), input, { ip });
+export const adminSaveBrand = async (input: BrandInput, ip: string | null) =>
+  saveBrandFor(await getCurrentUser(), input, { ip });
+export const adminSaveCategory = async (input: CategoryInput, ip: string | null) =>
+  saveCategoryFor(await getCurrentUser(), input, { ip });
