@@ -21,6 +21,12 @@ export default async function AdminSellerPage({ params }: Props) {
   if (!id.success) notFound();
   const s = await adminSeller(id.data);
   if (!s) notFound();
+  const allowed = {
+    pending: s.hasDocument ? ["approve", "reject"] : ["reject"],
+    approved: ["suspend"],
+    suspended: ["reinstate"],
+    rejected: [],
+  }[s.status];
   const day = (iso: string) =>
     new Date(iso).toLocaleDateString("en-LK", { day: "numeric", month: "short", year: "numeric" });
   const rows: [string, string][] = [
@@ -98,12 +104,23 @@ export default async function AdminSellerPage({ params }: Props) {
 
       {/* Always mounted: after the last decision the form shows its result instead of buttons. */}
       <section
-        className={
-          s.status === "pending" ? "rounded-[20px] border border-line bg-surface p-5" : "empty:hidden"
-        }
+        className={allowed.length ? "rounded-[20px] border border-line bg-surface p-5" : "empty:hidden"}
       >
-        {s.status === "pending" && <h2 className="mb-3 font-display text-lg font-bold">Decision</h2>}
-        <DecisionForm kind="seller" id={s.id} allowed={s.hasDocument ? ["approve", "reject"] : ["reject"]} />
+        {allowed.length > 0 && (
+          <h2 className="mb-3 font-display text-lg font-bold">
+            {s.status === "pending" ? "Decision" : "Shop status"}
+          </h2>
+        )}
+        {s.status === "approved" && (
+          <p className="mb-3 text-sm text-text-secondary">
+            Suspending hides every product from the store and closes the seller dashboard. Open orders stay —
+            handle them under Orders.
+          </p>
+        )}
+        {s.status === "suspended" && s.rejectionReason && (
+          <p className="mb-3 text-sm text-text-secondary">Suspended because: {s.rejectionReason}</p>
+        )}
+        <DecisionForm kind="seller" id={s.id} allowed={allowed} />
       </section>
     </div>
   );

@@ -4,12 +4,13 @@ import { connectDB } from "../mongoose";
 import { CategoryModel } from "../models/category.model";
 import { ProductModel } from "../models/product.model";
 import { toCategoryDTO, type LeanCategory } from "./catalog-mappers";
+import { liveProductFilter } from "./storefront-filter";
 import { $in } from "../operators";
 
 /** Published product count per category id. */
 async function countsByCategory(): Promise<Map<string, number>> {
   const rows = await ProductModel.aggregate<{ _id: Types.ObjectId; n: number }>([
-    { $match: { status: "published" } },
+    { $match: await liveProductFilter() },
     { $group: { _id: "$categoryId", n: { $sum: 1 } } },
   ]);
   return new Map(rows.map((r) => [r._id.toString(), r.n]));
@@ -30,7 +31,7 @@ export async function findCategoryBySlug(slug: string): Promise<CategoryDTO | nu
   await connectDB();
   const c = await CategoryModel.findOne({ slug, isActive: true }).lean<LeanCategory>();
   if (!c) return null;
-  const n = await ProductModel.countDocuments({ status: "published", categoryId: c._id });
+  const n = await ProductModel.countDocuments({ ...(await liveProductFilter()), categoryId: c._id });
   return toCategoryDTO(c, n);
 }
 

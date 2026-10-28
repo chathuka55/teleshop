@@ -2,7 +2,13 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { decideSellerAction, moderateProductAction } from "@/modules/admin/actions";
+import {
+  customerStatusAction,
+  decideSellerAction,
+  markPayoutPaidAction,
+  moderateProductAction,
+  moderateReviewAction,
+} from "@/modules/admin/actions";
 import { idleState } from "@/lib/validation/form";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/Input";
@@ -13,15 +19,46 @@ type Choice = { value: string; label: string; variant: "primary" | "glass" | "da
 const kinds = {
   seller: {
     action: decideSellerAction,
+    decisionField: "decision",
     field: "reason",
-    noteLabel: "Reason for the applicant",
+    noteLabel: "Reason (the owner sees it)",
     choices: [
       { value: "approve", label: "Approve shop", variant: "primary", needsNote: false },
       { value: "reject", label: "Reject", variant: "danger", needsNote: true },
+      { value: "reinstate", label: "Reinstate shop", variant: "primary", needsNote: false },
+      { value: "suspend", label: "Suspend shop", variant: "danger", needsNote: true },
     ],
+  },
+  customer: {
+    action: customerStatusAction,
+    decisionField: "status",
+    field: "reason",
+    noteLabel: "Reason (kept in the audit log)",
+    choices: [
+      { value: "active", label: "Reactivate", variant: "glass", needsNote: false },
+      { value: "suspended", label: "Suspend", variant: "danger", needsNote: true },
+    ],
+  },
+  review: {
+    action: moderateReviewAction,
+    decisionField: "action",
+    field: "reason",
+    noteLabel: "Reason (kept in the audit log)",
+    choices: [
+      { value: "show", label: "Show again", variant: "glass", needsNote: false },
+      { value: "hide", label: "Hide", variant: "danger", needsNote: true },
+    ],
+  },
+  payout: {
+    action: markPayoutPaidAction,
+    decisionField: "decision",
+    field: "reference",
+    noteLabel: "Bank transfer reference",
+    choices: [{ value: "paid", label: "Mark paid", variant: "primary", needsNote: true }],
   },
   product: {
     action: moderateProductAction,
+    decisionField: "decision",
     field: "note",
     noteLabel: "Note for the seller",
     choices: [
@@ -32,10 +69,13 @@ const kinds = {
   },
 } as const satisfies Record<
   string,
-  { action: unknown; field: string; noteLabel: string; choices: readonly Choice[] }
+  { action: unknown; decisionField: string; field: string; noteLabel: string; choices: readonly Choice[] }
 >;
 
-/** Approve / reject a shop (A10), approve / return / block a product (A6). */
+/**
+ * One admin decision with an optional note: shops (A10), products (A6), accounts (A9), reviews
+ * (A11), payouts. Buttons that need a note open a small form first.
+ */
 export function DecisionForm({
   kind,
   id,
@@ -73,7 +113,7 @@ export function DecisionForm({
             ) : (
               <form key={c.value} action={action}>
                 <input type="hidden" name="id" value={id} />
-                <input type="hidden" name="decision" value={c.value} />
+                <input type="hidden" name={k.decisionField} value={c.value} />
                 <Button type="submit" variant={c.variant} disabled={pending}>
                   {pending ? "Saving…" : c.label}
                 </Button>
@@ -84,7 +124,7 @@ export function DecisionForm({
       ) : (
         <form action={action} className="flex flex-col gap-3 rounded-2xl border border-line bg-white/3 p-4">
           <input type="hidden" name="id" value={id} />
-          <input type="hidden" name="decision" value={choice.value} />
+          <input type="hidden" name={k.decisionField} value={choice.value} />
           <div>
             <label htmlFor={`note-${id}`} className="mb-1.5 block text-[13px] text-text-secondary">
               {k.noteLabel}

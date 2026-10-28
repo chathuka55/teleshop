@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Pager } from "@/components/admin/Pager";
+import { ChevronRight, Search } from "lucide-react";
 import { orderStatusLabel } from "@/components/orders/order-status";
 import { sellerPackageStatus } from "@/components/seller/seller-status";
 import { Badge } from "@/components/ui/Badge";
@@ -38,7 +39,6 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   const parsed = adminOrderListSchema.safeParse(await searchParams);
   const f = parsed.success ? parsed.data : { q: "", page: 1, status: undefined };
   const { rows, total, pageSize } = await adminOrders(f);
-  const pages = Math.max(1, Math.ceil(total / pageSize));
   const when = (iso: string) =>
     new Date(iso).toLocaleString("en-LK", {
       timeZone: "Asia/Colombo",
@@ -131,29 +131,13 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
         </ul>
       )}
 
-      {pages > 1 && (
-        <nav aria-label="Pages" className="mt-5 flex items-center justify-center gap-3 text-sm">
-          {f.page > 1 && (
-            <Link
-              href={href({ ...f, page: f.page - 1 })}
-              className="inline-flex items-center gap-1 hover:text-primary-light"
-            >
-              <ChevronLeft aria-hidden className="size-4" /> Newer
-            </Link>
-          )}
-          <span className="text-text-secondary">
-            Page {f.page} of {pages} · {total} orders
-          </span>
-          {f.page < pages && (
-            <Link
-              href={href({ ...f, page: f.page + 1 })}
-              className="inline-flex items-center gap-1 hover:text-primary-light"
-            >
-              Older <ChevronRight aria-hidden className="size-4" />
-            </Link>
-          )}
-        </nav>
-      )}
+      <Pager
+        page={f.page}
+        total={total}
+        pageSize={pageSize}
+        noun="orders"
+        href={(page) => href({ ...f, page })}
+      />
     </div>
   );
 }

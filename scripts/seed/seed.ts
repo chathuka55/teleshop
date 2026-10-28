@@ -19,7 +19,7 @@ async function main(): Promise<void> {
     throw new Error(`Refusing to seed: ${realOrders} real order(s) found. Re-run with --force to wipe them.`);
   }
 
-  console.log("Seeding… (wipes users, sellers, catalogue, carts and orders)");
+  console.log("Seeding… (wipes users, sellers, catalogue, carts, orders and payouts)");
   const { accounts, counts } = await seedDatabase();
   console.log(
     "\nCollections:",
