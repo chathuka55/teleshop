@@ -4,6 +4,7 @@ import { countLowStock } from "@/db/repositories/seller-product.repository";
 import {
   createApplication,
   findApplicationByUser,
+  findSellerDocument,
   findOwnShop,
   listSellerPayouts,
   resubmitApplication,
@@ -11,12 +12,20 @@ import {
   setShopCover,
   shopSlugTaken,
   updateOwnShop,
+  type SellerDocument,
 } from "@/db/repositories/seller-shop.repository";
 import { getSettings } from "@/db/repositories/settings.repository";
+import { assertRole } from "@/lib/auth/authorize";
 import type { SessionUser } from "@/lib/auth/claims";
+import { checkBusinessDocument } from "@/lib/documents/business-document";
 import { InvalidImageError } from "@/lib/images/avatar";
 import { processProductImage } from "@/lib/images/product";
 import { deleteObject, ownObjectPath, putPublicImage, randomObjectPath } from "@/lib/storage/blob";
+import {
+  DocumentsNotConfiguredError,
+  encryptedDocumentStore,
+  type DocumentStore,
+} from "@/lib/storage/documents";
 import { audit } from "@/modules/audit/service";
 import type { SellerApplicationInput } from "@/modules/auth/schema";
 import { slugify } from "@/modules/products/access";
@@ -62,7 +71,7 @@ async function uniqueShopSlug(name: string): Promise<string> {
 export async function applyForShopFor(
   user: SessionUser,
   input: SellerApplicationInput,
-  ctx: { ip: string | null },
+  ctx: { ip: string | null; document: Uint8Array | null; store?: DocumentStore },
 ): Promise<ShopActionResult> {
   if (user.role !== "customer") {
     return { ok: false, message: "This account can't open a shop. Sign in with your own customer account." };
@@ -70,13 +79,6 @@ export async function applyForShopFor(
   if (!user.emailVerified)
     return { ok: false, message: "Please verify your email first — check your inbox." };
 
-  const application = {
-    shopName: input.shopName,
-    shopType: input.shopType,
-    businessRegNo: input.businessRegNo,
-    address: { line1: input.addressLine1, city: input.city, district: input.district },
-    phone: input.phone,
-  };
   const existing = await findApplicationByUser(user.id);
   if (existing && existing.status !== "rejected") {
     return {
@@ -89,18 +91,64 @@ export async function applyForShopFor(
             : "This shop is suspended. Please contact support.",
     };
   }
+  // A first application needs the business registration; a re-application may keep the old one.
+  const hasFile = !!ctx.document && ctx.document.byteLength > 0;
+  if (!existing && !hasFile) {
+    return {
+      ok: false,
+      message: "Attach your business registration certificate.",
+      fields: { brDocument: "Attach your business registration certificate (PDF, JPG or PNG)" },
+    };
+  }
 
-  let sellerId: string | null;
+  // Check the file, then store it encrypted (ADR-006) before the application points at it.
+  const store = ctx.store ?? encryptedDocumentStore;
+  let stored: SellerDocument | null = null;
+  if (hasFile && ctx.document) {
+    try {
+      const doc = await checkBusinessDocument(ctx.document);
+      const path = await store.put(user.id, doc.bytes);
+      stored = { kind: "business_registration", path, contentType: doc.contentType, size: doc.bytes.length };
+    } catch (e) {
+      if (e instanceof InvalidImageError) {
+        return { ok: false, message: e.message, fields: { brDocument: e.message } };
+      }
+      if (e instanceof DocumentsNotConfiguredError) {
+        return { ok: false, message: "Document uploads are switched off right now. Please try again later." };
+      }
+      throw e;
+    }
+  }
+
+  const application = {
+    shopName: input.shopName,
+    shopType: input.shopType,
+    businessRegNo: input.businessRegNo,
+    address: { line1: input.addressLine1, city: input.city, district: input.district },
+    phone: input.phone,
+    documents: stored ? [stored] : [],
+  };
+  let sellerId: string | null = null;
+  let replaced: SellerDocument[] = [];
   try {
-    sellerId = existing
-      ? await resubmitApplication(user.id, application)
-      : await createApplication(user.id, await uniqueShopSlug(input.shopName), application);
+    if (existing) {
+      const r = await resubmitApplication(user.id, application);
+      sellerId = r?.id ?? null;
+      replaced = r?.replaced ?? [];
+    } else {
+      sellerId = await createApplication(user.id, await uniqueShopSlug(input.shopName), application);
+    }
   } catch (e) {
+    if (stored) await store.remove(stored.path);
     // The unique userId index: a second tab applied at the same moment.
     if (isDuplicateKey(e)) return { ok: false, message: "Your application is already being reviewed." };
     throw e;
   }
-  if (!sellerId) return { ok: false, message: "Your application changed meanwhile. Reload the page." };
+  if (!sellerId) {
+    if (stored) await store.remove(stored.path);
+    return { ok: false, message: "Your application changed meanwhile. Reload the page." };
+  }
+  for (const old of replaced) await store.remove(old.path);
 
   await audit.log({
     actorId: user.id,
@@ -108,10 +156,40 @@ export async function applyForShopFor(
     action: existing ? "seller.reapplied" : "seller.applied",
     entity: "seller",
     entityId: sellerId,
+    data: { document: !!stored },
     ip: ctx.ip,
   });
   await sendShopApplicationEmail(user.email, user.name, input.shopName).catch(() => undefined);
   return { ok: true, message: "Application sent. We review it within 24 hours and email you the result." };
+}
+
+/**
+ * An admin opens a shop's business registration (decrypted in memory, never cached). Every view
+ * is audit-logged. The admin console (P7) links here; the route is /admin/sellers/[id]/document.
+ */
+export async function readSellerDocumentFor(
+  user: SessionUser | null,
+  sellerId: string,
+  ctx: { ip: string | null; store?: DocumentStore },
+): Promise<{ bytes: Buffer; contentType: string; filename: string } | null> {
+  const admin = assertRole(user, ["admin"]);
+  const found = await findSellerDocument(sellerId);
+  if (!found) return null;
+  const bytes = await (ctx.store ?? encryptedDocumentStore).read(found.document.path);
+  await audit.log({
+    actorId: admin.id,
+    actorRole: "admin",
+    action: "seller.document.view",
+    entity: "seller",
+    entityId: sellerId,
+    ip: ctx.ip,
+  });
+  const ext = found.document.contentType === "application/pdf" ? "pdf" : "jpg";
+  return {
+    bytes,
+    contentType: found.document.contentType,
+    filename: `business-registration-${found.slug}.${ext}`,
+  };
 }
 
 // ---- Settings (P6-T05) ----

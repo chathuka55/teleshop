@@ -147,6 +147,7 @@ Email verification. `identifier` (email), `tokenHash` (SHA-256), `expires`. TTL 
 | `approvalStatus` | enum | `pending`, `approved`, `rejected`, `suspended` |
 | `rejectionReason`, `approvedBy`, `approvedAt` | | |
 | `settings` | `{ acceptsCod, vacationMode, autoAccept, dispatchDays }` | |
+| `documents` | `[{ kind: business_registration, path, contentType, size, uploadedAt }]` | ≤ 5; the file is AES-256-GCM encrypted in storage ([ADR-006](adr/ADR-006-encrypted-seller-documents.md)); admin-only, never selected by public queries (v0.4) |
 | `payoutAccount` | `{ bank, branch, last4 }` | full account number is **not** stored here — kept only by the payment provider/offline |
 | `establishedYear` | int | year the shop opened ("Since 2019") — added v0.2 |
 | `coverUrl` | string | wide shop photo at the top of the shop page — added v0.3 |

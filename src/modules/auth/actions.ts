@@ -94,8 +94,10 @@ export async function applySellerAction(_prev: FormState, formData: FormData): P
   if (!parsed.success) return invalid(parsed.error, echoValues(formData));
   const blocked = await limited("seller:apply");
   if (blocked) return { ...blocked, values: echoValues(formData) } as FormState;
-  const r = await applyForShop(parsed.data, await clientIp());
-  if (!r.ok) return { status: "error", message: r.message, values: echoValues(formData) };
+  const file = formData.get("brDocument");
+  const document = file instanceof File && file.size > 0 ? new Uint8Array(await file.arrayBuffer()) : null;
+  const r = await applyForShop(parsed.data, document, await clientIp());
+  if (!r.ok) return { status: "error", message: r.message, fields: r.fields, values: echoValues(formData) };
   revalidatePath("/register/seller");
   return { status: "ok", message: r.message };
 }

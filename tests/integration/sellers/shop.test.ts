@@ -6,8 +6,12 @@ import { createAddress } from "@/db/repositories/address.repository";
 import { saveUserCartItems } from "@/db/repositories/cart.repository";
 import type { SessionUser } from "@/lib/auth/claims";
 import { placeOrderFor } from "@/modules/orders/checkout";
+import { randomBytes } from "node:crypto";
+import { decryptDocument, encryptDocument } from "@/lib/security/doc-crypto";
+import type { DocumentStore } from "@/lib/storage/documents";
 import {
   applyForShopFor,
+  readSellerDocumentFor,
   getDashboardFor,
   getPayoutsFor,
   getShopSettingsFor,
@@ -20,6 +24,25 @@ import { connectTestDatabase } from "../../support/db";
 connectTestDatabase("t_seller_shop");
 
 const ctx = { ip: "203.0.113.60" };
+
+/** In-memory stand-in for the bucket, with the real encryption (no network in tests). */
+const key = randomBytes(32);
+const bucket = new Map<string, Buffer>();
+const store: DocumentStore = {
+  async put(owner, bytes) {
+    const path = `kyc/${owner}-${randomBytes(4).toString("hex")}.bin`;
+    bucket.set(path, encryptDocument(bytes, key, path));
+    return path;
+  },
+  async read(path) {
+    return decryptDocument(bucket.get(path) ?? Buffer.alloc(0), key, path);
+  },
+  async remove(path) {
+    bucket.delete(path);
+  },
+};
+const PDF = new TextEncoder().encode("%PDF-1.7 business registration %%EOF");
+const withDoc = { ...ctx, document: PDF, store };
 let n = 0;
 let shop: SessionUser;
 let other: SessionUser;
@@ -94,41 +117,79 @@ beforeAll(async () => {
 describe("seller application (P6-T01)", () => {
   it("creates a pending shop once; a second try is refused", async () => {
     const user = await person();
-    const r = await applyForShopFor(user, application(), ctx);
+    const r = await applyForShopFor(user, application(), withDoc);
     expect(r.ok).toBe(true);
     const s = await SellerModel.findOne({ userId: user.id }).lean();
     expect([s?.approvalStatus, s?.slug, s?.phone]).toEqual(["pending", "kandy-mobile-point", "+94812223344"]);
     // Still a customer until an admin approves (P7).
     expect((await UserModel.findById(user.id).lean())?.role).toBe("customer");
-    expect((await applyForShopFor(user, application(), ctx)).ok).toBe(false);
+    expect((await applyForShopFor(user, application(), withDoc)).ok).toBe(false);
 
     // Another shop with the same name gets its own slug.
     const twin = await person();
-    expect((await applyForShopFor(twin, application(), ctx)).ok).toBe(true);
+    expect((await applyForShopFor(twin, application(), withDoc)).ok).toBe(true);
     expect((await SellerModel.findOne({ userId: twin.id }).lean())?.slug).toMatch(
       /^kandy-mobile-point-[a-f0-9]{4}$/,
     );
   });
 
+  it("needs the business registration; it is stored encrypted and only admins can open it", async () => {
+    const user = await person();
+    const none = await applyForShopFor(user, application({ shopName: "No Docs Ltd" }), {
+      ...withDoc,
+      document: null,
+    });
+    expect(!none.ok && none.fields?.brDocument).toBeTruthy();
+    const fake = await applyForShopFor(user, application({ shopName: "No Docs Ltd" }), {
+      ...withDoc,
+      document: new TextEncoder().encode("<html>not a certificate</html>"),
+    });
+    expect(fake.ok).toBe(false);
+
+    expect((await applyForShopFor(user, application({ shopName: "Docs Ltd" }), withDoc)).ok).toBe(true);
+    const s = await SellerModel.findOne({ userId: user.id }).lean();
+    const doc = s?.documents?.[0];
+    expect(doc).toMatchObject({
+      kind: "business_registration",
+      contentType: "application/pdf",
+      size: PDF.length,
+    });
+    // What sits in storage is ciphertext: the PDF bytes never appear in it.
+    const sealed = bucket.get(doc?.path ?? "");
+    expect(sealed?.includes(Buffer.from("%PDF-"))).toBe(false);
+
+    const admin = { ...(await person()), role: "admin" as const, twoFactorVerified: true };
+    const read = await readSellerDocumentFor(admin, String(s?._id), { ip: null, store });
+    expect(read?.bytes.equals(Buffer.from(PDF))).toBe(true);
+    expect(read?.filename).toBe("business-registration-docs-ltd.pdf");
+    await expect(readSellerDocumentFor(user, String(s?._id), { ip: null, store })).rejects.toThrow();
+    await expect(readSellerDocumentFor(null, String(s?._id), { ip: null, store })).rejects.toThrow();
+    // An admin without the TOTP step is refused too.
+    await expect(
+      readSellerDocumentFor({ ...admin, twoFactorVerified: false }, String(s?._id), { ip: null, store }),
+    ).rejects.toThrow();
+  });
+
   it("needs a verified customer account", async () => {
-    expect((await applyForShopFor(await person(false), application(), ctx)).ok).toBe(false);
-    expect((await applyForShopFor(shop, application(), ctx)).ok).toBe(false);
-    expect((await applyForShopFor({ ...(await person()), role: "admin" }, application(), ctx)).ok).toBe(
+    expect((await applyForShopFor(await person(false), application(), withDoc)).ok).toBe(false);
+    expect((await applyForShopFor(shop, application(), withDoc)).ok).toBe(false);
+    expect((await applyForShopFor({ ...(await person()), role: "admin" }, application(), withDoc)).ok).toBe(
       false,
     );
   });
 
   it("a rejected shop can fix its details and apply again", async () => {
     const user = await person();
-    await applyForShopFor(user, application({ shopName: "Galle Gadgets" }), ctx);
+    await applyForShopFor(user, application({ shopName: "Galle Gadgets" }), withDoc);
     await SellerModel.updateOne(
       { userId: user.id },
       { $set: { approvalStatus: "rejected", rejectionReason: "Unreadable BR" } },
     );
+    const firstDoc = (await SellerModel.findOne({ userId: user.id }).lean())?.documents?.[0]?.path;
     const r = await applyForShopFor(
       user,
       application({ shopName: "Galle Gadgets", businessRegNo: "PV 99887766" }),
-      ctx,
+      { ...withDoc, document: null },
     );
     expect(r.ok).toBe(true);
     const s = await SellerModel.findOne({ userId: user.id }).lean();
@@ -138,6 +199,8 @@ describe("seller application (P6-T01)", () => {
       "PV 99887766",
     ]);
     expect(await SellerModel.countDocuments({ userId: user.id })).toBe(1);
+    // No new file: the first certificate is kept.
+    expect(s?.documents?.[0]?.path).toBe(firstDoc);
   });
 });
 
@@ -168,7 +231,7 @@ describe("shop settings (P6-T05)", () => {
 
   it("a shop that isn't approved can't change settings", async () => {
     const user = await person();
-    await applyForShopFor(user, application({ shopName: "Pending Phones" }), ctx);
+    await applyForShopFor(user, application({ shopName: "Pending Phones" }), withDoc);
     const pending = {
       ...user,
       role: "seller" as const,

@@ -28,9 +28,10 @@ export async function getMyApplication(): Promise<ShopApplicationDTO | null> {
 
 export async function applyForShop(
   input: SellerApplicationInput,
+  document: Uint8Array | null,
   ip: string | null,
 ): Promise<ShopActionResult> {
-  return applyForShopFor(await requireUser(), input, { ip });
+  return applyForShopFor(await requireUser(), input, { ip, document });
 }
 
 export async function getMyShopSettings(): Promise<ShopSettingsDTO | null> {

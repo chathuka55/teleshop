@@ -35,6 +35,16 @@ export const serverSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: optionalString,
   // Upstash Blob (S3-compatible object storage) — product images, avatars, seller documents. ADR-005.
   UPSTASH_BLOB_TOKEN: optionalString,
+  // Seller documents are AES-256-GCM encrypted before they reach the (public) bucket. ADR-006.
+  DOCS_ENCRYPTION_KEY: z.preprocess(
+    emptyToUndefined,
+    z
+      .string()
+      .refine((v) => Buffer.from(v, "base64").length === 32, {
+        message: "DOCS_ENCRYPTION_KEY must be 32 random bytes, base64 encoded",
+      })
+      .optional(),
+  ),
   EMAIL_SERVER: optionalString,
   EMAIL_FROM: optionalString,
 });

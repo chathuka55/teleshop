@@ -31,6 +31,7 @@
 | `AUTH_URL` | (leave empty — Vercel sets preview URL with `AUTH_TRUST_HOST=true`) | `https://teleshop.lk` |
 | `TOTP_ENCRYPTION_KEY` | random | different random |
 | `UPSTASH_BLOB_TOKEN` | Upstash Blob token (staging buckets) | production buckets |
+| `DOCS_ENCRYPTION_KEY` | random (32 bytes, base64) | **the same key everywhere documents are read** — losing it makes stored seller documents unreadable ([ADR-006](adr/ADR-006-encrypted-seller-documents.md)) |
 | `UPSTASH_REDIS_REST_URL/TOKEN` | Upstash (Marketplace) | separate DB |
 | `EMAIL_SERVER`, `EMAIL_FROM` | sandbox SMTP | real SMTP |
 | `NEXT_PUBLIC_SITE_URL` | preview URL | `https://teleshop.lk` |

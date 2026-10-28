@@ -218,7 +218,15 @@ export async function shopSlugTaken(slug: string): Promise<boolean> {
   return (await SellerModel.countDocuments({ slug })) > 0;
 }
 
+export type SellerDocument = {
+  kind: "business_registration";
+  path: string;
+  contentType: "application/pdf" | "image/jpeg";
+  size: number;
+};
+
 export type NewApplication = {
+  documents: SellerDocument[];
   shopName: string;
   shopType: ShopSettingsDTO["shopType"];
   businessRegNo: string;
@@ -232,16 +240,44 @@ export async function createApplication(userId: string, slug: string, a: NewAppl
   return doc._id.toString();
 }
 
-/** A rejected shop may fix its details and apply again (back to pending). */
-export async function resubmitApplication(userId: string, a: NewApplication): Promise<string | null> {
+/**
+ * A rejected shop may fix its details and apply again (back to pending). Without a new document
+ * the old one is kept. Returns the replaced documents so the caller can delete their files.
+ */
+export async function resubmitApplication(
+  userId: string,
+  a: NewApplication,
+): Promise<{ id: string; replaced: SellerDocument[] } | null> {
   if (!isId(userId)) return null;
   await connectDB();
-  const doc = await SellerModel.findOneAndUpdate(
+  const { documents, ...fields } = a;
+  const before = await SellerModel.findOneAndUpdate(
     { userId: oid(userId), approvalStatus: "rejected" },
-    { $set: { ...a, approvalStatus: "pending", rejectionReason: null } },
-    { new: true, runValidators: true },
+    {
+      $set: {
+        ...fields,
+        ...(documents.length ? { documents } : {}),
+        approvalStatus: "pending",
+        rejectionReason: null,
+      },
+    },
+    { new: false, runValidators: true },
   )
-    .select("_id")
-    .lean<{ _id: Types.ObjectId }>();
-  return doc?._id.toString() ?? null;
+    .select("_id documents")
+    .lean<{ _id: Types.ObjectId; documents?: SellerDocument[] }>();
+  if (!before) return null;
+  return { id: before._id.toString(), replaced: documents.length ? (before.documents ?? []) : [] };
+}
+
+/** The shop's business-registration document record (admins only — the service checks). */
+export async function findSellerDocument(
+  sellerId: string,
+): Promise<{ shopName: string; slug: string; document: SellerDocument } | null> {
+  if (!isId(sellerId)) return null;
+  await connectDB();
+  const s = await SellerModel.findById(sellerId)
+    .select("shopName slug documents")
+    .lean<{ shopName: string; slug: string; documents?: SellerDocument[] }>();
+  const document = s?.documents?.findLast((d) => d.kind === "business_registration");
+  return s && document ? { shopName: s.shopName, slug: s.slug, document } : null;
 }

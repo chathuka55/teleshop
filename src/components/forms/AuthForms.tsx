@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Hash, Lock, Mail, MapPin, Smartphone, Store, User } from "lucide-react";
+import { ArrowRight, FileText, Hash, Lock, Mail, MapPin, Smartphone, Store, User } from "lucide-react";
 import { districts } from "@/config/districts";
 import {
   applySellerAction,
@@ -16,6 +16,7 @@ import {
 import { shopTypes } from "@/modules/auth/schema";
 import { idleState, type FormState } from "@/lib/validation/form";
 import { Button } from "@/components/ui/Button";
+import { FieldError } from "@/components/ui/Input";
 import { CheckboxField, FormMessage, PasswordField, SelectField, TextField } from "./fields";
 
 const fieldsOf = (s: FormState): Record<string, string> => (s.status === "error" && s.fields) || {};
@@ -254,9 +255,31 @@ export function SellerApplicationForm() {
         error={f.phone}
         required
       />
-      <p className="rounded-[14px] border border-dashed border-line px-4 py-3 text-xs text-text-secondary">
-        We may ask for a copy of your business registration certificate to verify your shop.
-      </p>
+      <div>
+        <label htmlFor="br-document" className="mb-2 block text-[13px] font-medium text-text-secondary">
+          Business registration certificate
+        </label>
+        <label
+          className={`flex cursor-pointer items-center gap-3 rounded-[14px] border border-dashed px-4 py-3 text-sm ${
+            f.brDocument ? "border-danger/60" : "border-line"
+          }`}
+        >
+          <FileText aria-hidden className="size-5 shrink-0 text-primary-light" />
+          <input
+            id="br-document"
+            name="brDocument"
+            type="file"
+            accept="application/pdf,image/jpeg,image/png"
+            aria-invalid={!!f.brDocument || undefined}
+            aria-describedby="br-document-help"
+            className="min-w-0 flex-1 text-xs text-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-white/8 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-text"
+          />
+        </label>
+        <p id="br-document-help" className="mt-1.5 text-xs text-text-muted">
+          PDF, JPG or PNG up to 4 MB. Stored encrypted — only Teleshop&apos;s review team can open it.
+        </p>
+        <FieldError>{f.brDocument}</FieldError>
+      </div>
       <CheckboxField name="agree" error={f.agree}>
         I agree to the{" "}
         <Link href="/help#fees" className="text-primary-light">
