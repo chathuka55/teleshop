@@ -406,3 +406,15 @@ export async function changeStock(
   ).lean<{ onHand: number }>();
   return r ? { ok: true, onHand: r.onHand } : { ok: false, reason: "BELOW_RESERVED" };
 }
+
+/** SKUs at or below their low-stock mark (dashboard to-do). */
+export async function countLowStock(sellerId: string): Promise<number> {
+  if (!isId(sellerId)) return 0;
+  await connectDB();
+  const rows = await InventoryModel.aggregate<{ n: number }>([
+    { $match: { sellerId: oid(sellerId) } },
+    { $match: { $expr: { $lte: ["$available", { $ifNull: ["$lowStockAt", 5] }] } } },
+    { $count: "n" },
+  ]);
+  return rows[0]?.n ?? 0;
+}

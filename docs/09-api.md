@@ -41,7 +41,7 @@
 | `placeOrderAction` | orders | customer | 5/min/user |
 | `cancelOrderAction` | orders | customer (seller/admin in Phases 6–7) — whole order, before any package ships | 5/min/IP |
 | `createReviewAction` | reviews | customer — delivered item from own order, once per item | 5/min/IP |
-| `applySellerAction`, `updateShopAction` | sellers | customer/seller | 5/min |
+| `applySellerAction` (verified customer), `updateShopAction`, `shopCoverAction` (approved seller, own shop) | sellers | customer/seller | 5/min/IP |
 | `saveProductAction`, `productStatusAction` (submit · deactivate · reactivate), `uploadProductImageAction`, `productImageAction` (cover · remove), `stockChangeAction` (add · remove · set) | products / inventory | seller — own products only | 30/min/IP |
 | `packageStepAction` (accept · pack · ready · cancel + reason), `recordSerialAction` | fulfilment | seller — own package only | 30/min/IP |
 | `addTrackingCodeAction` | shipments | admin | 60/min |

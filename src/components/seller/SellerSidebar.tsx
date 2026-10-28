@@ -5,8 +5,10 @@ import { usePathname } from "next/navigation";
 import {
   Boxes,
   ClipboardList,
+  Landmark,
   LayoutDashboard,
   PackageSearch,
+  Settings,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +24,8 @@ export function SellerSidebar({ shopName, newOrders }: { shopName: string; newOr
     { label: "Orders", href: "/seller/orders", icon: ClipboardList, badge: newOrders },
     { label: "Products", href: "/seller/products", icon: PackageSearch },
     { label: "Stock", href: "/seller/inventory", icon: Boxes },
+    { label: "Payouts", href: "/seller/payouts", icon: Landmark },
+    { label: "Shop settings", href: "/seller/settings", icon: Settings },
     { label: "My account", href: "/account", icon: UserRound },
   ];
   return (

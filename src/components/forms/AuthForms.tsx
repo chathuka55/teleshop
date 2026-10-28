@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Hash, Lock, Mail, MapPin, Smartphone, Store, User } from "lucide-react";
 import { districts } from "@/config/districts";
 import {
@@ -183,6 +184,11 @@ export function SellerApplicationForm() {
   const [state, action, pending] = useActionState(applySellerAction, idleState);
   const f = fieldsOf(state);
   const v = valuesOf(state);
+  const router = useRouter();
+  // Sent: re-render the page, which now shows the "being reviewed" card.
+  useEffect(() => {
+    if (state.status === "ok") router.refresh();
+  }, [state, router]);
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
       <TextField
@@ -249,7 +255,7 @@ export function SellerApplicationForm() {
         required
       />
       <p className="rounded-[14px] border border-dashed border-line px-4 py-3 text-xs text-text-secondary">
-        Next step: upload your business registration (PDF/JPG, max 5 MB) for verification.
+        We may ask for a copy of your business registration certificate to verify your shop.
       </p>
       <CheckboxField name="agree" error={f.agree}>
         I agree to the{" "}
@@ -260,7 +266,7 @@ export function SellerApplicationForm() {
       </CheckboxField>
       <FormMessage state={state} />
       <Button type="submit" size="lg" disabled={pending} className="w-full">
-        {pending ? "Submitting…" : "Continue to verification"} <ArrowRight aria-hidden />
+        {pending ? "Sending…" : "Send application"} <ArrowRight aria-hidden />
       </Button>
     </form>
   );
