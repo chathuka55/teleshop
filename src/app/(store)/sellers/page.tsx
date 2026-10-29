@@ -17,7 +17,7 @@ export default async function SellersPage() {
       <SectionHeader
         eyebrow="Verified sellers"
         title="Shops on Teleshop"
-        description="Every shop is checked before it can sell — business registration, address and phone."
+        description="Every shop is checked before it can sell business registration, address and phone."
       >
         <ButtonLink href="/register/seller" variant="glass">
           <Store aria-hidden /> Sell on Teleshop
