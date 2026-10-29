@@ -9,9 +9,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4 # version comes from "packageManager" in package.json
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # version comes from "packageManager" in package.json
+      - uses: actions/setup-node@v7
         with: { node-version: 24, cache: pnpm } # same major as Vercel (Node 24.x)
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
@@ -39,9 +39,9 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://localhost:3100
       E2E_BASE_URL: http://localhost:3100
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - name: Throwaway secrets
@@ -68,7 +68,7 @@ jobs:
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3100/ && break; sleep 2; done
       - run: pnpm test:e2e
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
@@ -98,11 +98,11 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
       - if: steps.secret.outputs.run == 'true'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - if: steps.secret.outputs.run == 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
       - if: steps.secret.outputs.run == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with: { node-version: 24, cache: pnpm }
       - if: steps.secret.outputs.run == 'true'
         run: pnpm install --frozen-lockfile
