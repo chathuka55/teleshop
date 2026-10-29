@@ -87,19 +87,22 @@ const docs: Record<string, Doc> = {
   },
 };
 
+/** Own keys only: a plain index would also "find" `constructor`, `toString`… */
+const docFor = (key: string): Doc | undefined => (Object.hasOwn(docs, key) ? docs[key] : undefined);
+
 type Props = { params: Promise<{ doc: string }> };
 
 // No generateStaticParams: a prerendered page carries no CSP nonce, so its scripts would be
 // blocked by the strict-dynamic policy in production. Every HTML page renders per request.
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const doc = docs[(await params).doc];
+  const doc = docFor((await params).doc);
   return doc ? { title: doc.title, description: doc.intro } : { title: "Not found" };
 }
 
 /** Figma "18 · Info — Terms & Privacy" (20:2417). */
 export default async function LegalPage({ params }: Props) {
-  const doc = docs[(await params).doc];
+  const doc = docFor((await params).doc);
   if (!doc) notFound();
   return (
     <InfoPage eyebrow="LEGAL" title={doc.title} intro={doc.intro} updated="22 October 2026">

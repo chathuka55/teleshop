@@ -20,13 +20,13 @@ test.describe("home page", () => {
   test("hero slider controls are keyboard accessible", async ({ page }) => {
     await page.goto("/");
     const slider = page.getByRole("region", { name: "Featured products" });
-    await slider.getByRole("button", { name: /Show slide 2 of 3/ }).click();
-    await expect(slider.getByRole("button", { name: /Show slide 2 of 3/ })).toHaveAttribute(
+    await slider.getByRole("button", { name: /Show slide 2 of \d/ }).click();
+    await expect(slider.getByRole("button", { name: /Show slide 2 of \d/ })).toHaveAttribute(
       "aria-current",
       "true",
     );
     await slider.getByRole("button", { name: "Next slide" }).click();
-    await expect(slider.getByRole("button", { name: /Show slide 3 of 3/ })).toHaveAttribute(
+    await expect(slider.getByRole("button", { name: /Show slide 3 of \d/ })).toHaveAttribute(
       "aria-current",
       "true",
     );

@@ -71,14 +71,10 @@ export async function Navbar({ user, cartCount = 0 }: { user?: NavUser | null; c
           >
             <Heart aria-hidden />
           </ButtonLink>
-          <ButtonLink
-            href="/cart"
-            variant="glass"
-            size="icon-sm"
-            aria-label="Cart"
-            className="relative border-line bg-white/5"
-          >
+          <ButtonLink href="/cart" variant="glass" size="icon-sm" className="relative border-line bg-white/5">
             <ShoppingCart aria-hidden />
+            {/* Name from content ("Cart 2 items"), so it matches what sighted users see (WCAG 2.5.3). */}
+            <span className="sr-only">Cart</span>
             <CartCount serverCount={cartCount} />
           </ButtonLink>
 

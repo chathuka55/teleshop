@@ -2,10 +2,23 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test.describe("storefront", () => {
-  test("unknown product, category and shop return 404", async ({ request }) => {
+  // The (store) loading screen streams the page before the item is looked up, so Next sends
+  // 200 + <meta name="robots" content="noindex"> instead of a 404 status; search engines
+  // honour noindex. What matters: the not-found page, never a crash or a half-rendered item.
+  test("unknown product, category, shop and page show the not-found page", async ({ request }) => {
     test.setTimeout(120_000); // first hit compiles each route in dev
-    for (const path of ["/p/does-not-exist", "/c/does-not-exist", "/s/does-not-exist", "/legal/nope"]) {
-      expect((await request.get(path)).status(), path).toBe(404);
+    for (const path of [
+      "/p/does-not-exist",
+      "/c/does-not-exist",
+      "/s/does-not-exist",
+      "/legal/nope",
+      "/legal/constructor", // not an own key of the docs table
+    ]) {
+      const res = await request.get(path);
+      const html = await res.text();
+      expect([200, 404], path).toContain(res.status());
+      expect(html, path).toContain("This page went offline");
+      expect(html, path).toMatch(/<meta name="robots" content="noindex"/);
     }
   });
 
@@ -35,8 +48,14 @@ test.describe("storefront", () => {
     await page.goto("/cart");
     const summary = page.getByRole("complementary", { name: "Order summary" });
     // First /cart hit compiles the page + server action in dev.
-    await expect(summary).toContainText("LKR 685,000", { timeout: 30_000 }); // subtotal
-    await expect(summary).toContainText("LKR 685,450"); // + one shop delivery
+    await expect(summary).toContainText("LKR 685,000", { timeout: 30_000 }); // subtotal, not 1 cent
+    // Total = server subtotal + the delivery fee the admin set (one shop).
+    const lkr = (s: string): number => Number(s.replace(/[^\d]/g, ""));
+    const text = await summary.innerText();
+    const fee = lkr(/Delivery · 1 shop\s*(LKR [\d,]+)/.exec(text)?.[1] ?? "");
+    const total = lkr(/Total\s*(LKR [\d,]+)/.exec(text)?.[1] ?? "");
+    expect(fee).toBeGreaterThan(0);
+    expect(total).toBe(685_000 + fee);
 
     await page
       .getByRole("button", { name: /Remove/ })
@@ -50,7 +69,7 @@ test.describe("storefront", () => {
     await page.getByRole("textbox", { name: /Order number/ }).fill("TS-2026-000123");
     await page.getByRole("textbox", { name: /Phone number/ }).fill("077 123 4567");
     await page.getByRole("button", { name: "Track order" }).click();
-    const link = page.getByRole("link", { name: /Open courier site/ });
+    const link = page.getByRole("link", { name: /Track on courier website/ });
     await expect(link).toHaveAttribute("href", /PX-7731%202093%20LK/);
     await expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });

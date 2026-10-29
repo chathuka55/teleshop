@@ -20,6 +20,18 @@ test.describe("mobile layout", () => {
     await expect(drawer).toBeHidden();
   });
 
+  test("the menu works from the keyboard: focus moves in, Escape closes, focus returns", async ({ page }) => {
+    await page.goto("/");
+    const trigger = page.getByRole("button", { name: "Open menu" });
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name: "Close menu" })).toBeFocused();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
   test("the loading screen never sticks: gone within 4 s, also after Back", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator(".splash")).toHaveCount(0, { timeout: 4_000 });
