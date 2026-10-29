@@ -10,7 +10,7 @@ export function CartCount({ serverCount = 0 }: { serverCount?: number }) {
   return (
     <span className="absolute -top-1.5 left-[26px] rounded-full bg-primary px-[5px] py-px text-[10px] font-bold text-on-primary">
       {n > 99 ? "99+" : n}
-      <span className="sr-only"> items in cart</span>
+      <span className="sr-only"> {n === 1 ? "item" : "items"}</span>
     </span>
   );
 }

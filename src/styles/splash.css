@@ -1,6 +1,6 @@
 /*
  * First-load splash (src/components/layout/SplashScreen.tsx). The fade-out is driven by JS once the
- * page has loaded; `splash-failsafe` hides it after 6 s anyway, so a script error can never trap
+ * page has loaded; `splash-failsafe` hides it after 4 s anyway, so a script error can never trap
  * the page behind it.
  */
 .splash {
@@ -13,7 +13,7 @@
   transition:
     opacity 450ms var(--ease-out),
     visibility 0s linear 450ms;
-  animation: splash-failsafe 0s linear 6s forwards;
+  animation: splash-failsafe 0s linear 4s forwards;
 }
 
 .splash[data-state="done"] {

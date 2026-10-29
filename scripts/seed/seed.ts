@@ -7,6 +7,7 @@ import { $ne } from "@/db/operators";
 /**
  * pnpm db:seed — development data. Refuses to run in production, and refuses to wipe a
  * database that holds real orders (anything besides the demo order) unless --force.
+ * SEED_PASSWORD=… gives every account that password (end-to-end tests: E2E_PASSWORD).
  */
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
@@ -19,8 +20,12 @@ async function main(): Promise<void> {
     throw new Error(`Refusing to seed: ${realOrders} real order(s) found. Re-run with --force to wipe them.`);
   }
 
+  const fixedPassword = process.env.SEED_PASSWORD || undefined;
+  if (fixedPassword && fixedPassword.length < 10)
+    throw new Error("SEED_PASSWORD needs at least 10 characters.");
+
   console.log("Seeding… (wipes users, sellers, catalogue, carts, orders and payouts)");
-  const { accounts, counts } = await seedDatabase();
+  const { accounts, counts } = await seedDatabase({ fixedPassword });
   console.log(
     "\nCollections:",
     Object.entries(counts)

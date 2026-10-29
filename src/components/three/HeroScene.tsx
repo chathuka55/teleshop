@@ -2,14 +2,15 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, Environment, Float, Lightformer, PresentationControls } from "@react-three/drei";
-import { Bloom, EffectComposer } from "@react-three/postprocessing";
-import { Suspense, useEffect, useRef, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useRef, type ReactNode } from "react";
 import type * as THREE from "three";
 import { FitToSize } from "./FitToSize";
 import { GamingPC } from "./pc/GamingPC";
 import { GltfModel, ModelErrorBoundary } from "./models/GltfModel";
 import { ProceduralPhone } from "./models/ProceduralPhone";
-import { heroSlides, type HeroSlide } from "./hero-slides";
+import { heroSlides, modelUrlFor, type HeroSlide } from "./hero-slides";
+
+const HeroEffects = lazy(() => import("./HeroEffects"));
 
 export type HeroSceneProps = {
   index: number;
@@ -32,13 +33,14 @@ const SLIDE_ROTATION: Record<HeroSlide["id"], [number, number, number]> = {
 /** Desktop canvases have room to spare around the model; fill a little more of it. */
 const DESKTOP_SCALE = 1.1;
 
-function SlideModel({ slide }: { slide: HeroSlide }) {
+function SlideModel({ slide, isMobile }: { slide: HeroSlide; isMobile: boolean }) {
   if (slide.id === "pc") return <GamingPC glass />;
   const fallback = slide.id === "phone" ? <ProceduralPhone /> : null;
-  if (!slide.modelUrl) return fallback;
+  const url = modelUrlFor(slide, isMobile);
+  if (!url) return fallback;
   return (
     <ModelErrorBoundary fallback={fallback}>
-      <GltfModel url={slide.modelUrl} />
+      <GltfModel url={url} />
     </ModelErrorBoundary>
   );
 }
@@ -81,13 +83,15 @@ function FirstFrame({ onReady }: { onReady: () => void }) {
 
 /** The WebGL canvas for the hero. Loaded with next/dynamic({ ssr: false }) only. */
 export default function HeroScene({ index, active, reducedMotion, isMobile, onReady }: HeroSceneProps) {
-  // Warm the GLB cache after the first slide is up so later slides appear without a blank frame.
+  // Warm the cache for the NEXT slide only, a little after this one is up, so it appears without
+  // a blank frame — fetching every model at once used ~3 MB of mobile data before anyone looked.
   useEffect(() => {
-    const id = window.setTimeout(() => {
-      for (const s of heroSlides) if (s.modelUrl) GltfModel.preload(s.modelUrl);
-    }, 1500);
+    const next = heroSlides[(index + 1) % heroSlides.length];
+    const url = next && modelUrlFor(next, isMobile);
+    if (!url) return;
+    const id = window.setTimeout(() => GltfModel.preload(url), 1500);
     return () => window.clearTimeout(id);
-  }, []);
+  }, [index, isMobile]);
 
   const slide = heroSlides[index] ?? heroSlides[0];
   if (!slide) return null;
@@ -98,7 +102,7 @@ export default function HeroScene({ index, active, reducedMotion, isMobile, onRe
       frameloop={active ? "always" : "never"}
       dpr={isMobile ? [1, 1.5] : [1, 2]}
       camera={{ position: [0, 0.35, 7.6], fov: 32, near: 0.1, far: 60 }}
-      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+      gl={{ alpha: true, antialias: !isMobile, powerPreference: isMobile ? "default" : "high-performance" }}
       style={{ touchAction: "pan-y" }}
     >
       <ambientLight intensity={0.45} />
@@ -154,7 +158,7 @@ export default function HeroScene({ index, active, reducedMotion, isMobile, onRe
               <Suspense key={slide.id} fallback={null}>
                 <FitToSize size={SLIDE_SIZE[slide.id] * (isMobile ? 1 : DESKTOP_SCALE)}>
                   <group rotation={SLIDE_ROTATION[slide.id]}>
-                    <SlideModel slide={slide} />
+                    <SlideModel slide={slide} isMobile={isMobile} />
                   </group>
                 </FitToSize>
                 <FirstFrame onReady={onReady} />
@@ -176,9 +180,9 @@ export default function HeroScene({ index, active, reducedMotion, isMobile, onRe
       </Suspense>
 
       {!isMobile && (
-        <EffectComposer multisampling={0}>
-          <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.25} intensity={0.9} radius={0.65} />
-        </EffectComposer>
+        <Suspense fallback={null}>
+          <HeroEffects />
+        </Suspense>
       )}
     </Canvas>
   );

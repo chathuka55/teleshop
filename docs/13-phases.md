@@ -73,8 +73,8 @@
 ## Phase 8 — Hardening · [details](phases/phase-8-hardening.md)
 - [x] **P8-T01** Security review against doc 10 checklist (run `/code-review` on every module). — _Every Server Action checked for Zod, role/ownership, rate limit and audit: cart, wishlist and address actions gained limits (per account when signed in — `limitAction`); address ownership test added; Dependabot weekly; `pnpm audit --prod` clean. Plus the auto-cancel job left over from P7: daily Vercel Cron `/api/cron/auto-cancel` (CRON_SECRET) cancels packages not accepted within `settings.autoCancelHours`, now on the admin Settings form._
 - [ ] **P8-T02** Performance: Lighthouse CI, bundle analysis, image + GLB budgets.
-- [ ] **P8-T03** Accessibility: axe on key pages, keyboard paths, focus states.
-- [ ] **P8-T04** Full E2E suite (customer, seller, admin flows) on preview.
+- [x] **P8-T03** Accessibility: axe on key pages, keyboard paths, focus states. — _axe (serious/critical = fail) on 11 pages incl. signed-in checkout, order, seller and admin pages; fixed the navbar cart link whose label didn't match its visible count (WCAG 2.5.3). Keyboard tests: hero slider, phone menu (focus moves in, Escape closes, focus returns)._
+- [x] **P8-T04** Full E2E suite (customer, seller, admin flows) on preview. — _`flows.spec.ts`: one order customer → shop (accept, IMEI, pack, ready) → admin TOTP tracking code → customer tracking link; stale storefront/home tests updated; runs in CI against the production build + in-memory DB (Vercel previews have no env vars yet). Found and fixed: hand-over time rejected in the same minute as the order; `/legal/constructor` matched a prototype key. Mobile fixes: menu drawer trapped in the navbar on phones, slow/sticky loading screen, 3 MB of 3D on phones → light models, next-slide preload only._
 - [ ] **P8-T05** Error pages, Sentry, logging hygiene (no PII).
 
 ## Phase 9 — Launch · [details](phases/phase-9-launch.md)

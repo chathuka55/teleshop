@@ -31,7 +31,9 @@ export function trackingCodeMatches(pattern: string, code: string): boolean {
 
 /** Hand-over time: not before the order was placed, not in the future (10 min clock slack). */
 export function validHandOver(at: Date, placedAt: Date, now: Date): boolean {
-  return at.getTime() >= placedAt.getTime() && at.getTime() <= now.getTime() + 10 * 60 * 1000;
+  // The form has minute precision: "10:31" must count for an order placed at 10:31:40.
+  const placedMinute = Math.floor(placedAt.getTime() / 60_000) * 60_000;
+  return at.getTime() >= placedMinute && at.getTime() <= now.getTime() + 10 * 60 * 1000;
 }
 
 /** Packages that still count for payment after a change (not cancelled, not returned). */
