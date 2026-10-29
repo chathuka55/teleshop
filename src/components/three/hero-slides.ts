@@ -6,7 +6,13 @@ export type HeroSlide = {
   cta: { label: string; href: string };
   /** Compressed GLB in /public/models. `null` = procedural model (gaming PC, fallback phone). */
   modelUrl: string | null;
+  /** Lighter copy for phones (512px textures), when the full one is heavy. */
+  mobileModelUrl?: string;
 };
+
+/** The GLB this device should load for a slide. */
+export const modelUrlFor = (slide: HeroSlide, isMobile: boolean): string | null =>
+  (isMobile && slide.mobileModelUrl) || slide.modelUrl;
 
 export const heroSlides: readonly HeroSlide[] = [
   {
@@ -15,6 +21,7 @@ export const heroSlides: readonly HeroSlide[] = [
     caption: "iPhone 17 Pro · from LKR 389,900",
     cta: { label: "Shop smartphones", href: "/c/mobile-phones" },
     modelUrl: "/models/hero-phone.glb",
+    mobileModelUrl: "/models/hero-phone-mobile.glb",
   },
   {
     id: "laptop",
@@ -22,6 +29,7 @@ export const heroSlides: readonly HeroSlide[] = [
     caption: "MacBook Pro · M-series power",
     cta: { label: "Shop laptops", href: "/c/laptops" },
     modelUrl: "/models/hero-laptop.glb",
+    mobileModelUrl: "/models/hero-laptop-mobile.glb",
   },
   {
     id: "pc",

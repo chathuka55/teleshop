@@ -9,11 +9,16 @@ import { heroSlides, SLIDE_INTERVAL_MS } from "./hero-slides";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false, loading: () => null });
 
-type NavigatorWithHints = Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
+type NavigatorWithHints = Navigator & {
+  connection?: { saveData?: boolean; effectiveType?: string };
+  deviceMemory?: number;
+};
 
+/** Devices and connections that keep the still poster instead of downloading the 3D scene. */
 function detectLowPower(): boolean {
   const nav = navigator as NavigatorWithHints;
   if (nav.connection?.saveData) return true;
+  if (/(^|-)2g$|^3g$/.test(nav.connection?.effectiveType ?? "")) return true;
   if ((nav.hardwareConcurrency ?? 8) <= 4) return true;
   if (nav.deviceMemory !== undefined && nav.deviceMemory < 4) return true;
   try {
@@ -76,7 +81,8 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
     };
   }, []);
 
-  // Mount WebGL lazily: visible + idle + not a low-power device.
+  // Mount WebGL lazily: page fully loaded + hero visible + idle + not a low-power device. Phones
+  // wait longer for idle so the 3D download never competes with the page itself.
   useEffect(() => {
     if (mount3d || !onScreen) return;
     if (detectLowPower()) return;
@@ -84,13 +90,21 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
       requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
       cancelIdleCallback?: (id: number) => void;
     };
-    if (w.requestIdleCallback) {
-      const id = w.requestIdleCallback(() => setMount3d(true), { timeout: 2000 });
-      return () => w.cancelIdleCallback?.(id);
-    }
-    const t = window.setTimeout(() => setMount3d(true), 800);
-    return () => window.clearTimeout(t);
-  }, [onScreen, mount3d]);
+    let idle: number | undefined;
+    let timer: number | undefined;
+    const start = (): void => {
+      if (w.requestIdleCallback) {
+        idle = w.requestIdleCallback(() => setMount3d(true), { timeout: isMobile ? 4000 : 2000 });
+      } else timer = window.setTimeout(() => setMount3d(true), 800);
+    };
+    if (document.readyState === "complete") start();
+    else window.addEventListener("load", start, { once: true });
+    return () => {
+      window.removeEventListener("load", start);
+      if (idle !== undefined) w.cancelIdleCallback?.(idle);
+      window.clearTimeout(timer);
+    };
+  }, [onScreen, mount3d, isMobile]);
 
   // Auto-advance every 6 s (not with reduced motion, not while hovered/focused, not off-screen)
   const active = onScreen && tabVisible;
