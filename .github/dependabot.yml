@@ -1,6 +1,8 @@
 # Weekly dependency updates (docs/10 §1 "Vulnerable dependencies"). Minor and patch bumps come
-# as one grouped PR per ecosystem; majors stay separate so each gets its own review.
+# as one grouped PR per ecosystem. Major npm upgrades (Next 16, TypeScript 6, Mongoose 9…) are
+# not raised automatically: each needs a planned migration, done on purpose in its own branch.
 # Security fixes are raised as soon as GitHub publishes an advisory, outside this schedule.
+# Vercel skips preview builds for dependabot/* branches (vercel.json); CI still tests them.
 version: 2
 updates:
   - package-ecosystem: npm # reads pnpm-lock.yaml
@@ -11,6 +13,9 @@ updates:
       time: "06:00"
       timezone: Asia/Colombo
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
