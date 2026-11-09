@@ -22,7 +22,8 @@ export type HeroSceneProps = {
 };
 
 /** Size (largest dimension, world units) each slide is normalised to. */
-const SLIDE_SIZE: Record<HeroSlide["id"], number> = { phone: 2.6, laptop: 3.2, pc: 2.9, headset: 2.4 };
+// The PC is the tallest: kept clear of the canvas' faded top/bottom edges (HeroModelSlider).
+const SLIDE_SIZE: Record<HeroSlide["id"], number> = { phone: 2.6, laptop: 3.2, pc: 2.6, headset: 2.4 };
 /** Resting pose per slide (radians), so each model faces the camera at a flattering angle. */
 const SLIDE_ROTATION: Record<HeroSlide["id"], [number, number, number]> = {
   phone: [0.05, -0.4, 0],
@@ -171,7 +172,9 @@ export default function HeroScene({ index, active, reducedMotion, isMobile, onRe
           <ContactShadows
             position={[0, -1.75, 0]}
             opacity={0.55}
-            scale={9}
+            // Narrower than the view (≈4.2 units wide here), so the plane's edges never meet
+            // the canvas border; the CSS edge fade softens whatever is left.
+            scale={4.5}
             blur={2.6}
             far={3.5}
             color="#000000"

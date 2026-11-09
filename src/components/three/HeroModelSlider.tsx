@@ -3,11 +3,37 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+import { onSplashDone } from "@/lib/motion/splash";
 import { cn } from "@/lib/utils/cn";
 import { heroSlides, SLIDE_INTERVAL_MS } from "./hero-slides";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false, loading: () => null });
+
+/** About as long as the hero intro (HeroMotion) runs after the splash fades. */
+const INTRO_MS = 1600;
+
+/**
+ * Soft edges for the WebGL layer. The ground shadow and the bloom glow are drawn on a rectangular
+ * canvas; without this they stop dead at its border and the canvas shows as a faint box around the
+ * model. Fading every edge to transparent lets them melt into the page instead.
+ */
+const fadeEdges: CSSProperties = {
+  maskImage:
+    "linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 8%, #000 80%, transparent 100%)",
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 8%, #000 80%, transparent 100%)",
+  maskComposite: "intersect",
+  WebkitMaskComposite: "source-in",
+};
 
 type NavigatorWithHints = Navigator & {
   connection?: { saveData?: boolean; effectiveType?: string };
@@ -81,8 +107,10 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
     };
   }, []);
 
-  // Mount WebGL lazily: page fully loaded + hero visible + idle + not a low-power device. Phones
-  // wait longer for idle so the 3D download never competes with the page itself.
+  // Mount WebGL lazily: page loaded + splash gone + hero intro finished + hero visible + idle + not a
+  // low-power device. Setting up WebGL (shaders, model decoding) blocks the main thread for a
+  // moment, which would stutter the GSAP intro (HeroMotion); phones also wait longer for idle so
+  // the 3D download never competes with the page itself.
   useEffect(() => {
     if (mount3d || !onScreen) return;
     if (detectLowPower()) return;
@@ -92,14 +120,22 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
     };
     let idle: number | undefined;
     let timer: number | undefined;
+    let afterIntro: number | undefined;
     const start = (): void => {
       if (w.requestIdleCallback) {
         idle = w.requestIdleCallback(() => setMount3d(true), { timeout: isMobile ? 4000 : 2000 });
       } else timer = window.setTimeout(() => setMount3d(true), 800);
     };
-    if (document.readyState === "complete") start();
-    else window.addEventListener("load", start, { once: true });
+    const whenLoaded = (): void => {
+      if (document.readyState === "complete") start();
+      else window.addEventListener("load", start, { once: true });
+    };
+    const stopWaiting = onSplashDone(() => {
+      afterIntro = window.setTimeout(whenLoaded, INTRO_MS);
+    });
     return () => {
+      stopWaiting();
+      window.clearTimeout(afterIntro);
       window.removeEventListener("load", start);
       if (idle !== undefined) w.cancelIdleCallback?.(idle);
       window.clearTimeout(timer);
@@ -153,6 +189,7 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
             "absolute inset-0 transition-opacity duration-700 ease-out",
             ready ? "opacity-100" : "opacity-0",
           )}
+          style={fadeEdges}
         >
           <HeroScene
             index={index}

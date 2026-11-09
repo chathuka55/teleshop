@@ -3,6 +3,7 @@ import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { getNavUser } from "@/components/layout/nav-user";
+import { ScrollReveal } from "@/components/motion/ScrollReveal";
 
 /** Storefront chrome. Cart count is wired in P4-T02. */
 export default async function StoreLayout({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
       </main>
       <Footer />
       <BottomTabBar />
+      <ScrollReveal />
     </>
   );
 }

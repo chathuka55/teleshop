@@ -19,7 +19,7 @@ export function SectionHeader({
   children?: ReactNode;
 }) {
   return (
-    <div className={cn("mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-9", className)}>
+    <div data-reveal className={cn("mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-9", className)}>
       <div>
         {eyebrow && (
           <p className="mb-2.5 text-xs font-semibold tracking-[0.12em] text-primary-light uppercase">

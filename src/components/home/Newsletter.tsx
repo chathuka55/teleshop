@@ -13,7 +13,10 @@ export function Newsletter() {
 
   return (
     <section className="container-page pt-14 pb-16 md:pt-[88px] md:pb-24">
-      <div className="relative isolate flex flex-col gap-6 overflow-hidden rounded-[28px] border border-primary/25 bg-linear-to-r from-[#13203f] to-[#2a1f0a] p-6 md:p-12 lg:flex-row lg:items-center lg:justify-between">
+      <div
+        data-reveal
+        className="relative isolate flex flex-col gap-6 overflow-hidden rounded-[28px] border border-primary/25 bg-linear-to-r from-[#13203f] to-[#2a1f0a] p-6 md:p-12 lg:flex-row lg:items-center lg:justify-between"
+      >
         <span
           aria-hidden
           className="absolute -top-[120px] right-[20px] -z-10 size-[360px] rounded-full bg-accent/30 blur-[90px]"

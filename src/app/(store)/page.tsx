@@ -37,7 +37,7 @@ export default async function HomePage() {
           description="Trusted mobile and computer shops selling on Teleshop."
           action={{ label: "All sellers", href: "/sellers" }}
         />
-        <ul className="grid gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+        <ul data-reveal="stagger" className="grid gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
           {sellers.map((s) => (
             <li key={s.id}>
               <SellerCard seller={s} />

@@ -26,6 +26,7 @@
     "prepare": "husky",
     "test:watch": "vitest --project unit",
     "db:memory": "tsx scripts/dev/memory-db.ts",
+    "brand-logos": "node scripts/dev/brand-logos.mjs",
     "vercel:preview-env": "node scripts/dev/vercel-preview-env.mjs"
   },
   "dependencies": {
@@ -38,6 +39,7 @@
     "@upstash/ratelimit": "2.2.0",
     "@upstash/redis": "1.39.0",
     "clsx": "2.1.1",
+    "gsap": "3.13.0",
     "lucide-react": "1.60.0",
     "mongoose": "8.24.6",
     "next": "15.5.28",
@@ -85,6 +87,8 @@
     "mongodb-memory-server": "11.3.0",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
+    "simple-icons": "15.21.0",
+    "svg-path-bbox": "2.1.0",
     "tailwindcss": "4.3.3",
     "tsx": "4.23.15",
     "typescript": "5.9.3",

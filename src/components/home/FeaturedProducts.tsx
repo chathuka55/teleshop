@@ -54,7 +54,7 @@ export function FeaturedProducts({ products }: { products: ProductCardDTO[] }) {
       </SectionHeader>
 
       {visible.length ? (
-        <ul className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
+        <ul data-reveal="stagger" className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
           {visible.map((p) => (
             <li key={p.id} className="flex">
               <div className="flex w-full flex-col [&>article]:flex-1">

@@ -18,7 +18,7 @@ export default function CreditsPage() {
     <InfoPage
       eyebrow="Credits"
       title="Image credits"
-      intro="Product and shop photos come from Wikimedia Commons and the 3D models from Sketchfab, used under the licences below. Each photo shows the product or the closest model available."
+      intro="Product and shop photos come from Wikimedia Commons, the 3D models from Sketchfab and the brand logos from Simple Icons, used under the licences below. Each photo shows the product or the closest model available."
     >
       <h2 className="mb-4 font-display text-xl font-bold">3D models</h2>
       <ul className="mb-10 grid gap-3 sm:grid-cols-2">
@@ -51,6 +51,24 @@ export default function CreditsPage() {
 
       <h2 className="mt-10 mb-4 font-display text-xl font-bold">Product photos</h2>
       <PhotoCredits credits={productImageCredits} />
+
+      <h2 className="mt-10 mb-4 font-display text-xl font-bold">Brand logos</h2>
+      <p className="text-[13px] leading-relaxed text-text-secondary">
+        Brand logos on the home page come from{" "}
+        <a href="https://simpleicons.org" {...external} className="text-text hover:text-primary-light">
+          Simple Icons
+        </a>{" "}
+        (
+        <a
+          href="https://creativecommons.org/publicdomain/zero/1.0/"
+          {...external}
+          className="hover:text-text"
+        >
+          CC0
+        </a>
+        ). The logos are trademarks of their owners, shown only to say which brands the shops on Teleshop
+        sell; Teleshop is not affiliated with or endorsed by them.
+      </p>
     </InfoPage>
   );
 }

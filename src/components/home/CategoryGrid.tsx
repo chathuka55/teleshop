@@ -14,7 +14,7 @@ export function CategoryGrid({ categories }: { categories: CategoryDTO[] }) {
         description="Everything tech, organised the way you shop."
         action={{ label: "All categories", href: "/shop" }}
       />
-      <ul className="grid grid-cols-4 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-4">
+      <ul data-reveal="stagger" className="grid grid-cols-4 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-4">
         {categories.map((c) => (
           <li key={c.id}>
             <Link

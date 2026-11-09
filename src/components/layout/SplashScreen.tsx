@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/site";
+import { markSplashDone } from "@/lib/motion/splash";
 
 /** Keep the splash up at least this long so it never flashes for a few frames. */
 const MIN_VISIBLE_MS = 300;
@@ -29,6 +30,7 @@ export function SplashScreen() {
       const wait = Math.max(0, MIN_VISIBLE_MS - (performance.now() - started));
       fadeTimer = window.setTimeout(() => {
         setState("done");
+        markSplashDone(); // hero intro plays while the splash fades
         removeTimer = window.setTimeout(() => setState("gone"), FADE_MS);
       }, wait);
     };
@@ -42,7 +44,10 @@ export function SplashScreen() {
     void document.fonts?.ready.then(once, once);
     // Back/forward cache: the page comes back exactly as it was left — never with the splash.
     const onShow = (e: PageTransitionEvent): void => {
-      if (e.persisted) setState("gone");
+      if (e.persisted) {
+        setState("gone");
+        markSplashDone();
+      }
     };
     window.addEventListener("pageshow", onShow);
     return () => {

@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Stars } from "@/components/product/Rating";
 import { HeroModelSlider } from "@/components/three/HeroModelSlider";
+import { HeroMotion } from "./HeroMotion";
 import { TrustStrip } from "./TrustStrip";
 
 const stats = [
@@ -15,12 +16,17 @@ const stats = [
 /** Figma "Hero" (7:308): copy on the left, 3D slider + glass float cards on the right. */
 export function Hero() {
   return (
-    <section className="relative isolate -mt-[74px] overflow-hidden pt-[74px] md:-mt-[82px] md:pt-[82px]">
+    <section
+      data-hero
+      className="relative isolate -mt-[74px] overflow-hidden pt-[74px] md:-mt-[82px] md:pt-[82px]"
+    >
+      <HeroMotion />
       <HeroBackdrop />
 
       <div className="container-page grid items-center gap-10 pt-8 pb-10 lg:grid-cols-[minmax(0,640px)_minmax(0,600px)] lg:justify-between lg:gap-10 lg:pt-12 lg:pb-14 2xl:max-w-[1376px]! 2xl:grid-cols-[minmax(0,640px)_minmax(0,696px)]">
-        <div className="flex flex-col items-start gap-6 md:gap-7">
+        <div data-parallax="-0.1" className="flex flex-col items-start gap-6 md:gap-7">
           <Link
+            data-hero-item
             href="/c/mobile-phones"
             className="glass flex items-center gap-2.5 rounded-full border-white/8 py-1.5 pr-3.5 pl-1.5 text-[13px] font-medium shadow-none backdrop-blur-[10px] hover:bg-white/10"
           >
@@ -31,18 +37,24 @@ export function Hero() {
             <ArrowRight aria-hidden className="size-3.5 shrink-0" />
           </Link>
 
-          <h1 className="font-display text-[40px] leading-[1.04] font-bold tracking-[-0.03em] sm:text-[56px] lg:text-[60px] 2xl:text-[70px]">
+          <h1
+            data-hero-item
+            className="font-display text-[40px] leading-[1.04] font-bold tracking-[-0.03em] sm:text-[56px] lg:text-[60px] 2xl:text-[70px]"
+          >
             The future of tech,
             <br />
             <span className="text-gradient-brand">all in one place.</span>
           </h1>
 
-          <p className="max-w-[580px] text-base leading-relaxed text-text-secondary md:text-lg">
+          <p
+            data-hero-item
+            className="max-w-[580px] text-base leading-relaxed text-text-secondary md:text-lg"
+          >
             Shop smartphones, laptops, PC parts and accessories from verified mobile and computer shops across
             Sri Lanka. Compare real specs, pay cash on delivery and track every order live.
           </p>
 
-          <div className="flex flex-wrap gap-3.5">
+          <div data-hero-item className="flex flex-wrap gap-3.5">
             <ButtonLink href="/shop" size="md">
               Shop Now
               <ArrowRight aria-hidden />
@@ -53,7 +65,7 @@ export function Hero() {
             </ButtonLink>
           </div>
 
-          <dl className="flex items-center pt-2">
+          <dl data-hero-item className="flex items-center pt-2">
             {stats.map((s, i) => (
               <div
                 key={s.label}
@@ -64,7 +76,12 @@ export function Hero() {
                 }
               >
                 <dt className="order-2 text-[13px] text-text-secondary">{s.label}</dt>
-                <dd className="order-1 font-display text-2xl font-bold md:text-[30px]">{s.value}</dd>
+                <dd
+                  data-countup
+                  className="order-1 font-display text-2xl font-bold tabular-nums md:text-[30px]"
+                >
+                  {s.value}
+                </dd>
               </div>
             ))}
           </dl>
@@ -83,9 +100,18 @@ export function Hero() {
 function HeroBackdrop() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-      <div className="absolute -top-[120px] -left-[160px] size-[620px] rounded-full bg-primary/25 blur-[140px]" />
-      <div className="absolute -top-[60px] right-[-20px] size-[560px] rounded-full bg-primary-light/15 blur-[140px]" />
-      <div className="absolute top-[420px] left-[40%] size-[420px] rounded-full bg-accent/10 blur-[140px]" />
+      <div
+        data-parallax="0.35"
+        className="absolute -top-[120px] -left-[160px] size-[620px] rounded-full bg-primary/25 blur-[140px]"
+      />
+      <div
+        data-parallax="0.22"
+        className="absolute -top-[60px] right-[-20px] size-[560px] rounded-full bg-primary-light/15 blur-[140px]"
+      />
+      <div
+        data-parallax="0.5"
+        className="absolute top-[420px] left-[40%] size-[420px] rounded-full bg-accent/10 blur-[140px]"
+      />
       <div
         className="absolute inset-0 opacity-[0.35]"
         style={{
@@ -101,7 +127,10 @@ function HeroBackdrop() {
 /** Right side of the hero: rings, 3D slider (with the Figma phone as poster) and float cards. */
 function HeroShowcase() {
   return (
-    <div className="relative mx-auto h-[380px] w-full max-w-[600px] md:h-[560px] xl:h-[620px] 2xl:h-[700px] 2xl:max-w-[696px]">
+    <div
+      data-hero-showcase
+      className="relative mx-auto h-[380px] w-full max-w-[600px] md:h-[560px] xl:h-[620px] 2xl:h-[700px] 2xl:max-w-[696px]"
+    >
       <div aria-hidden className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 aspect-square w-[87%] -translate-1/2 rounded-full border border-white/6" />
         <div className="absolute top-1/2 left-1/2 aspect-square w-[63%] -translate-1/2 rounded-full border border-white/8" />
@@ -111,7 +140,10 @@ function HeroShowcase() {
       <HeroModelSlider poster={<PhoneMockup />} className="absolute inset-0 pb-[88px]" />
 
       {/* Glass float cards (HTML on top of the canvas) */}
-      <div className="glass absolute top-[12.5%] -left-2.5 hidden w-[230px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block">
+      <div
+        data-hero-float
+        className="glass absolute top-[12.5%] -left-2.5 hidden w-[230px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block"
+      >
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-[rgb(22_163_74/0.16)]">
             <ShieldCheck aria-hidden className="size-5 text-success" />
@@ -123,13 +155,19 @@ function HeroShowcase() {
         </div>
       </div>
 
-      <div className="glass absolute top-[17%] right-[-10px] hidden w-[190px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block">
+      <div
+        data-hero-float
+        className="glass absolute top-[17%] right-[-10px] hidden w-[190px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block"
+      >
         <Stars value={5} />
         <p className="mt-2.5 text-sm font-semibold">4.9 / 5 rating</p>
         <p className="mt-2.5 text-xs text-text-secondary">from 12,400+ reviews</p>
       </div>
 
-      <div className="glass absolute top-[53.5%] right-[-20px] hidden w-[210px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block">
+      <div
+        data-hero-float
+        className="glass absolute top-[53.5%] right-[-20px] hidden w-[210px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] lg:block"
+      >
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-primary/16">
             <Truck aria-hidden className="size-5 text-primary-light" />
@@ -141,7 +179,10 @@ function HeroShowcase() {
         </div>
       </div>
 
-      <div className="glass absolute top-[53.5%] left-0 hidden w-[250px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block">
+      <div
+        data-hero-float
+        className="glass absolute top-[53.5%] left-0 hidden w-[250px] rounded-[18px] border-white/8 p-4 backdrop-blur-[12px] md:block"
+      >
         <p className="text-[13px] text-text-secondary">iPhone 17 Pro · 256GB</p>
         <p className="mt-2.5 flex items-end gap-2">
           <span className="font-display text-[22px] font-bold text-primary-light">LKR 389,900</span>

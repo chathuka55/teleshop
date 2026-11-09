@@ -43,8 +43,9 @@ pnpm dlx @gltf-transform/cli optimize assets-src/phone.glb public/models/hero-ph
 3. It mounts only when the hero is visible (IntersectionObserver) and the browser is idle.
 4. Only the **current** model is loaded; only the **next** slide's model is preloaded (`useGLTF.preload`, 1.5 s after a slide appears) — never all of them at once.
 5. Rendering pauses when the hero is off-screen or the tab is hidden (`frameloop="demand"` + `invalidate()` on interaction).
-6. On phones (< 768 px): `dpr={[1, 1.5]}`, no antialias, no shadows, no bloom (its post-processing code is a separate chunk phones never download), smaller environment map, and the `*-mobile.glb` models (512 px textures — `modelUrlFor()` in `hero-slides.ts`). WebGL mounts only after window `load` + idle. If `navigator.hardwareConcurrency <= 4`, `deviceMemory < 4`, `saveData` is on or the connection is 2G/3G, keep the poster image and skip WebGL.
-7. `prefers-reduced-motion`: no auto-rotate, no auto-advance.
+6. The WebGL layer's edges fade to transparent (CSS mask in `HeroModelSlider`), and the desktop ground shadow is narrower than the view — otherwise the shadow and bloom glow stop at the canvas border and show as a faint box around the model. WebGL mounts only after the GSAP hero intro (~1.6 s after the splash), so its set-up never stutters the intro.
+7. On phones (< 768 px): `dpr={[1, 1.5]}`, no antialias, no shadows, no bloom (its post-processing code is a separate chunk phones never download), smaller environment map, and the `*-mobile.glb` models (512 px textures — `modelUrlFor()` in `hero-slides.ts`). WebGL mounts only after window `load` + idle. If `navigator.hardwareConcurrency <= 4`, `deviceMemory < 4`, `saveData` is on or the connection is 2G/3G, keep the poster image and skip WebGL.
+8. `prefers-reduced-motion`: no auto-rotate, no auto-advance.
 
 ## 4. Component outline
 

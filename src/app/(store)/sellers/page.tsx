@@ -23,7 +23,7 @@ export default async function SellersPage() {
           <Store aria-hidden /> Sell on Teleshop
         </ButtonLink>
       </SectionHeader>
-      <ul className="grid gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+      <ul data-reveal="stagger" className="grid gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
         {sellers.map((s) => (
           <li key={s.id}>
             <SellerCard seller={s} />
