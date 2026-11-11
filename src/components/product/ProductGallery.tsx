@@ -51,6 +51,7 @@ function PhotoGallery({ product }: { product: ProductDetailDTO }) {
             alt={image.alt}
             fill
             priority={active === 0}
+            fetchPriority={active === 0 ? "high" : undefined}
             sizes="(min-width: 1024px) 1000px, 100vw"
             className="object-contain p-6 drop-shadow-[0_24px_40px_rgb(0_0_0/0.45)] transition-transform duration-200 ease-out md:p-10"
             style={{

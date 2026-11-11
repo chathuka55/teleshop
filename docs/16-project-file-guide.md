@@ -44,6 +44,7 @@ engineering decisions; `tests/` verifies behavior.
 | `next-env.d.ts` | Next.js-generated TypeScript declarations; normally maintained by Next.js. |
 | `next.config.ts` | Next.js build/runtime configuration, including image and framework settings. |
 | `package.json` | Project dependencies and commands for development, builds, tests, linting and database tasks. |
+| `lighthouserc.json` | Lighthouse CI settings and performance/accessibility assertions (`pnpm perf:lighthouse`). |
 | `playwright.config.ts` | Playwright browser-test configuration. |
 | `pnpm-lock.yaml` | Exact dependency versions installed by pnpm. |
 | `pnpm-workspace.yaml` | Declares the pnpm workspace/package-manager configuration. |
@@ -138,8 +139,15 @@ images indicates separate images in a gallery, not different products/shops.
 
 | File | What it does |
 | --- | --- |
+| `brand-logos.mjs` | Regenerates the brand-logo paths in `src/config/brand-logos.ts` from Simple Icons (`pnpm brand-logos`). |
 | `memory-db.ts` | Starts a local MongoDB replica set for development (`pnpm db:memory`). |
 | `vercel-preview-env.mjs` | Helps prepare environment values for a Vercel preview deployment. |
+
+### `scripts/perf/`
+
+| File | What it does |
+| --- | --- |
+| `budgets.mjs` (+ `budgets.d.mts` types) | After `pnpm build`: fails when a page ships more than 250 KB first-load JS (gzip) or a hero model is over 2.5 MB (`pnpm perf:budgets`). |
 
 ### `scripts/python/`
 
@@ -257,8 +265,9 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `cart/CartView.tsx` | Cart display and item interactions. |
 | `checkout/CheckoutForm.tsx` | Customer checkout form. |
 | `forms/` — `AccountForms.tsx`, `AddressForm.tsx`, `AuthForms.tsx`, `AvatarForm.tsx`, `ContactForm.tsx`, `TwoFactorForms.tsx`, `fields.tsx` | Reusable account, address, login/registration, avatar, contact and two-factor forms/fields. `.gitkeep` reserves the folder. |
-| `home/` — `CategoryGrid.tsx`, `FeaturedProducts.tsx`, `Hero.tsx`, `HowItWorks.tsx`, `Newsletter.tsx`, `PromoBanners.tsx`, `TopBrands.tsx`, `TrustStrip.tsx` | Home page hero and content sections. |
+| `home/` — `BrandMarquee.tsx`, `CategoryGrid.tsx`, `FeaturedProducts.tsx`, `Hero.tsx`, `HeroMotion.tsx`, `HowItWorks.tsx`, `Newsletter.tsx`, `PromoBanners.tsx`, `SectionSkeleton.tsx`, `TopBrands.tsx`, `TrustStrip.tsx` | Home page hero (with its GSAP intro), content sections, the brand logo marquee and placeholders for sections still streaming in. |
 | `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `Navbar.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation, responsive layout, account navigation, user navigation state and related types. `.gitkeep` preserves the folder. |
+| `motion/` — `ScrollReveal.tsx` | Scroll-in animations for elements marked `data-reveal` in server components. |
 | `orders/` — `CancelOrderForm.tsx`, `PackageTimeline.tsx`, `StatusStepper.tsx`, `TrackForm.tsx`, `TrackingCodeBox.tsx`, `order-status.ts` | Order cancellation, timeline/status and tracking UI plus status display helpers. |
 | `product/` — `CategoryIcon.tsx`, `FilterForm.tsx`, `PriceTag.tsx`, `ProductArt.tsx`, `ProductCard.tsx`, `ProductGallery.tsx`, `ProductListing.tsx`, `PurchasePanel.tsx`, `Rating.tsx`, `SellerCard.tsx`, `SortSelect.tsx`, `WishlistSync.tsx`, `WishlistToggle.tsx`, `listing-href.ts`, `variant-select.ts` | Catalogue/product cards, images, filters, purchasing, seller/rating display, wishlist behavior, and listing/variant helpers. `.gitkeep` preserves the folder. |
 | `reviews/` — `ReviewForm.tsx`, `ReviewList.tsx` | Customer review form and review display. |
@@ -335,6 +344,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `documents/business-document.ts` | Validates/handles seller business-document input. |
 | `email/send.ts` | Sends application email. |
 | `geo/tiles.ts` | Builds/handles map tile URLs for shop maps. |
+| `motion/gsap.ts`, `motion/splash.ts` | Loads GSAP + ScrollTrigger on demand (never for reduced motion) and tells intro animations when the splash screen starts fading. |
 | `images/avatar.ts`, `images/product.ts` | Validates/processes avatar and product image uploads, including image re-encoding. |
 | `security/action-limit.ts` | Applies per-user/per-IP Server Action rate-limit policy. |
 | `security/client-ip.ts` | Obtains the client IP for guest security controls. |
@@ -346,6 +356,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `storage/documents.ts` | Stores seller documents as encrypted objects and decrypts them for authorized use. |
 | `utils/cn.ts` | Combines CSS class names. |
 | `utils/money.ts` | Money/cents formatting and conversion helpers. |
+| `utils/webgl.ts` | Detects software (CPU) WebGL renderers, where the 3D hero keeps its poster. |
 | `utils/strings.ts` | Shared string helpers. `.gitkeep` reserves the utils folder. |
 | `validation/common.ts`, `form.ts`, `serial.ts` | Shared Zod/form and serial-number validation helpers. `.gitkeep` reserves the validation folder. |
 

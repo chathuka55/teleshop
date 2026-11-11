@@ -10,7 +10,9 @@ export default async function StoreLayout({ children }: { children: ReactNode })
   return (
     <>
       <Navbar user={await getNavUser()} cartCount={0} />
-      <main id="main" className="min-h-[60vh]">
+      {/* flow-root: the home hero's negative top margin (it slides under the navbar) must not
+          collapse through <main> — that moved <main> itself when the page replaced loading.tsx. */}
+      <main id="main" className="flow-root min-h-[60vh]">
         {children}
       </main>
       <Footer />

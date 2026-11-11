@@ -14,6 +14,7 @@ import {
 } from "react";
 import { onSplashDone } from "@/lib/motion/splash";
 import { cn } from "@/lib/utils/cn";
+import { isSoftwareRenderer } from "@/lib/utils/webgl";
 import { heroSlides, SLIDE_INTERVAL_MS } from "./hero-slides";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false, loading: () => null });
@@ -49,7 +50,14 @@ function detectLowPower(): boolean {
   if (nav.deviceMemory !== undefined && nav.deviceMemory < 4) return true;
   try {
     const c = document.createElement("canvas");
-    return !(c.getContext("webgl2") ?? c.getContext("webgl"));
+    const gl = c.getContext("webgl2") ?? c.getContext("webgl");
+    if (!gl) return true;
+    // No GPU (blocklisted driver, VM, remote desktop, headless): the browser falls back to a CPU
+    // rasteriser, and compiling the scene's shaders there blocks the main thread for seconds.
+    const info = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return isSoftwareRenderer(renderer);
   } catch {
     return true;
   }

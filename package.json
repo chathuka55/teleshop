@@ -17,6 +17,8 @@
     "test": "vitest run --project unit",
     "test:int": "vitest run --project integration --passWithNoTests",
     "test:e2e": "playwright test",
+    "perf:budgets": "node scripts/perf/budgets.mjs",
+    "perf:lighthouse": "pnpm dlx @lhci/cli@0.15.1 autorun",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "db:indexes": "tsx scripts/seed/indexes.ts",
     "db:migrate": "tsx scripts/seed/migrate.ts",
