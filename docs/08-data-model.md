@@ -314,6 +314,8 @@ Other rules:
 
 Applied migrations are recorded in the `_migrations` collection (`_id` = migration id, `appliedAt`). Runner: `scripts/seed/migrate.ts` (`--status`, `--down <id>`); list of migrations: `src/db/migrations/index.ts`.
 
+`_demo_sales` (one document, only when `pnpm db:demo-sales` has run): ids of every demo document plus the rating caches and shop bank fields before/after, so `--remove` can undo the showcase data exactly. Demo customers use `@demo.teleshop.local` addresses and have no password.
+
 ## 8. How to change the database
 
 1. Change the model in `src/db/models/<name>.model.ts` (fields, validation, indexes).

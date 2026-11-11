@@ -23,6 +23,7 @@
     "db:indexes": "tsx scripts/seed/indexes.ts",
     "db:migrate": "tsx scripts/seed/migrate.ts",
     "db:seed": "tsx scripts/seed/seed.ts",
+    "db:demo-sales": "tsx scripts/seed/demo-sales.ts",
     "db:set-password": "tsx scripts/seed/set-password.ts",
     "models:optimize": "gltf-transform optimize",
     "prepare": "husky",
