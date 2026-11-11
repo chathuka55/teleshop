@@ -17,7 +17,7 @@
 | File upload abuse | Signed Blob uploads, allow-list MIME (jpeg/png/webp), magic-byte check, ≤ 5 MB, re-encode with sharp (strips EXIF), random file names. |
 | Secrets exposure | Env validated with Zod; only `NEXT_PUBLIC_*` reach the browser; secrets in Vercel env (Production/Preview separated); GitHub secret scanning + push protection on. |
 | Vulnerable dependencies | Dependabot weekly, `pnpm audit --prod` in CI, lockfile committed, pin versions. |
-| Logging & monitoring | `audit_logs` for sensitive actions; Sentry for errors (PII scrubbed); alert on > 20 failed logins/min. |
+| Logging & monitoring | `audit_logs` for sensitive actions. Unexpected errors → `reportError()` (`src/lib/observability/`): one JSON log line + a Sentry event when `SENTRY_DSN` is set — server errors via `src/instrumentation.ts` `onRequestError`, browser errors via `POST /api/client-errors`. Everything passes `scrub()`: sensitive keys dropped (password, token, cookie, email, phone, address, names, IMEI, IP…), emails / phones / long numbers / tokens / URL credentials replaced in text, URLs reduced to their path; no user, IP or headers reach Sentry. Error pages show only the digest (matches the log). Every failed sign-in logs `auth.login_failed` (reason only) → alert on > 20/min (doc 12 §2). |
 | Abuse / DoS | Upstash rate limits on every Server Action — per account when signed in, per IP for guests (see doc 09 §3) — Vercel Firewall / attack challenge mode for bursts. Cron routes need `CRON_SECRET`. |
 
 ## 2. Security headers (set in `middleware.ts` / `next.config.ts`)
@@ -39,7 +39,7 @@ The shop-page map loads OpenStreetMap tiles as plain images (`img-src` only — 
 - [ ] All new inputs have a Zod schema; no raw objects reach Mongoose.
 - [ ] Service checks role **and** ownership; a test proves another user is refused.
 - [ ] No price/total/stock value is taken from the client.
-- [ ] No secret, token, password or full address is logged or returned in a DTO.
+- [ ] No secret, token, password or full address is logged or returned in a DTO. Log with `logger` / `reportError` (scrubbed), never `console.*` with request data.
 - [ ] Sensitive action writes to `audit_logs`.
 - [ ] New page under `/admin` or `/seller` is guarded in middleware.
 - [ ] Uploads use the shared `upload.ts` checks.

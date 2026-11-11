@@ -22,7 +22,7 @@
 | Testing | **Vitest**, **mongodb-memory-server** (replica set), **Playwright**, **@axe-core/playwright** | Fast unit + real Mongo integration + E2E + a11y |
 | Quality | ESLint (next + security plugin), Prettier, Husky + lint-staged, commitlint | Consistent code, no bad commits |
 | CI | **GitHub Actions** → Vercel preview per PR | Checks before merge |
-| Monitoring | Vercel Analytics + Speed Insights, Sentry (errors) | Performance and error visibility |
+| Monitoring | Vercel Analytics + Speed Insights, Sentry (errors) — sent server-side over Sentry's envelope HTTP API (`src/lib/observability/`), no SDK: nothing added to the browser bundle, no CSP change | Performance and error visibility |
 | Scripts | **Python 3.11** (`requests`, `Pillow`) | Product image fetch + optimise ([doc 07](07-product-images.md)) |
 
 ## Libraries we deliberately do not use

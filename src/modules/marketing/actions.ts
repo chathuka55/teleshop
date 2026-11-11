@@ -2,9 +2,11 @@
 
 import { siteConfig } from "@/config/site";
 import { sendEmail } from "@/lib/email/send";
+import { reportError } from "@/lib/observability/report";
 import { limitAction } from "@/lib/security/action-limit";
 import { echoValues } from "@/lib/validation/form";
 import { contactSchema, type ContactInput } from "./contact";
+import { subscribeToNewsletter } from "./newsletter";
 import { newsletterSchema } from "./schema";
 
 export type ContactState =
@@ -70,8 +72,8 @@ export type NewsletterState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
 
 /**
- * Newsletter sign-up: parse (Zod) → rate limit (5/min/IP) → store.
- * Storage arrives with the data layer (Phase 1); until then valid emails are accepted but not persisted.
+ * Newsletter sign-up: parse (Zod) → rate limit (5/min/IP) → store in `newsletter_subscribers`.
+ * Same answer whether the address is new or already subscribed (no enumeration).
  */
 export async function subscribeNewsletterAction(
   _prev: NewsletterState,
@@ -85,6 +87,11 @@ export async function subscribeNewsletterAction(
   const limit = await limitAction("newsletter", 5);
   if (!limit.ok) return { status: "error", message: "Too many attempts. Please try again in a minute." };
 
-  // TODO(P1): persist to a `newsletter_subscribers` collection (add to docs/08 first).
+  try {
+    await subscribeToNewsletter(parsed.data.email);
+  } catch (error) {
+    await reportError(error, { source: "server", tags: { action: "newsletter.subscribe" } });
+    return { status: "error", message: "We couldn’t sign you up just now. Please try again in a moment." };
+  }
   return { status: "ok", message: "Thanks! You’re on the list for the next deal drop." };
 }

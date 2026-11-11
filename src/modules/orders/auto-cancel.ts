@@ -12,6 +12,7 @@ import { findSellerContacts } from "@/db/repositories/seller.repository";
 import { getSettings } from "@/db/repositories/settings.repository";
 import { findUserById } from "@/db/repositories/user.repository";
 import { withTransaction } from "@/db/mongoose";
+import { reportError } from "@/lib/observability/report";
 import { audit } from "@/modules/audit/service";
 import { sendPackageAutoCancelledEmail, sendSellerPackageAutoCancelledEmail } from "./emails";
 import { deriveOrderStatus } from "./status";
@@ -40,9 +41,9 @@ export async function autoCancelUnconfirmed(now: Date = new Date()): Promise<Aut
         result.orders += 1;
         result.packages += n;
       }
-    } catch {
-      // Order number only — never customer details in logs.
-      console.error("auto-cancel failed", orderNo);
+    } catch (error) {
+      // Order number only — never customer details (the error itself is scrubbed).
+      await reportError(error, { source: "job", tags: { job: "auto-cancel", orderNo } });
       result.failed += 1;
     }
   }

@@ -22,6 +22,7 @@ import {
 import { isBreachedPassword } from "@/lib/auth/breached";
 import { RECHECK_MS, type TokenClaims } from "@/lib/auth/claims";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { logger } from "@/lib/observability/logger";
 import { hashToken, looksLikeToken, newToken } from "@/lib/auth/tokens";
 import { audit } from "@/modules/audit/service";
 import { canSignIn, isLocked, lockAfterFailure } from "./access";
@@ -71,8 +72,16 @@ export async function signInWithPassword(
 
   if (!user || !user.passwordHash || !canSignIn(user) || isLocked(user.lockedUntil, now)) {
     await verifyPassword(await timingDummy(), input.password);
+    const reason = !user
+      ? "unknown_account"
+      : !user.passwordHash
+        ? "no_password"
+        : !canSignIn(user)
+          ? "suspended"
+          : "locked";
+    // One line per failure, no email or IP: a log alert counts these (docs/10 §1, > 20/min).
+    logger.warn("auth.login_failed", { reason });
     if (user) {
-      const reason = !user.passwordHash ? "no_password" : !canSignIn(user) ? "suspended" : "locked";
       await audit.log({
         actorId: user.id,
         actorRole: user.role,
@@ -89,6 +98,7 @@ export async function signInWithPassword(
   if (!(await verifyPassword(user.passwordHash, input.password))) {
     const lockUntil = lockAfterFailure(await incrementFailedLogins(user.id), now);
     if (lockUntil) await lockUserUntil(user.id, lockUntil);
+    logger.warn("auth.login_failed", { reason: lockUntil ? "wrong_password_locked" : "wrong_password" });
     await audit.log({
       actorId: user.id,
       actorRole: user.role,

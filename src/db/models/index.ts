@@ -8,6 +8,7 @@ import { CategoryModel } from "./category.model";
 import { CounterModel } from "./counter.model";
 import { CourierModel } from "./courier.model";
 import { InventoryModel } from "./inventory.model";
+import { NewsletterSubscriberModel } from "./newsletter-subscriber.model";
 import { OrderEventModel } from "./order-event.model";
 import { OrderModel } from "./order.model";
 import { PasswordResetModel } from "./password-reset.model";
@@ -43,6 +44,7 @@ export const allModels = [
   OrderEventModel,
   PaymentModel,
   PayoutModel,
+  NewsletterSubscriberModel,
 ] as const;
 
 export {
@@ -55,6 +57,7 @@ export {
   CounterModel,
   CourierModel,
   InventoryModel,
+  NewsletterSubscriberModel,
   OrderEventModel,
   OrderModel,
   PasswordResetModel,

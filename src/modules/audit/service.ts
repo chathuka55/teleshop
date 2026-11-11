@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, createHmac } from "node:crypto";
 import { env } from "@/config/env";
+import { logger } from "@/lib/observability/logger";
 import { insertAuditLog, type AuditEntry } from "@/db/repositories/audit-log.repository";
 
 /**
@@ -24,7 +25,8 @@ export const audit = {
     try {
       await insertAuditLog({ ...entry, ipHash: hashIp(ip) });
     } catch {
-      // Intentionally silent: no PII in logs, and auditing must not break sign-in.
+      // Auditing must not break the action it records; log the action name only (no data, no PII).
+      logger.warn("audit.write_failed", { action: entry.action });
     }
   },
 };
