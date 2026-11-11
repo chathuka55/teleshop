@@ -18,6 +18,8 @@ Start here. Read in this order the first time; after that, jump to what you need
 | 12 | [Deployment](12-deployment.md) | Setting up Atlas/Vercel or releasing |
 | 13 | [Phases](13-phases.md) | Picking the next task |
 | 14 | [Claude Code workflow](14-claude-code-workflow.md) | Building a task with Claude Code |
+| 15 | [Figma frames](15-figma-frames.md) | Finding the screen/frame design references |
+| 16 | [Project file and folder guide](16-project-file-guide.md) | Finding what each main folder and file does |
 
 **Decision records:** [adr/](adr/) — one file per important choice. Add a new ADR instead of editing an accepted one.
 
