@@ -23,7 +23,7 @@
 
 ## 1. How the data is organised
 
-Four groups:
+Five groups:
 
 | Group | Collections | Key field |
 | --- | --- | --- |
@@ -31,6 +31,7 @@ Four groups:
 | **Identity** | `users`, `accounts`, `verification_tokens`, `password_resets` | `userId` |
 | **Catalogue** (seller-owned) | `sellers`, `categories`, `brands`, `products`, `inventory`, `reviews` | `sellerId` |
 | **Commerce** (customer-owned) | `addresses`, `carts`, `wishlists`, `orders`, `order_events`, `payments`, `payouts` | `customerId` / `sellerId` |
+| **Marketing** | `newsletter_subscribers` | `email` |
 
 **Four rules keep the numbers right:**
 
@@ -241,6 +242,18 @@ Indexes: `{ orderNo: 1 }` unique, `{ idempotencyKey: 1 }` unique, `{ customerId:
 #### `payouts`
 `sellerId`, `periodStart`, `periodEnd`, `orderCount`, `grossCents`, `feeCents`, `netCents`, `status` (`scheduled`/`paid`), `paidAt`, `reference`. Unique `{ sellerId: 1, periodStart: 1 }`. Writes: `payouts.service` (admin / scheduled job).
 
+### 3.5 Marketing
+
+#### `newsletter_subscribers`
+| Field | Type | Notes |
+| --- | --- | --- |
+| `email` | string, unique | lower-cased, ≤ 254 |
+| `status` | enum | `subscribed`, `unsubscribed` |
+| `source` | enum | `home` (the home page form) |
+| `consentAt` | Date | last time the visitor opted in — the consent record |
+| `unsubscribedAt` | Date | set when they leave; cleared if they sign up again |
+Index: `{ email: 1 }` unique. Writes: `marketing.subscribeToNewsletter` (public, rate limited; same answer for new and existing addresses). Personal data: no admin view or export yet — add one with an unsubscribe link before sending the first campaign.
+
 ## 4. Security model
 
 MongoDB has no row-level security, so access control is enforced in **three layers**:
@@ -273,6 +286,7 @@ Other rules:
 | `shipments.addTrackingCode` | orders.packages.shipment, order_events, audit_logs | admin |
 | `payments.markPaid` | payments, orders, inventory (reserved → sold), order_events | admin |
 | `reviews.create` / `moderate` | reviews, products.rating, sellers.rating | customer (delivered) / admin |
+| `marketing.subscribeToNewsletter` | newsletter_subscribers | public + rate limit (5/min) |
 
 ## 6. Conventions and deliberate deviations
 

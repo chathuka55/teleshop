@@ -314,6 +314,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `models/account.model.ts`, `address.model.ts`, `audit-log.model.ts` | Authentication accounts, saved addresses and audit records. |
 | `models/brand.model.ts`, `category.model.ts`, `product.model.ts` | Catalogue brands, categories and products. |
 | `models/cart.model.ts`, `wishlist.model.ts` | Persisted customer cart and wishlist data. |
+| `models/newsletter-subscriber.model.ts` | Newsletter sign-ups with their consent time. |
 | `models/counter.model.ts` | Counters used to generate sequential identifiers. |
 | `models/courier.model.ts` | Courier and tracking configuration data. |
 | `models/inventory.model.ts` | Product stock and inventory data. |
@@ -331,6 +332,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `repositories/audit-log.repository.ts` | Audit history queries. |
 | `repositories/brand.repository.ts`, `category.repository.ts`, `product.repository.ts`, `catalog-mappers.ts`, `storefront-filter.ts` | Catalogue queries, DTO mapping and storefront filter construction. |
 | `repositories/cart.repository.ts`, `wishlist.repository.ts` | Customer cart and wishlist queries. |
+| `repositories/newsletter.repository.ts` | Idempotent newsletter sign-up (upsert on the unique email). |
 | `repositories/checkout.repository.ts` | Data operations needed to validate and create checkout orders. |
 | `repositories/courier.repository.ts`, `order-status.repository.ts`, `order.repository.ts` | Courier and order/status operations. |
 | `repositories/payment.repository.ts`, `payout.repository.ts` | Payment and payout queries. |
@@ -382,7 +384,7 @@ pattern is `schema.ts` (input validation), `access.ts` (permissions),
 | `couriers/` | Reserved feature folder for courier behavior; currently contains only `.gitkeep`. |
 | `fulfilment/` | Seller order/package fulfilment: `access.ts`, `actions.ts`, `emails.ts`, `schema.ts`, `seller.ts`, `service.ts`, `tabs.ts`, `types.ts`. |
 | `inventory/` | Reserved feature folder for inventory behavior; currently contains only `.gitkeep`. |
-| `marketing/` | Contact/marketing actions and validation: `actions.ts`, `contact.ts`, `schema.ts`. |
+| `marketing/` | Contact form and newsletter sign-up: `actions.ts`, `contact.ts`, `newsletter.ts` (service), `schema.ts`. |
 | `orders/` | Customer/admin orders, tracking and cancellation: `actions.ts`, `admin-access.ts`, `admin-emails.ts`, `admin-schema.ts`, `admin-types.ts`, `admin.ts`, `auto-cancel.ts`, `cancel.ts`, `checkout.ts`, `customer.ts`, `emails.ts`, `schema.ts`, `service.ts`, `status.ts`, `types.ts`. |
 | `payments/` | Reserved feature folder for payment behavior; currently contains only `.gitkeep`. |
 | `payouts/` | Reserved feature folder for payout behavior; currently contains only `.gitkeep`. |
