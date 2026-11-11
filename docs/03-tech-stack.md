@@ -9,6 +9,7 @@
 | Package manager | **pnpm** | Fast, strict dependency tree |
 | Styling | **Tailwind CSS v4** + CSS variables (`src/styles/tokens.css`) | Small CSS, tokens shared with Figma variables |
 | Animated UI | **React Bits** (reactbits.dev) — copied components, wrapped in `components/ui` | Text, background and card effects without a heavy library |
+| Scroll & page motion | **GSAP 3 + ScrollTrigger** (free, incl. plugins) — lazy chunk via `src/lib/motion/gsap.ts` | Scroll reveals, hero intro/parallax, brand marquee (docs/05 §6); not in the first-load bundle |
 | 3D UI | **ThreeUI Community** (`@designcodeio/threeui`, MIT) for 3D effects/backgrounds; **React Three Fiber + drei** for our own GLB hero | ThreeUI for ready-made three.js effects; R3F for full control of product models |
 | 3D assets | **gltf-transform** CLI (Draco/meshopt + WebP/KTX2 textures) | GLB files small enough for phones |
 | Database | **MongoDB Atlas** (replica set) + **Mongoose 8** | Flexible per-category specs and embedded variants; transactions |

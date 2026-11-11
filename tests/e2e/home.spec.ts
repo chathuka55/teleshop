@@ -47,3 +47,35 @@ test.describe("home page", () => {
     expect(serious.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
   });
 });
+
+test.describe("home motion", () => {
+  test("brand logos: one real link per brand, the looping copy is hidden from assistive tech", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const section = page.getByRole("heading", { name: "Top brands" }).locator("xpath=ancestor::section");
+    const links = section.getByRole("link", { name: /^Shop / });
+    await expect(links).not.toHaveCount(0);
+    await expect(section.locator('a[aria-label="Shop Apple"] svg')).toHaveCount(2); // + the inert copy
+    await expect(section.getByRole("link", { name: "Shop Apple" })).toHaveCount(1);
+    await expect(section.locator("[inert]").first()).toHaveAttribute("aria-hidden", "true");
+  });
+
+  test("scroll reveals never leave content invisible or out of the accessibility tree", async ({ page }) => {
+    await page.goto("/");
+    // Before scrolling: headings further down are already reachable (opacity only, never hidden).
+    await expect(page.getByRole("heading", { name: "From click to doorstep" })).toHaveCount(1);
+    for (let y = 0; y < 30; y++) {
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(60);
+    }
+    await page.waitForTimeout(1500);
+    const invisible = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("main [data-reveal], main [data-reveal] > *")]
+          .filter((e) => !e.closest("[inert]") && e.getClientRects().length > 0)
+          .filter((e) => Number(getComputedStyle(e).opacity) < 0.99).length,
+    );
+    expect(invisible).toBe(0);
+  });
+});

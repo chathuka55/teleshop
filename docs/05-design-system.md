@@ -68,5 +68,11 @@ Check each component's licence before copying, and record it in `src/components/
 ## 6. Motion and accessibility
 - Durations 150–300 ms, ease-out. No animation over 600 ms on interactive elements.
 - `@media (prefers-reduced-motion: reduce)` turns off auto-rotation, parallax and text effects.
+- **Scroll and page motion is GSAP + ScrollTrigger** (`src/lib/motion/gsap.ts`), loaded as its own chunk after the page is interactive and never for reduced-motion visitors. Server components opt in with attributes, no client code:
+  - `data-reveal` — rises and fades in as it scrolls into view; `data-reveal="stagger"` — its children do, one after another (grids; each row as it enters). Run by `components/motion/ScrollReveal.tsx` (store layout). Already-visible content is never animated, and "hidden" is opacity only — never `visibility`, so content stays in the accessibility tree and find-in-page.
+  - Home hero (`HeroMotion.tsx`): intro while the splash fades (skipped if GSAP arrives > 600 ms late or on client navigation), count-up stats (`data-countup`), desktop-only parallax layers (`data-parallax="<speed>"`) and floating glass cards (`data-hero-float`, paused off screen).
+  - Brand strip (`BrandMarquee.tsx`): endless logo rows, faster with scroll velocity, stops on hover/focus, paused off screen; reduced motion = static wrapped grid.
+- Scroll is native — no scroll-jacking (ScrollSmoother/Lenis): it fights the phone's own momentum scrolling and costs frames on low-end Android.
+- Brand logos: `pnpm brand-logos` regenerates `src/config/brand-logos.ts` from Simple Icons (CC0, cropped to each logo's outline); brands without one show a text wordmark. Credited on `/credits`.
 - Contrast: text ≥ 4.5:1, large text ≥ 3:1. Focus ring: 2px `--color-primary-light` + 2px offset.
 - Touch targets ≥ 44×44 px on phones.

@@ -33,7 +33,7 @@ export function HowItWorks() {
         title="From click to doorstep"
         description="Order with confidence — no card needed."
       />
-      <ol className="grid gap-3 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
+      <ol data-reveal="stagger" className="grid gap-3 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
         {steps.map(({ icon: Icon, title, text }, i) => (
           <li key={title} className="rounded-[22px] border border-white/7 bg-surface p-7">
             <div className="flex items-center justify-between">

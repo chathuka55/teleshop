@@ -5,7 +5,10 @@ import { Badge } from "@/components/ui/Badge";
 /** Figma "Promo Banners" (7:907). */
 export function PromoBanners() {
   return (
-    <section className="container-page grid gap-4 pt-14 md:grid-cols-2 md:gap-5 md:pt-[88px]">
+    <section
+      data-reveal="stagger"
+      className="container-page grid gap-4 pt-14 md:grid-cols-2 md:gap-5 md:pt-[88px]"
+    >
       <article
         className="relative isolate flex min-h-[220px] flex-col justify-center gap-3.5 overflow-hidden rounded-[26px] border border-white/10 p-6 md:h-[280px] md:p-10"
         style={{ backgroundImage: "linear-gradient(156deg, #1d4ed8 0%, #3b82f6 71%)" }}

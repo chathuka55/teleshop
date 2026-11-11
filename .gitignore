@@ -21,3 +21,5 @@ assets-src/
 next-env.d.ts
 # local dev database (pnpm db:memory)
 .mongo-dev/
+# Lighthouse CI reports (pnpm perf:lighthouse)
+.lighthouseci/

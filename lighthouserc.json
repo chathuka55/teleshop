@@ -1,0 +1,47 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:3100/", "http://localhost:3100/p/apple-iphone-17-pro"],
+      "numberOfRuns": 3,
+      "settings": {
+        "throttlingMethod": "devtools",
+        "chromeFlags": "--no-sandbox --headless=new",
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": [
+          "error",
+          {
+            "maxNumericValue": 2500,
+            "aggregationMethod": "median"
+          }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          {
+            "maxNumericValue": 0.1,
+            "aggregationMethod": "median"
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 0.9
+          }
+        ],
+        "categories:performance": [
+          "warn",
+          {
+            "minScore": 0.8
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}

@@ -274,7 +274,7 @@ export function ProductListing({
           )}
 
           {page.items.length ? (
-            <ul className="grid grid-cols-2 gap-3 md:gap-5 xl:grid-cols-3">
+            <ul data-reveal="stagger" className="grid grid-cols-2 gap-3 md:gap-5 xl:grid-cols-3">
               {page.items.map((p, i) => (
                 <li key={p.id} className="flex [&>article]:flex-1">
                   <ProductCard product={p} priority={i < 3} />

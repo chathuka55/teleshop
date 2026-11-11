@@ -22,6 +22,8 @@ jobs:
       - run: pnpm build
         env:
           SKIP_ENV_VALIDATION: "true"
+      # Every page < 250 KB first-load JS (gzip), every hero model ≤ 2.5 MB (docs/11 §1).
+      - run: pnpm perf:budgets
 
   # End-to-end (docs/11): the production build against a throwaway in-memory database with
   # throwaway secrets — customer → seller → admin (TOTP) order flow, phone layout, axe checks.
@@ -67,6 +69,8 @@ jobs:
           pnpm exec next start --port 3100 > app.log 2>&1 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3100/ && break; sleep 2; done
       - run: pnpm test:e2e
+      # Mobile Lighthouse on / and a product page, median of 3: LCP < 2.5 s, CLS < 0.1 (docs/11 §1).
+      - run: pnpm perf:lighthouse
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -74,6 +78,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            .lighthouseci/
             app.log
           retention-days: 7
 
