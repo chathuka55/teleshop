@@ -63,6 +63,7 @@
 | GET | `/admin/orders` · `/admin/shipments/pending` · `/admin/reports` · `/admin/audit-logs` | admin | |
 | POST | `/uploads/sign` | seller/admin/customer(avatar) | Upstash Blob upload handler (authorises + sets path); type + size limits |
 | POST | `/auth/[...nextauth]` | Auth.js | managed by Auth.js |
+| POST | `/api/client-errors` | anyone | Browser errors from the error pages (only ones without a server digest). JSON ≤ 8 KB, Zod (`name`, `message` ≤ 500, `stack` ≤ 4000, site `path`), 10/min/IP; scrubbed, logged and sent to Sentry. 204 / 400 / 413 / 415 / 429, never echoes input. |
 
 Signed-in actions are limited **per account**, guests **per IP** (`src/lib/security/action-limit.ts`): Sri Lankan mobile carriers put many customers behind one IP, so a per-IP limit on everyday actions would block strangers who share it.
 

@@ -1,4 +1,4 @@
-// Performance budgets (P8-T02, docs/11 §3). Run after `pnpm build`: `pnpm perf:budgets`.
+// Performance budgets (P8-T02, docs/11 §1). Run after `pnpm build`: `pnpm perf:budgets`.
 //
 // 1. First-load JS per app route, gzip: every page < 250 KB (docs/06 §6). Lazily loaded
 //    chunks (the 3D hero, GSAP) are not in the route manifest, so they are excluded by design.

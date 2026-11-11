@@ -192,7 +192,9 @@ bracketed names such as `[slug]` are dynamic URL values.
 | --- | --- |
 | `src/app/layout.tsx` | Root HTML document, global providers and shared page shell. |
 | `src/app/globals.css` | Global CSS entry point and imported styles. |
-| `src/app/error.tsx` | Application-level error boundary UI. |
+| `src/app/error.tsx` | Application-level error boundary UI (shows only the error reference). |
+| `src/app/global-error.tsx` | Last-resort error page when the root layout itself fails; brings its own `<html>`/`<body>`. |
+| `src/app/(store)/error.tsx`, `account/error.tsx`, `seller/error.tsx`, `admin/(console)/error.tsx` | Section error boundaries that keep the section's navigation around the error message. |
 | `src/app/not-found.tsx` | Not-found page. |
 | `src/app/robots.ts` | Generates crawler rules. |
 | `src/app/sitemap.ts` | Generates the site sitemap. |
@@ -250,6 +252,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `src/app/admin/(console)/settings/page.tsx` | Site and operational settings. |
 | `src/app/admin/(console)/audit-log/page.tsx` | Security/administrative audit history. |
 | `src/app/api/auth/[...nextauth]/route.ts` | Auth.js API endpoint. |
+| `src/app/api/client-errors/route.ts` | Receives browser-side errors from the error pages (validated, rate limited, scrubbed) and reports them. |
 | `src/app/api/cron/auto-cancel/route.ts` | Protected Vercel Cron endpoint for automatic cancellation of unaccepted orders. |
 | `src/app/api/v1/.gitkeep` | Keeps the planned/versioned REST API directory in Git; currently no tracked v1 route files here. |
 | `src/app/dev/ui/page.tsx` | Development-only UI/component preview page. |
@@ -266,7 +269,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `checkout/CheckoutForm.tsx` | Customer checkout form. |
 | `forms/` — `AccountForms.tsx`, `AddressForm.tsx`, `AuthForms.tsx`, `AvatarForm.tsx`, `ContactForm.tsx`, `TwoFactorForms.tsx`, `fields.tsx` | Reusable account, address, login/registration, avatar, contact and two-factor forms/fields. `.gitkeep` reserves the folder. |
 | `home/` — `BrandMarquee.tsx`, `CategoryGrid.tsx`, `FeaturedProducts.tsx`, `Hero.tsx`, `HeroMotion.tsx`, `HowItWorks.tsx`, `Newsletter.tsx`, `PromoBanners.tsx`, `SectionSkeleton.tsx`, `TopBrands.tsx`, `TrustStrip.tsx` | Home page hero (with its GSAP intro), content sections, the brand logo marquee and placeholders for sections still streaming in. |
-| `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `Navbar.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation, responsive layout, account navigation, user navigation state and related types. `.gitkeep` preserves the folder. |
+| `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `Navbar.tsx`, `ErrorState.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation, responsive layout, account navigation, the shared error-page content (reports browser errors), user navigation state and related types. `.gitkeep` preserves the folder. |
 | `motion/` — `ScrollReveal.tsx` | Scroll-in animations for elements marked `data-reveal` in server components. |
 | `orders/` — `CancelOrderForm.tsx`, `PackageTimeline.tsx`, `StatusStepper.tsx`, `TrackForm.tsx`, `TrackingCodeBox.tsx`, `order-status.ts` | Order cancellation, timeline/status and tracking UI plus status display helpers. |
 | `product/` — `CategoryIcon.tsx`, `FilterForm.tsx`, `PriceTag.tsx`, `ProductArt.tsx`, `ProductCard.tsx`, `ProductGallery.tsx`, `ProductListing.tsx`, `PurchasePanel.tsx`, `Rating.tsx`, `SellerCard.tsx`, `SortSelect.tsx`, `WishlistSync.tsx`, `WishlistToggle.tsx`, `listing-href.ts`, `variant-select.ts` | Catalogue/product cards, images, filters, purchasing, seller/rating display, wishlist behavior, and listing/variant helpers. `.gitkeep` preserves the folder. |
@@ -343,6 +346,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `cache/.gitkeep` | Reserves the cache utility folder. |
 | `documents/business-document.ts` | Validates/handles seller business-document input. |
 | `email/send.ts` | Sends application email. |
+| `observability/` — `scrub.ts`, `logger.ts`, `report.ts`, `sentry-envelope.ts`, `client-error.ts`, `request-error.ts` | Error reporting and logging without PII: scrubbing, JSON log lines, `reportError()` (log + Sentry over HTTP), the browser-error schema and de-duplication of Next's repeated render errors. |
 | `geo/tiles.ts` | Builds/handles map tile URLs for shop maps. |
 | `motion/gsap.ts`, `motion/splash.ts` | Loads GSAP + ScrollTrigger on demand (never for reduced motion) and tells intro animations when the splash screen starts fading. |
 | `images/avatar.ts`, `images/product.ts` | Validates/processes avatar and product image uploads, including image re-encoding. |
@@ -397,6 +401,7 @@ pattern is `schema.ts` (input validation), `access.ts` (permissions),
 
 | Path / files | What they do |
 | --- | --- |
+| `src/instrumentation.ts` | Next.js hook `onRequestError`: logs and reports every uncaught server error (scrubbed, with its digest). |
 | `src/middleware.ts` | Next.js middleware for request-level routing/security behavior. |
 | `src/hooks/use-cart.ts`, `use-wishlist.ts` | Client hooks for cart and wishlist state. |
 | `src/hooks/.gitkeep` | Keeps the hooks directory in Git. |

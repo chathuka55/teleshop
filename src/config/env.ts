@@ -52,6 +52,12 @@ export const serverSchema = z.object({
     emptyToUndefined,
     z.string().min(32, "CRON_SECRET must be at least 32 characters (openssl rand -hex 32)").optional(),
   ),
+  // Error reports (P8-T05): Sentry project DSN. Empty = errors only go to the logs.
+  SENTRY_DSN: optionalUrl,
+  SENTRY_ENVIRONMENT: optionalString,
+  // Set by Vercel: tag reports with the deployment (git commit) and environment.
+  VERCEL_GIT_COMMIT_SHA: optionalString,
+  VERCEL_ENV: optionalString,
 });
 
 export const publicSchema = z.object({
