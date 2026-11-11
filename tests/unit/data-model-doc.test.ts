@@ -14,8 +14,8 @@ const migrationsDir = join(root, "src", "db", "migrations");
 const modelFiles = readdirSync(modelsDir).filter((f) => f.endsWith(".model.ts"));
 const collections = modelFiles.map((file) => {
   const src = readFileSync(join(modelsDir, file), "utf8");
-  // model<Doc>("Name", schema, "collection_name")
-  const m = /model<\w+>\(\s*"\w+",\s*\w+,\s*"([a-z_]+)"\s*\)/.exec(src);
+  // model<Doc>("Name", schema, "collection_name") — Prettier may wrap it and add a trailing comma
+  const m = /model<\w+>\(\s*"\w+",\s*\w+,\s*"([a-z_]+)",?\s*\)/.exec(src);
   return { file, collection: m?.[1] };
 });
 const migrationFiles = readdirSync(migrationsDir).filter((f) => /^\d{4}-[\w-]+\.ts$/.test(f));
