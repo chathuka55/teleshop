@@ -53,7 +53,7 @@
 
 | Method | Path | Who | Notes |
 | --- | --- | --- | --- |
-| GET | `/products` | public | filters: `category, brand, minPrice, maxPrice, condition, inStock, spec.<key>, sort, cursor` |
+| GET | `/products` | public | filters: `q, category, brand, minPrice, maxPrice, condition, inStock, spec.<key>, sort, cursor`. `q` (≤ 100 chars, ≤ 6 words): every word must start a word in the product name or model, or name its brand or category (“iph”, “laptops”, “apple laptop”); plural endings dropped; sorted by words found in the name, the typed phrase first. Nothing matches every word → text-index fallback (any word, stemmed). Words are escaped — regex syntax is literal (`src/db/repositories/search-terms.ts`). |
 | GET | `/products/{slug}` | public | |
 | GET | `/categories` · `/brands` | public | cached |
 | GET | `/search?q=` | public | text search, 20/min/IP |

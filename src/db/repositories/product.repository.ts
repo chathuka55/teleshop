@@ -2,11 +2,14 @@ import type { PipelineStage, Types } from "mongoose";
 import type { ProductCardDTO, ProductDetailDTO, ProductPage, ProductQuery } from "@/modules/catalog/types";
 import { connectDB } from "../mongoose";
 import { InventoryModel } from "../models/inventory.model";
+import { BrandModel } from "../models/brand.model";
+import { CategoryModel } from "../models/category.model";
 import { ProductModel } from "../models/product.model";
 import { findLeanBrands } from "./brand.repository";
 import { toProductCardDTO, toProductDetailDTO, type LeanProduct } from "./catalog-mappers";
 import { findLeanCategories } from "./category.repository";
 import { findLeanSellers } from "./seller.repository";
+import { idsMatching, searchTerms, wordPrefixRegex } from "./search-terms";
 import { liveProductFilter } from "./storefront-filter";
 import { $gt, $in } from "../operators";
 
@@ -98,10 +101,73 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
     match._id = { $in: ids };
   }
 
+  if (!query.q) return aggregatePage(match, query, { kind: "none" });
+
+  // 1) every word must start a word in the name / model, or name a brand / category
+  const words = await wordSearch(query.q);
+  if (words) {
+    const page = await aggregatePage(
+      { ...match, $and: [...((match.$and as unknown[] | undefined) ?? []), ...words.clauses] },
+      query,
+      { kind: "words", score: words.score },
+    );
+    if (page.total > 0) return page;
+  }
+  // 2) nothing matched every word: full-text index (any word, stemmed) as the fallback
+  return aggregatePage(match, query, { kind: "text", q: query.q });
+}
+
+type SearchMode =
+  { kind: "none" } | { kind: "words"; score: Record<string, unknown> } | { kind: "text"; q: string };
+
+/** Per-word match clauses + a relevance score (words found in the product name, whole phrase bonus). */
+async function wordSearch(
+  q: string,
+): Promise<{ clauses: Record<string, unknown>[]; score: Record<string, unknown> } | null> {
+  const terms = searchTerms(q);
+  if (!terms.length) return null;
+  const [categories, brands] = await Promise.all([
+    CategoryModel.find({ isActive: true })
+      .select("name slug")
+      .lean<{ _id: Types.ObjectId; name: string; slug: string }[]>(),
+    BrandModel.find({ isActive: true })
+      .select("name slug")
+      .lean<{ _id: Types.ObjectId; name: string; slug: string }[]>(),
+  ]);
+  const clauses = terms.map((term) => {
+    const re = wordPrefixRegex(term);
+    return {
+      $or: [
+        { name: re },
+        { "specs.model": re },
+        { brandId: { $in: idsMatching(brands, term) } },
+        { categoryId: { $in: idsMatching(categories, term) } },
+      ],
+    };
+  });
+  const inName = (re: RegExp) => ({ $cond: [{ $regexMatch: { input: "$name", regex: re } }, 1, 0] });
+  const score = {
+    $add: [
+      ...terms.map((t) => inName(wordPrefixRegex(t))),
+      // the words typed together, in order ("iphone 17 pro") rank above scattered matches
+      ...(terms.length > 1 ? [{ $multiply: [2, inName(wordPrefixRegex(terms.join(" ")))] }] : []),
+    ],
+  };
+  return { clauses, score };
+}
+
+async function aggregatePage(
+  match: Record<string, unknown>,
+  query: ProductQuery,
+  mode: SearchMode,
+): Promise<ProductPage> {
   const sortKey = query.sort ?? "featured";
   const pipeline: PipelineStage[] = [];
-  if (query.q) pipeline.push({ $match: { $text: { $search: query.q } } });
+  // $text has to be the first stage
+  if (mode.kind === "text") pipeline.push({ $match: { $text: { $search: mode.q } } });
   pipeline.push({ $match: match });
+  if (mode.kind === "words" && sortKey === "featured")
+    pipeline.push({ $addFields: { searchScore: mode.score } });
   if (sortKey === "discount" || query.deals) {
     pipeline.push({
       $addFields: {
@@ -126,9 +192,7 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
     });
   }
   if (query.deals) pipeline.push({ $match: { discountScore: { $gt: 0 } } });
-  pipeline.push({
-    $sort: query.q && sortKey === "featured" ? { score: { $meta: "textScore" }, _id: 1 } : SORTS[sortKey],
-  });
+  pipeline.push({ $sort: sortFor(sortKey, mode) });
 
   const limit = Math.min(Math.max(query.limit ?? DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
   const start = query.cursor ? Number(query.cursor) : 0;
@@ -149,6 +213,13 @@ export async function searchPublishedProducts(query: ProductQuery): Promise<Prod
     total,
     nextCursor: next < total ? String(next) : null,
   };
+}
+
+function sortFor(sortKey: NonNullable<ProductQuery["sort"]>, mode: SearchMode): PipelineStage.Sort["$sort"] {
+  if (sortKey !== "featured") return SORTS[sortKey];
+  if (mode.kind === "text") return { score: { $meta: "textScore" }, _id: 1 };
+  if (mode.kind === "words") return { searchScore: -1, "rating.count": -1, _id: 1 };
+  return SORTS.featured;
 }
 
 export async function findPublishedProductBySlug(slug: string): Promise<ProductDetailDTO | null> {
