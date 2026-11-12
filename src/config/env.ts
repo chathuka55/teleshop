@@ -48,6 +48,8 @@ export const serverSchema = z.object({
   // Email: Brevo HTTP API key ("xkeysib-…") wins; otherwise SMTP via EMAIL_SERVER (smtp:// URL).
   // EMAIL_FROM must be a sender verified in Brevo. CONTACT_INBOX receives /contact form messages.
   BREVO_API_KEY: optionalString,
+  // Only with a Brevo SMTP key ("xsmtpsib-…") in BREVO_API_KEY: the SMTP login ("…@smtp-brevo.com").
+  BREVO_SMTP_LOGIN: optionalString,
   EMAIL_SERVER: optionalString,
   EMAIL_FROM: optionalString,
   CONTACT_INBOX: z.preprocess(emptyToUndefined, z.string().email().optional()),

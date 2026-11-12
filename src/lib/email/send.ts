@@ -23,20 +23,32 @@ export function parseSender(from: string): { name?: string; email: string } | nu
   return /^[^\s@<>"]+@[^\s@<>"]+$/.test(email) ? { ...(name ? { name } : {}), email } : null;
 }
 
+/** Brevo SMTP relay URL from the SMTP login ("…@smtp-brevo.com") and an SMTP key ("xsmtpsib-…"). */
+export function brevoSmtpUrl(login: string, smtpKey: string): string {
+  return `smtp://${encodeURIComponent(login)}:${encodeURIComponent(smtpKey)}@smtp-relay.brevo.com:587`;
+}
+
 /** EMAIL_SERVER has to be a URL ("smtp://login:key@smtp-relay.brevo.com:587"), not a bare key. */
 export function isSmtpUrl(value: string): boolean {
   return /^smtps?:\/\/[^\s]+$/.test(value);
 }
 
 /**
- * Sends a plain-text email. Order: Brevo HTTP API (BREVO_API_KEY) → SMTP (EMAIL_SERVER) → not sent.
+ * Sends a plain-text email. Order: Brevo HTTP API (BREVO_API_KEY "xkeysib-…") or Brevo SMTP relay
+ * (BREVO_API_KEY "xsmtpsib-…" + BREVO_SMTP_LOGIN) → SMTP (EMAIL_SERVER) → not sent.
  * The HTTP API suits serverless better than SMTP (no socket set-up per cold start).
  * Never logs recipients or bodies (docs/10) — only the transport and the failure status.
  */
 export async function sendEmail(msg: Message): Promise<SendResult> {
   const sender = env.EMAIL_FROM ? parseSender(env.EMAIL_FROM) : null;
   if (!sender) return notConfigured("EMAIL_FROM missing or not an email address");
-  if (env.BREVO_API_KEY) return sendViaBrevo(env.BREVO_API_KEY, sender, msg);
+  const key = env.BREVO_API_KEY;
+  if (key?.startsWith("xsmtpsib-")) {
+    // A Brevo SMTP key (not an API key): send over Brevo's SMTP relay with the account's SMTP login.
+    if (!env.BREVO_SMTP_LOGIN) return notConfigured("BREVO_API_KEY is an SMTP key: set BREVO_SMTP_LOGIN too");
+    return sendViaSmtp(brevoSmtpUrl(env.BREVO_SMTP_LOGIN, key), env.EMAIL_FROM!, msg);
+  }
+  if (key) return sendViaBrevo(key, sender, msg);
   if (env.EMAIL_SERVER) {
     if (!isSmtpUrl(env.EMAIL_SERVER)) return notConfigured("EMAIL_SERVER is not an smtp:// URL");
     return sendViaSmtp(env.EMAIL_SERVER, env.EMAIL_FROM!, msg);

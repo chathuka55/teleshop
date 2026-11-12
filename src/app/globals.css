@@ -2,6 +2,7 @@
 @import "../styles/tokens.css";
 @import "../styles/glass.css";
 @import "../styles/splash.css";
+@import "../styles/footer.css";
 
 /* Expose the Midnight Tech tokens as Tailwind utilities: bg-surface, text-text-secondary, border-line… */
 @theme inline {

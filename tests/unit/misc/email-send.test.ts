@@ -4,7 +4,7 @@ const env: Record<string, string | undefined> = {};
 vi.mock("@/config/env", () => ({ env: new Proxy({}, { get: (_t, k: string) => env[k] }) }));
 vi.mock("@/lib/observability/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
-const { isSmtpUrl, parseSender, sendEmail } = await import("@/lib/email/send");
+const { brevoSmtpUrl, isSmtpUrl, parseSender, sendEmail } = await import("@/lib/email/send");
 const { logger } = await import("@/lib/observability/logger");
 
 const msg = { to: "buyer@example.com", subject: "Hi", text: "Body", replyTo: "reply@example.com" };
@@ -32,6 +32,14 @@ describe("isSmtpUrl", () => {
   });
 });
 
+describe("brevoSmtpUrl", () => {
+  it("builds the Brevo relay URL with the login and key encoded", () => {
+    expect(brevoSmtpUrl("9a1b2c001@smtp-brevo.com", "xsmtpsib-abc/def")).toBe(
+      "smtp://9a1b2c001%40smtp-brevo.com:xsmtpsib-abc%2Fdef@smtp-relay.brevo.com:587",
+    );
+  });
+});
+
 describe("sendEmail", () => {
   const fetchMock = vi.fn();
   beforeEach(() => {
@@ -50,6 +58,12 @@ describe("sendEmail", () => {
   it("treats a bare key in EMAIL_SERVER as not configured instead of failing every send", async () => {
     env.EMAIL_SERVER = "xsmtpsib-abc123";
     expect(await sendEmail(msg)).toEqual({ sent: false, reason: "not_configured" });
+  });
+
+  it("a Brevo SMTP key without its SMTP login is not configured (and never hits the HTTP API)", async () => {
+    env.BREVO_API_KEY = "xsmtpsib-abc123";
+    expect(await sendEmail(msg)).toEqual({ sent: false, reason: "not_configured" });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("posts to the Brevo API with the key header and verified sender", async () => {

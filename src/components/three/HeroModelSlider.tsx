@@ -3,19 +3,11 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { onSplashDone } from "@/lib/motion/splash";
 import { cn } from "@/lib/utils/cn";
 import { isSoftwareRenderer } from "@/lib/utils/webgl";
-import { heroSlides, SLIDE_INTERVAL_MS } from "./hero-slides";
+import { heroSlides, modelUrlFor, SLIDE_INTERVAL_MS } from "./hero-slides";
 
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false, loading: () => null });
 
@@ -41,13 +33,17 @@ type NavigatorWithHints = Navigator & {
   deviceMemory?: number;
 };
 
-/** Devices and connections that keep the still poster instead of downloading the 3D scene. */
+/**
+ * Devices and connections that skip the 3D scene (the slider keeps its captions and controls).
+ * Ordinary phones (4–8 cores, 3–4 GB) DO get 3D — the phone models are ~0.3 MB each and the
+ * mobile scene skips shadows and bloom; only data saver, 2G, ≤ 2 GB memory, no WebGL or a
+ * software renderer skip it.
+ */
 function detectLowPower(): boolean {
   const nav = navigator as NavigatorWithHints;
   if (nav.connection?.saveData) return true;
-  if (/(^|-)2g$|^3g$/.test(nav.connection?.effectiveType ?? "")) return true;
-  if ((nav.hardwareConcurrency ?? 8) <= 4) return true;
-  if (nav.deviceMemory !== undefined && nav.deviceMemory < 4) return true;
+  if (/(^|-)2g$/.test(nav.connection?.effectiveType ?? "")) return true;
+  if (nav.deviceMemory !== undefined && nav.deviceMemory <= 2) return true;
   try {
     const c = document.createElement("canvas");
     const gl = c.getContext("webgl2") ?? c.getContext("webgl");
@@ -64,16 +60,18 @@ function detectLowPower(): boolean {
 }
 
 /**
- * Home hero 3D slider (docs/06-3d-hero.md). The server-rendered `poster` is the LCP element;
- * the WebGL scene mounts only once the hero is visible and the browser is idle, fades in over
- * the poster, and stops rendering when off-screen or the tab is hidden.
+ * Home hero 3D slider (docs/06-3d-hero.md): 3D models only — a soft glow marks the spot while a
+ * model loads. The WebGL scene mounts once the slider is on screen and the browser is idle, fades
+ * in, and stops rendering when off-screen or the tab is hidden.
  */
-export function HeroModelSlider({ poster, className }: { poster: ReactNode; className?: string }) {
+export function HeroModelSlider({ className }: { className?: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [mount3d, setMount3d] = useState(false);
   const [ready, setReady] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [nearScreen, setNearScreen] = useState(false);
   const [tabVisible, setTabVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -103,40 +101,56 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setOnScreen(!!entry?.isIntersecting), {
-      threshold: 0.15,
-    });
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        setOnScreen(!!entry?.isIntersecting && entry.intersectionRatio >= 0.15);
+        // WebGL set-up starts once the slider is mostly in view (a peek at the fold is not enough).
+        if (entry && entry.intersectionRatio >= 0.4) setInView(true);
+      },
+      {
+        threshold: [0, 0.15, 0.4],
+      },
+    );
     io.observe(el);
+    // Start the 3D download a screen ahead: on phones the slider sits below the hero copy.
+    const near = new IntersectionObserver(([entry]) => entry?.isIntersecting && setNearScreen(true), {
+      rootMargin: "0px 0px 100% 0px",
+    });
+    near.observe(el);
     const onVis = (): void => setTabVisible(document.visibilityState === "visible");
     document.addEventListener("visibilitychange", onVis);
     return () => {
       io.disconnect();
+      near.disconnect();
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
-  // Mount WebGL lazily: page loaded + splash gone + hero intro finished + hero visible + idle + not a
-  // low-power device. Setting up WebGL (shaders, model decoding) blocks the main thread for a
-  // moment, which would stutter the GSAP intro (HeroMotion); phones also wait longer for idle so
-  // the 3D download never competes with the page itself.
+  // Two steps, both only after page load + splash + hero intro, and never on low-power devices:
+  //  1. "warm": the slider is within a screen → download the current model (a plain fetch into the
+  //     HTTP cache — no main-thread cost; importing the 3D code here would evaluate three.js and
+  //     block a phone for seconds), so phones (slider below the hero copy) have it ready.
+  //  2. mount: the slider is ≥ 40 % in view + the browser is idle → set up WebGL. That step
+  //     (shaders, model decoding) does block the main thread for a moment, so it waits until it is
+  //     worth it and never stutters the GSAP intro (HeroMotion) or the first scroll.
+  const [warm, setWarm] = useState(false);
+  const slideRef = useRef(index);
   useEffect(() => {
-    if (mount3d || !onScreen) return;
+    slideRef.current = index;
+  }, [index]);
+  useEffect(() => {
+    if (warm || !nearScreen) return;
     if (detectLowPower()) return;
-    const w = window as Window & {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    let idle: number | undefined;
-    let timer: number | undefined;
     let afterIntro: number | undefined;
-    const start = (): void => {
-      if (w.requestIdleCallback) {
-        idle = w.requestIdleCallback(() => setMount3d(true), { timeout: isMobile ? 4000 : 2000 });
-      } else timer = window.setTimeout(() => setMount3d(true), 800);
+    const go = (): void => {
+      setWarm(true);
+      const slide = heroSlides[slideRef.current];
+      const url = slide && modelUrlFor(slide, isMobile);
+      if (url) void fetch(url, { priority: "low" } as RequestInit).catch(() => undefined);
     };
     const whenLoaded = (): void => {
-      if (document.readyState === "complete") start();
-      else window.addEventListener("load", start, { once: true });
+      if (document.readyState === "complete") go();
+      else window.addEventListener("load", go, { once: true });
     };
     const stopWaiting = onSplashDone(() => {
       afterIntro = window.setTimeout(whenLoaded, INTRO_MS);
@@ -144,11 +158,23 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
     return () => {
       stopWaiting();
       window.clearTimeout(afterIntro);
-      window.removeEventListener("load", start);
-      if (idle !== undefined) w.cancelIdleCallback?.(idle);
-      window.clearTimeout(timer);
+      window.removeEventListener("load", go);
     };
-  }, [onScreen, mount3d, isMobile]);
+  }, [nearScreen, warm, isMobile]);
+
+  useEffect(() => {
+    if (mount3d || !warm || !inView) return;
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (!w.requestIdleCallback) {
+      const timer = window.setTimeout(() => setMount3d(true), 300);
+      return () => window.clearTimeout(timer);
+    }
+    const idle = w.requestIdleCallback(() => setMount3d(true), { timeout: 2000 });
+    return () => w.cancelIdleCallback?.(idle);
+  }, [warm, inView, mount3d]);
 
   // Auto-advance every 6 s (not with reduced motion, not while hovered/focused, not off-screen)
   const active = onScreen && tabVisible;
@@ -166,7 +192,6 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
   };
 
   const slide = heroSlides[index] ?? heroSlides[0];
-  const showPoster = !ready;
 
   return (
     <div
@@ -180,21 +205,22 @@ export function HeroModelSlider({ poster, className }: { poster: ReactNode; clas
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {/* Poster: server-rendered, visible until the first 3D frame */}
+      {/* While the model loads: a soft pulsing glow where it will appear (no placeholder art) */}
       <div
-        aria-hidden={ready}
+        aria-hidden
         className={cn(
-          "absolute inset-0 transition-opacity duration-500 ease-out",
-          showPoster ? "opacity-100" : "pointer-events-none opacity-0",
+          "pointer-events-none absolute inset-x-0 top-0 bottom-[96px] grid place-items-center transition-opacity duration-700",
+          ready ? "opacity-0" : "opacity-100",
         )}
       >
-        {poster}
+        <span className="size-28 animate-pulse rounded-full bg-primary-light/25 blur-2xl md:size-40" />
       </div>
 
       {mount3d && (
         <div
           className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-out",
+            // phones: stop above the caption so the model never covers it
+            "absolute inset-x-0 top-0 bottom-[84px] transition-opacity duration-700 ease-out md:bottom-0",
             ready ? "opacity-100" : "opacity-0",
           )}
           style={fadeEdges}

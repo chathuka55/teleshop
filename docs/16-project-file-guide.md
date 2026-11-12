@@ -143,6 +143,12 @@ images indicates separate images in a gallery, not different products/shops.
 | `memory-db.ts` | Starts a local MongoDB replica set for development (`pnpm db:memory`). |
 | `vercel-preview-env.mjs` | Helps prepare environment values for a Vercel preview deployment. |
 
+### `scripts/models/`
+
+| File | What it does |
+| --- | --- |
+| `make-mobile.mjs` | Rebuilds the phone copies of the hero models (`public/models/*-mobile.glb`) from the desktop GLBs (`pnpm models:mobile`). |
+
 ### `scripts/perf/`
 
 | File | What it does |
@@ -269,7 +275,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `checkout/CheckoutForm.tsx` | Customer checkout form. |
 | `forms/` — `AccountForms.tsx`, `AddressForm.tsx`, `AuthForms.tsx`, `AvatarForm.tsx`, `ContactForm.tsx`, `TwoFactorForms.tsx`, `fields.tsx` | Reusable account, address, login/registration, avatar, contact and two-factor forms/fields. `.gitkeep` reserves the folder. |
 | `home/` — `BrandMarquee.tsx`, `CategoryGrid.tsx`, `FeaturedProducts.tsx`, `Hero.tsx`, `HeroMotion.tsx`, `HowItWorks.tsx`, `Newsletter.tsx`, `PromoBanners.tsx`, `SectionSkeleton.tsx`, `TopBrands.tsx`, `TrustStrip.tsx` | Home page hero (with its GSAP intro), content sections, the brand logo marquee and placeholders for sections still streaming in. |
-| `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `NavSearch.tsx`, `Navbar.tsx`, `ErrorState.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation (search box with ⌘K / Ctrl+K, dialog on small screens), responsive layout, account navigation, the shared error-page content (reports browser errors), user navigation state and related types. `.gitkeep` preserves the folder. |
+| `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `FooterMotion.tsx`, `BackToTop.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `NavSearch.tsx`, `Navbar.tsx`, `ErrorState.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation (search box with ⌘K / Ctrl+K, dialog on small screens), the cinematic footer (curtain reveal on tall desktop screens, GSAP parallax + magnetic pills, back-to-top), responsive layout, account navigation, the shared error-page content (reports browser errors), user navigation state and related types. `.gitkeep` preserves the folder. |
 | `motion/` — `ScrollReveal.tsx` | Scroll-in animations for elements marked `data-reveal` in server components. |
 | `orders/` — `CancelOrderForm.tsx`, `PackageTimeline.tsx`, `StatusStepper.tsx`, `TrackForm.tsx`, `TrackingCodeBox.tsx`, `order-status.ts` | Order cancellation, timeline/status and tracking UI plus status display helpers. |
 | `product/` — `CategoryIcon.tsx`, `FilterForm.tsx`, `PriceTag.tsx`, `ProductArt.tsx`, `ProductCard.tsx`, `ProductGallery.tsx`, `ProductListing.tsx`, `PurchasePanel.tsx`, `Rating.tsx`, `SellerCard.tsx`, `SortSelect.tsx`, `WishlistSync.tsx`, `WishlistToggle.tsx`, `listing-href.ts`, `variant-select.ts` | Catalogue/product cards, images, filters, purchasing, seller/rating display, wishlist behavior, and listing/variant helpers. `.gitkeep` preserves the folder. |
@@ -410,6 +416,7 @@ pattern is `schema.ts` (input validation), `access.ts` (permissions),
 | `src/styles/tokens.css` | Design-system color, spacing and component tokens. |
 | `src/styles/glass.css` | Shared glassmorphism styles. |
 | `src/styles/splash.css` | Splash/loading screen styles. |
+| `src/styles/footer.css` | Footer effects: aurora, grid, marquee, glass pills, giant outlined wordmark, the `curtain:` variant (≥ 768 px wide and ≥ 760 px tall). |
 | `src/styles/.gitkeep`, `src/types/.gitkeep` | Preserve folders for future shared styles/types. |
 
 ## 6. Tests (`tests/`)

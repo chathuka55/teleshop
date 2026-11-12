@@ -33,7 +33,7 @@ Copy these into `src/styles/tokens.css`. Names match the Figma variables (`color
 Rules: every text colour must pass 4.5:1 on `surface-2` (checked by axe in `tests/e2e`). No violet, cyan or pink. Amber is for highlights, never for long text. Body text on dark uses `--color-text` / `--color-text-secondary` only.
 
 ## 2. Glassmorphism
-Use glass **only** for the floating navbar, hero cards, announcement pill, trust strip, modals/sheets and mobile bottom bars.
+Use glass **only** for the floating navbar, hero cards, announcement pill, trust strip, modals/sheets, mobile bottom bars and the footer's pills (`.footer-pill` in `src/styles/footer.css`).
 
 ```css
 .glass {

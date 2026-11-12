@@ -6,7 +6,7 @@ export type HeroSlide = {
   cta: { label: string; href: string };
   /** Compressed GLB in /public/models. `null` = procedural model (gaming PC, fallback phone). */
   modelUrl: string | null;
-  /** Lighter copy for phones (512px textures), when the full one is heavy. */
+  /** Lighter copy for phones (simplified, colour textures only — `pnpm models:mobile`). */
   mobileModelUrl?: string;
 };
 
@@ -44,6 +44,7 @@ export const heroSlides: readonly HeroSlide[] = [
     caption: "Noise-cancelling headsets",
     cta: { label: "Shop audio", href: "/c/audio" },
     modelUrl: "/models/hero-headset.glb",
+    mobileModelUrl: "/models/hero-headset-mobile.glb",
   },
 ];
 
