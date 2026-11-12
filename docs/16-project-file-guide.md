@@ -140,6 +140,7 @@ images indicates separate images in a gallery, not different products/shops.
 | File | What it does |
 | --- | --- |
 | `brand-logos.mjs` | Regenerates the brand-logo paths in `src/config/brand-logos.ts` from Simple Icons (`pnpm brand-logos`). |
+| `check-integrations.ts` | Sends one test email (to `CONTACT_INBOX`) and one Sentry test event through the app's own `sendEmail` / `reportError` (`pnpm integrations:check`); prints outcomes only. |
 | `memory-db.ts` | Starts a local MongoDB replica set for development (`pnpm db:memory`). |
 | `vercel-preview-env.mjs` | Helps prepare environment values for a Vercel preview deployment. |
 
