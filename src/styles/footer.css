@@ -104,6 +104,8 @@
   background-clip: text;
 }
 
+/* background-clip:text only paints inside the line box: keep line-height ≥ 1.1 + bottom padding,
+   or descenders (y, g) are cut off. */
 .footer-text-glow {
   background: linear-gradient(180deg, var(--color-text) 0%, rgb(249 250 251 / 0.45) 100%);
   background-clip: text;

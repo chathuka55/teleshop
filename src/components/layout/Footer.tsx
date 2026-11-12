@@ -81,7 +81,7 @@ export function Footer() {
         <div className="container-page relative z-10 flex flex-1 flex-col pt-14 md:pt-12">
           {/* Call to action */}
           <div data-footer-reveal className="flex flex-col items-center text-center">
-            <h2 className="footer-text-glow font-display text-[44px] leading-[0.95] font-bold tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+            <h2 className="footer-text-glow pb-[0.14em] font-display text-[44px] leading-[1.1] font-bold tracking-[-0.04em] sm:text-6xl lg:text-7xl">
               Ready to upgrade?
             </h2>
             <p className="mt-4 max-w-[480px] text-sm text-text-secondary md:text-base">

@@ -26,6 +26,7 @@
     "db:set-password": "tsx scripts/seed/set-password.ts",
     "models:optimize": "gltf-transform optimize",
     "models:mobile": "node scripts/models/make-mobile.mjs",
+    "integrations:check": "tsx --conditions=react-server scripts/dev/check-integrations.ts",
     "prepare": "husky",
     "test:watch": "vitest --project unit",
     "db:memory": "tsx scripts/dev/memory-db.ts",
