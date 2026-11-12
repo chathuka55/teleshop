@@ -31,6 +31,27 @@ test.describe("storefront", () => {
       expect(name).toMatch(/Apple|iPhone/);
   });
 
+  test("navbar search: ⌘K / Ctrl+K or the search button, partial words find products", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto("/about");
+    const box = page.getByRole("searchbox", { name: "Search products" }).filter({ visible: true });
+    // retried: the shortcut listener exists only once the page has hydrated
+    await expect(async () => {
+      if (isMobile) await page.getByRole("button", { name: "Search", exact: true }).click();
+      else await page.keyboard.press("ControlOrMeta+k");
+      await expect(box).toBeFocused({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000 });
+    await page.keyboard.type("iph");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/shop\?q=iph$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Results for “iph”");
+    const names = await page.getByRole("article").getByRole("heading").allTextContents();
+    expect(names.length).toBeGreaterThan(0);
+    for (const name of names) expect(name).toMatch(/iPhone/);
+  });
+
   test("add to cart → cart totals come from the server", async ({ page }) => {
     await page.goto("/p/asus-rog-zephyrus-g16");
     await page.getByRole("button", { name: "Add to cart", exact: true }).click();

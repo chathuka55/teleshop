@@ -18,8 +18,9 @@ The model slowly rotates, can be dragged (desktop) or swiped (phone), and the sl
 > (0.9 MB) are Sketchfab CC BY 4.0 models, credited in `public/models/CREDITS.md` and on `/credits`; raw sources stay
 > in `assets-src/models/` (git-ignored). `ProceduralPhone` is only the error fallback. The PC is built in code
 > (RGB recoloured to primary → amber); `hero-headset.glb` is 306 KB. Models are normalised with `FitToSize` (largest
-> side = slide size, `SLIDE_SIZE`) and posed with `SLIDE_ROTATION`. Each slide has its own Suspense boundary: the
-> HTML phone mockup (server-rendered poster, LCP) stays up until the first frame that actually shows a model.
+> side = slide size, `SLIDE_SIZE`) and posed with `SLIDE_ROTATION`. Each slide has its own Suspense boundary: a soft
+> pulsing glow marks the spot until the first frame that actually shows a model — no photos or placeholder art (the
+> hero copy is the LCP element).
 
 ## 2. Asset rules
 - Format: **.glb** (binary glTF 2.0). One model per file, origin at the centre, Y up, real-world scale ≈ 1 unit = 10 cm.
@@ -35,17 +36,18 @@ pnpm dlx @gltf-transform/cli optimize assets-src/phone.glb public/models/hero-ph
 ```
 
 - Licence: only use models you made, bought or that have a licence allowing commercial use. Record source + licence in `public/models/CREDITS.md`.
-- Poster images: `public/images/placeholders/hero-phone.webp`, `hero-pc.webp`, `hero-headset.webp` (shown while loading and on low-power devices).
+- Phone copies (`*-mobile.glb`): `pnpm models:mobile` (`scripts/models/make-mobile.mjs`) rebuilds them from the desktop files — normal, occlusion and specular **textures** dropped (invisible at phone size; specular factors kept), colour textures ≤ 384 px WebP, meshes simplified (meshopt, error ≤ 0.2 %). Phone 157 KB · laptop 299 KB · headset 120 KB.
 
 ## 3. How it loads (performance)
-1. The hero renders on the server with the **poster image** in the slider slot (fast LCP).
+1. The hero renders on the server with the copy, captions and controls; the slider slot shows only a soft glow until the model is ready (the headline is the LCP element).
 2. `HeroModelSlider` is imported with `next/dynamic(() => import(...), { ssr: false })`.
-3. It mounts only when the hero is visible (IntersectionObserver) and the browser is idle.
+3. Once the slider is within a screen of the viewport (IntersectionObserver, `rootMargin` 100 % below — on phones it sits under the hero copy) the current model is **downloaded** into the HTTP cache (no main-thread cost — the 3D code is not imported yet, evaluating three.js early blocks a phone for seconds); WebGL is **set up** only when the slider is ≥ 40 % in view and the browser is idle, so phones see the model a moment after scrolling to it and the page load itself never pays for shader compilation.
 4. Only the **current** model is loaded; only the **next** slide's model is preloaded (`useGLTF.preload`, 1.5 s after a slide appears) — never all of them at once.
 5. Rendering pauses when the hero is off-screen or the tab is hidden (`frameloop="demand"` + `invalidate()` on interaction).
 6. The WebGL layer's edges fade to transparent (CSS mask in `HeroModelSlider`), and the desktop ground shadow is narrower than the view — otherwise the shadow and bloom glow stop at the canvas border and show as a faint box around the model. WebGL mounts only after the GSAP hero intro (~1.6 s after the splash), so its set-up never stutters the intro.
-7. On phones (< 768 px): `dpr={[1, 1.5]}`, no antialias, no shadows, no bloom (its post-processing code is a separate chunk phones never download), smaller environment map, and the `*-mobile.glb` models (512 px textures — `modelUrlFor()` in `hero-slides.ts`). WebGL mounts only after window `load` + idle. If `navigator.hardwareConcurrency <= 4`, `deviceMemory < 4`, `saveData` is on or the connection is 2G/3G, keep the poster image and skip WebGL. The same when WebGL runs on a CPU rasteriser (SwiftShader, llvmpipe, Microsoft Basic Render Driver — `isSoftwareRenderer()` in `src/lib/utils/webgl.ts`): compiling the scene's shaders there blocks the main thread for seconds.
+7. On phones (< 768 px): `dpr={[1, 1.5]}`, no antialias, no shadows, no bloom (its post-processing code is a separate chunk phones never download), smaller environment map, and the `*-mobile.glb` models (see §2 — `modelUrlFor()` in `hero-slides.ts`); the canvas stops above the caption. WebGL mounts only after window `load` + idle (≤ 2.5 s). Ordinary phones (4–8 cores, 3–4 GB) get 3D; only `saveData`, a 2G connection or `deviceMemory <= 2` skip WebGL (captions and controls stay). The same when WebGL runs on a CPU rasteriser (SwiftShader, llvmpipe, Microsoft Basic Render Driver — `isSoftwareRenderer()` in `src/lib/utils/webgl.ts`): compiling the scene's shaders there blocks the main thread for seconds.
 8. `prefers-reduced-motion`: no auto-rotate, no auto-advance.
+9. Trade-off (2026-11): phones now get 3D. On a typical phone the slider is already in view under the hero copy, so the scene is built right after load + idle; in Lighthouse's throttled mobile run that shows as ~3 s Total Blocking Time and a performance score in the high 60s (LCP ≈ 2.3 s and CLS 0 are unaffected — the build happens after the page is interactive). The performance score is a CI *warning*, not a failure.
 
 ## 4. Component outline
 

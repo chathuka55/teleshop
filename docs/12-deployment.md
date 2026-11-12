@@ -33,7 +33,12 @@
 | `UPSTASH_BLOB_TOKEN` | Upstash Blob token (staging buckets) | production buckets |
 | `DOCS_ENCRYPTION_KEY` | random (32 bytes, base64) | **the same key everywhere documents are read** — losing it makes stored seller documents unreadable ([ADR-006](adr/ADR-006-encrypted-seller-documents.md)) |
 | `UPSTASH_REDIS_REST_URL/TOKEN` | Upstash (Marketplace) | separate DB |
-| `EMAIL_SERVER`, `EMAIL_FROM` | sandbox SMTP | real SMTP |
+| `BREVO_API_KEY` | (optional) | Brevo API key (`xkeysib-…`, brevo.com → SMTP & API → API Keys). When set, email goes through Brevo's HTTP API; otherwise `EMAIL_SERVER`. |
+| `BREVO_SMTP_LOGIN` | (optional) | Only when `BREVO_API_KEY` holds a Brevo **SMTP** key (`xsmtpsib-…`): the SMTP login from Brevo → SMTP & API → SMTP (`…@smtp-brevo.com`); mail then goes through `smtp-relay.brevo.com:587`. |
+| `EMAIL_SERVER`, `EMAIL_FROM` | sandbox SMTP | SMTP **URL** (`smtp://login:key@smtp-relay.brevo.com:587` — a bare key is ignored and logged as `email.not_configured`). `EMAIL_FROM` must be a sender verified in Brevo. |
+| `CONTACT_INBOX` | (optional) | Real inbox for `/contact` messages (the address shown on the site is display-only). |
+
+> **Check email + Sentry keys:** `pnpm integrations:check` sends a test email to `CONTACT_INBOX` and a Sentry test event with the keys in `.env.local`. Brevo answering `525 Unauthorized IP address` means Brevo → Security → **Authorised IPs** is blocking unknown IPs — turn that off (Vercel sends from changing IPs).
 | `CRON_SECRET` | (not needed — crons run on production only) | random, 32+ chars (`openssl rand -hex 32`); Vercel sends it to `/api/cron/*`. Without it the daily auto-cancel job refuses to run. |
 | `SENTRY_DSN` | (optional) same project, environment tells them apart | Sentry project DSN (Settings → Client Keys). Empty = errors only in Vercel logs. |
 | `SENTRY_ENVIRONMENT` | (optional — defaults to `preview`) | (optional — defaults to `production`) |

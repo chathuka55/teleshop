@@ -161,18 +161,20 @@ Read [docs/14-claude-code-workflow.md](docs/14-claude-code-workflow.md). Short v
 
 Copy `.env.example` to `.env.local`. The app validates every variable at start-up with Zod (`src/config/env.ts`) and refuses to boot if one is missing or wrong.
 
-| Variable                                              | Example                    | Notes                                                            |
-| ----------------------------------------------------- | -------------------------- | ---------------------------------------------------------------- |
-| `MONGODB_URI`                                         | `mongodb+srv://…/teleshop` | Atlas connection string, app user (readWrite on `teleshop` only) |
-| `MONGODB_DB`                                          | `teleshop`                 | Database name                                                    |
-| `AUTH_SECRET`                                         | 32+ random bytes           | `openssl rand -base64 32`                                        |
-| `AUTH_URL`                                            | `http://localhost:3000`    | Public base URL                                                  |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`               |                            | Optional Google sign-in                                          |
-| `TOTP_ENCRYPTION_KEY`                                 | 32 random bytes (base64)   | Encrypts admin 2FA secrets                                       |
-| `UPSTASH_BLOB_TOKEN`                                  |                            | Upstash Blob — product images, avatars, seller documents         |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` |                            | Rate limiting in production                                      |
-| `EMAIL_SERVER` / `EMAIL_FROM`                         |                            | Transactional email (SMTP)                                       |
-| `NEXT_PUBLIC_SITE_URL`                                | `https://teleshop.lk`      | Used for SEO and links                                           |
+| Variable                                              | Example                      | Notes                                                            |
+| ----------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| `MONGODB_URI`                                         | `mongodb+srv://…/teleshop`   | Atlas connection string, app user (readWrite on `teleshop` only) |
+| `MONGODB_DB`                                          | `teleshop`                   | Database name                                                    |
+| `AUTH_SECRET`                                         | 32+ random bytes             | `openssl rand -base64 32`                                        |
+| `AUTH_URL`                                            | `http://localhost:3000`      | Public base URL                                                  |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`               |                              | Optional Google sign-in                                          |
+| `TOTP_ENCRYPTION_KEY`                                 | 32 random bytes (base64)     | Encrypts admin 2FA secrets                                       |
+| `UPSTASH_BLOB_TOKEN`                                  |                              | Upstash Blob — product images, avatars, seller documents         |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` |                              | Rate limiting in production                                      |
+| `BREVO_API_KEY`                                       | `xkeysib-…`                  | Transactional email via Brevo's API (preferred)                  |
+| `EMAIL_SERVER` / `EMAIL_FROM`                         | `smtp://…` / verified sender | Transactional email via SMTP (fallback)                          |
+| `CONTACT_INBOX`                                       |                              | Inbox that receives `/contact` form messages                     |
+| `NEXT_PUBLIC_SITE_URL`                                | `https://teleshop.lk`        | Used for SEO and links                                           |
 
 Never commit `.env*` files except `.env.example`.
 

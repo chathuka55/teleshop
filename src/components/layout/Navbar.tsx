@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, LogOut, Search, ShoppingCart, User } from "lucide-react";
+import { Heart, LogOut, ShoppingCart, User } from "lucide-react";
 import { mainNav } from "@/config/site";
 import { signOutAction } from "@/modules/auth/actions";
 import { listNavCategories } from "@/modules/catalog/service";
@@ -11,13 +11,14 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { CartCount } from "./CartCount";
 import { Logo } from "./Logo";
 import { MobileMenu } from "./MobileMenu";
+import { NavSearch } from "./NavSearch";
 import { NavLinks } from "./NavLinks";
 import type { NavUser } from "./types";
 
 /**
  * Floating glass navbar — Figma "Navbar component (Guest / Logged in)" 7:214.
- * Server component; only the active-link highlight, the Categories dropdown and the mobile drawer
- * are client code.
+ * Server component; only the active-link highlight, the Categories dropdown, the search box and
+ * the mobile drawer are client code.
  */
 export async function Navbar({ user, cartCount = 0 }: { user?: NavUser | null; cartCount?: number }) {
   const categories = await loadCategories();
@@ -43,25 +44,10 @@ export async function Navbar({ user, cartCount = 0 }: { user?: NavUser | null; c
         />
 
         <div className="flex items-center gap-2.5">
-          <Link
-            href="/shop"
-            className="hidden h-10 w-[280px] items-center gap-2.5 rounded-xl border border-line bg-white/4 pr-2.5 pl-3.5 text-[13px] text-text-muted transition-colors hover:border-line-strong lg:flex xl:hidden 2xl:flex"
-          >
-            <Search aria-hidden className="size-4" />
-            <span className="flex-1">Search phones, laptops…</span>
-            <kbd className="rounded-md bg-white/8 px-1.5 py-0.5 font-sans text-[11px] font-semibold text-text-secondary">
-              ⌘K
-            </kbd>
-          </Link>
-          <ButtonLink
-            href="/shop"
-            variant="glass"
-            size="icon-sm"
-            aria-label="Search"
-            className="lg:hidden xl:inline-flex 2xl:hidden"
-          >
-            <Search aria-hidden />
-          </ButtonLink>
+          <NavSearch
+            inlineClassName="hidden lg:flex xl:hidden 2xl:flex"
+            buttonClassName="lg:hidden xl:inline-flex 2xl:hidden"
+          />
           <ButtonLink
             href="/account/wishlist"
             variant="glass"

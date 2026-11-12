@@ -140,8 +140,15 @@ images indicates separate images in a gallery, not different products/shops.
 | File | What it does |
 | --- | --- |
 | `brand-logos.mjs` | Regenerates the brand-logo paths in `src/config/brand-logos.ts` from Simple Icons (`pnpm brand-logos`). |
+| `check-integrations.ts` | Sends one test email (to `CONTACT_INBOX`) and one Sentry test event through the app's own `sendEmail` / `reportError` (`pnpm integrations:check`); prints outcomes only. |
 | `memory-db.ts` | Starts a local MongoDB replica set for development (`pnpm db:memory`). |
 | `vercel-preview-env.mjs` | Helps prepare environment values for a Vercel preview deployment. |
+
+### `scripts/models/`
+
+| File | What it does |
+| --- | --- |
+| `make-mobile.mjs` | Rebuilds the phone copies of the hero models (`public/models/*-mobile.glb`) from the desktop GLBs (`pnpm models:mobile`). |
 
 ### `scripts/perf/`
 
@@ -269,7 +276,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `checkout/CheckoutForm.tsx` | Customer checkout form. |
 | `forms/` — `AccountForms.tsx`, `AddressForm.tsx`, `AuthForms.tsx`, `AvatarForm.tsx`, `ContactForm.tsx`, `TwoFactorForms.tsx`, `fields.tsx` | Reusable account, address, login/registration, avatar, contact and two-factor forms/fields. `.gitkeep` reserves the folder. |
 | `home/` — `BrandMarquee.tsx`, `CategoryGrid.tsx`, `FeaturedProducts.tsx`, `Hero.tsx`, `HeroMotion.tsx`, `HowItWorks.tsx`, `Newsletter.tsx`, `PromoBanners.tsx`, `SectionSkeleton.tsx`, `TopBrands.tsx`, `TrustStrip.tsx` | Home page hero (with its GSAP intro), content sections, the brand logo marquee and placeholders for sections still streaming in. |
-| `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `Navbar.tsx`, `ErrorState.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation, responsive layout, account navigation, the shared error-page content (reports browser errors), user navigation state and related types. `.gitkeep` preserves the folder. |
+| `layout/` — `AccountSidebar.tsx`, `AuthShell.tsx`, `BottomTabBar.tsx`, `CartCount.tsx`, `CategoriesMenu.tsx`, `Footer.tsx`, `FooterMotion.tsx`, `BackToTop.tsx`, `Logo.tsx`, `MobileMenu.tsx`, `NavLinks.tsx`, `NavSearch.tsx`, `Navbar.tsx`, `ErrorState.tsx`, `SplashScreen.tsx`, `nav-user.ts`, `types.ts` | Shared site navigation (search box with ⌘K / Ctrl+K, dialog on small screens), the cinematic footer (curtain reveal on tall desktop screens, GSAP parallax + magnetic pills, back-to-top), responsive layout, account navigation, the shared error-page content (reports browser errors), user navigation state and related types. `.gitkeep` preserves the folder. |
 | `motion/` — `ScrollReveal.tsx` | Scroll-in animations for elements marked `data-reveal` in server components. |
 | `orders/` — `CancelOrderForm.tsx`, `PackageTimeline.tsx`, `StatusStepper.tsx`, `TrackForm.tsx`, `TrackingCodeBox.tsx`, `order-status.ts` | Order cancellation, timeline/status and tracking UI plus status display helpers. |
 | `product/` — `CategoryIcon.tsx`, `FilterForm.tsx`, `PriceTag.tsx`, `ProductArt.tsx`, `ProductCard.tsx`, `ProductGallery.tsx`, `ProductListing.tsx`, `PurchasePanel.tsx`, `Rating.tsx`, `SellerCard.tsx`, `SortSelect.tsx`, `WishlistSync.tsx`, `WishlistToggle.tsx`, `listing-href.ts`, `variant-select.ts` | Catalogue/product cards, images, filters, purchasing, seller/rating display, wishlist behavior, and listing/variant helpers. `.gitkeep` preserves the folder. |
@@ -330,7 +337,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `repositories/auth-token.repository.ts` | Verification and password-reset token queries. |
 | `repositories/admin-catalog.repository.ts`, `admin-config.repository.ts`, `admin-order.repository.ts`, `admin-people.repository.ts` | Admin catalogue, settings, orders and people queries. |
 | `repositories/audit-log.repository.ts` | Audit history queries. |
-| `repositories/brand.repository.ts`, `category.repository.ts`, `product.repository.ts`, `catalog-mappers.ts`, `storefront-filter.ts` | Catalogue queries, DTO mapping and storefront filter construction. |
+| `repositories/brand.repository.ts`, `category.repository.ts`, `product.repository.ts`, `catalog-mappers.ts`, `storefront-filter.ts`, `search-terms.ts` | Catalogue queries, DTO mapping, storefront filter construction and search-word matching. |
 | `repositories/cart.repository.ts`, `wishlist.repository.ts` | Customer cart and wishlist queries. |
 | `repositories/newsletter.repository.ts` | Idempotent newsletter sign-up (upsert on the unique email). |
 | `repositories/checkout.repository.ts` | Data operations needed to validate and create checkout orders. |
@@ -347,7 +354,7 @@ bracketed names such as `[slug]` are dynamic URL values.
 | `auth/` — `auth.config.ts`, `authorize.ts`, `breached.ts`, `claims.ts`, `guards.ts`, `index.ts`, `password.ts`, `route-access.ts`, `tokens.ts`, `totp.ts` | Auth.js setup, permission checks, password security, user claims, tokens, route access and TOTP two-factor helpers. |
 | `cache/.gitkeep` | Reserves the cache utility folder. |
 | `documents/business-document.ts` | Validates/handles seller business-document input. |
-| `email/send.ts` | Sends application email. |
+| `email/send.ts` | Sends application email: Brevo HTTP API when `BREVO_API_KEY` is set, else SMTP (`EMAIL_SERVER` URL); logs failures without recipients or bodies. |
 | `observability/` — `scrub.ts`, `logger.ts`, `report.ts`, `sentry-envelope.ts`, `client-error.ts`, `request-error.ts` | Error reporting and logging without PII: scrubbing, JSON log lines, `reportError()` (log + Sentry over HTTP), the browser-error schema and de-duplication of Next's repeated render errors. |
 | `geo/tiles.ts` | Builds/handles map tile URLs for shop maps. |
 | `motion/gsap.ts`, `motion/splash.ts` | Loads GSAP + ScrollTrigger on demand (never for reduced motion) and tells intro animations when the splash screen starts fading. |
@@ -410,6 +417,7 @@ pattern is `schema.ts` (input validation), `access.ts` (permissions),
 | `src/styles/tokens.css` | Design-system color, spacing and component tokens. |
 | `src/styles/glass.css` | Shared glassmorphism styles. |
 | `src/styles/splash.css` | Splash/loading screen styles. |
+| `src/styles/footer.css` | Footer effects: aurora, grid, marquee, glass pills, giant outlined wordmark, the `curtain:` variant (≥ 768 px wide and ≥ 760 px tall). |
 | `src/styles/.gitkeep`, `src/types/.gitkeep` | Preserve folders for future shared styles/types. |
 
 ## 6. Tests (`tests/`)

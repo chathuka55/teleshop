@@ -17,7 +17,7 @@
 | Auth | **Auth.js v5** (Credentials + Google), JWT sessions; **@node-rs/argon2**; **otplib** (admin TOTP) | Standard, maintained, secure defaults |
 | Images | **Upstash Blob** (`@upstash/blob`) + `next/image` + **sharp** (re-encode uploads) | Free tier, Cloudflare CDN, private bucket for seller documents ([ADR-005](adr/ADR-005-upstash-blob.md)) |
 | Rate limit | **@upstash/ratelimit** + Upstash Redis (in-memory fallback in dev) | Works across serverless functions |
-| Email | **Nodemailer** (SMTP) + React Email templates | Verification, reset, order emails |
+| Email | **Brevo** transactional HTTP API (`BREVO_API_KEY`), **Nodemailer** SMTP fallback — plain-text messages | Verification, reset, order emails |
 | Charts | **Recharts** (admin/seller dashboards, loaded only there) | Simple, small enough when code-split |
 | Testing | **Vitest**, **mongodb-memory-server** (replica set), **Playwright**, **@axe-core/playwright** | Fast unit + real Mongo integration + E2E + a11y |
 | Quality | ESLint (next + security plugin), Prettier, Husky + lint-staged, commitlint | Consistent code, no bad commits |

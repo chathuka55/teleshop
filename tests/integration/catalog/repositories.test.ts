@@ -137,6 +137,38 @@ describe("searchProducts", () => {
     );
   });
 
+  it("search matches word prefixes while typing (“iph”, “mac”)", async () => {
+    const iph = await searchProducts({ q: "iph", limit: 50 });
+    expect(iph.total).toBeGreaterThan(0);
+    expect(iph.items.every((p) => /iphone/i.test(p.name))).toBe(true);
+    expect((await searchProducts({ q: "mac" })).items.map((p) => p.slug)).toContain(
+      "apple-macbook-air-13-m4",
+    );
+  });
+
+  it("search finds products by category and brand words (“laptops”, “apple laptop”)", async () => {
+    const laptops = await searchProducts({ q: "laptops", limit: 50 });
+    expect(laptops.total).toBeGreaterThan(0);
+    expect(laptops.items.every((p) => p.category.slug === "laptops")).toBe(true);
+    const appleLaptops = await searchProducts({ q: "apple laptop", limit: 50 });
+    expect(appleLaptops.total).toBeGreaterThan(0);
+    expect(appleLaptops.items.every((p) => p.brand.slug === "apple" && p.category.slug === "laptops")).toBe(
+      true,
+    );
+  });
+
+  it("search ranks the typed phrase first and keeps other filters", async () => {
+    const page = await searchProducts({ q: "iphone 17 pro", limit: 50 });
+    expect(page.items[0]?.name).toMatch(/^Apple iPhone 17 Pro\b/);
+    const cheap = await searchProducts({ q: "samsung", maxPriceCents: 20_000_000, limit: 50 });
+    expect(cheap.items.every((p) => p.brand.slug === "samsung" && p.priceCents <= 20_000_000)).toBe(true);
+  });
+
+  it("search treats regex characters literally and returns nothing for gibberish", async () => {
+    expect((await searchProducts({ q: ".*" })).total).toBe(0);
+    expect((await searchProducts({ q: "zzqxv" })).total).toBe(0);
+  });
+
   it("in-stock filter uses inventory", async () => {
     const all = await searchProducts({ limit: 50 });
     const inStock = await searchProducts({ inStock: true, limit: 50 });

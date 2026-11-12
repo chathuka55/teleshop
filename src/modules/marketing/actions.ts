@@ -1,5 +1,6 @@
 "use server";
 
+import { env } from "@/config/env";
 import { siteConfig } from "@/config/site";
 import { sendEmail } from "@/lib/email/send";
 import { reportError } from "@/lib/observability/report";
@@ -51,7 +52,8 @@ export async function sendContactMessageAction(
 
   const { name, email, phone, topic, message } = parsed.data;
   const result = await sendEmail({
-    to: siteConfig.contact.email,
+    // the public address on the site is display-only; messages go to the real inbox
+    to: env.CONTACT_INBOX ?? siteConfig.contact.email,
     replyTo: email,
     subject: `[Contact · ${topic}] ${name}`,
     text: `${message}\n\n— ${name} <${email}>${phone ? ` · ${phone}` : ""}`,
@@ -62,7 +64,7 @@ export async function sendContactMessageAction(
       message: `We couldn’t send your message. Email us at ${siteConfig.contact.email}.`,
     };
   }
-  if (!result.sent && process.env.NODE_ENV === "production") {
+  if (!result.sent && env.NODE_ENV === "production") {
     return { status: "error", message: `Messaging is unavailable. Email us at ${siteConfig.contact.email}.` };
   }
   return { status: "ok", message: "Thanks — we’ll reply within one working day." };
